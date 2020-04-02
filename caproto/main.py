@@ -3,6 +3,7 @@ from caproto import ChannelType
 
 from db.filters import FilterGroup
 from db.system import SystemGroup
+from db.fake_ev import FakeEVGroup
 
 pref = "AT2L0:SIM"
 num_blades = 18
@@ -24,6 +25,9 @@ def create_ioc(prefix, filter_group, **ioc_options):
         groups[group_prefix] = FilterGroup(f'{prefix}:FILTER:{group_prefix}:', ioc=ioc)
 
     groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
+
+    # Fake photon energy PV for development:
+    groups['LCLS:HXR:BEAM'] = FakeEVGroup(f'LCLS:HXR:BEAM:',ioc=ioc)
 
     for group in groups.values():
         ioc.pvdb.update(**group.pvdb)
