@@ -3,7 +3,7 @@ from caproto import ChannelType
 
 class FakeEVGroup(PVGroup):
     """
-    PV group for attenuator system-spanning information.
+    PV group for fake photon energy readback
     """
     fake_eV = pvproperty(value=9500,
                          name='EV',
