@@ -10,7 +10,7 @@ class SystemGroup(PVGroup):
                         mock_record='ao',
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
-                        read_only=True,
+#                        read_only=True,
                         doc='Calculated transmission')
 
     t_high = pvproperty(value=0.1,

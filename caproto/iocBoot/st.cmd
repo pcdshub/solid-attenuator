@@ -18,4 +18,4 @@ export PYTHONPATH="${PYDEV}:${PYTHONPATH}"
 
 cd "$(dirname "$0")"
 python --version
-python ${TOP}main.py --prefix ${PREFIX}
+python ${TOP}main.py --prefix ${PREFIX} --list-pvs
