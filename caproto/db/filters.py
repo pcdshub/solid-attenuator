@@ -11,6 +11,7 @@ class FilterGroup(PVGroup):
                            mock_record='ao',
                            upper_alarm_limit=1.0,
                            lower_alarm_limit=0.0,
+                           read_only=True,
                            doc='Filter thickness',
                            units='m')
 
@@ -18,6 +19,7 @@ class FilterGroup(PVGroup):
                           name='MATERIAL',
                           mock_record='stringin',
                           doc='Filter material',
+                          read_only=True,
                           dtype=ChannelType.STRING)
 
     is_stuck = pvproperty(value='False',
@@ -26,6 +28,13 @@ class FilterGroup(PVGroup):
                           enum_strings=['False', 'True'],
                           doc='Filter is stuck in place',
                           dtype=ChannelType.ENUM)
+
+    # cmd_st = pvproperty(value='True',
+    #                     name='CMD_STATE',
+    #                     mock_record='bo',
+    #                     enum_strings=['False', 'True'],
+    #                     doc='Commanded filter state')
+
 
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
