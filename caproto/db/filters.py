@@ -29,11 +29,11 @@ class FilterGroup(PVGroup):
                           doc='Filter is stuck in place',
                           dtype=ChannelType.ENUM)
 
-    cmd_st = pvproperty(value='True',
-                        name='CMD_STATE',
-                        mock_record='bo',
-                        enum_strings=['False', 'True'],
-                        doc='Commanded filter state')
+    # cmd_st = pvproperty(value='True',
+    #                     name='CMD_STATE',
+    #                     mock_record='bo',
+    #                     enum_strings=['False', 'True'],
+    #                     doc='Commanded filter state')
 
 
     def __init__(self, prefix, *, ioc, **kwargs):
