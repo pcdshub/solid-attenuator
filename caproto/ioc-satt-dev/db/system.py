@@ -46,7 +46,7 @@ class SystemGroup(PVGroup):
                                upper_alarm_limit=1.0,
                                lower_alarm_limit=0.0,
                                read_only=True,
-                               doc='Actual 3rd harmonic '
+                               doc='Calculated 3rd harmonic '
                                +'transmission')
 
     run = pvproperty(value='False',
@@ -73,20 +73,6 @@ class SystemGroup(PVGroup):
                            doc='The inspection mirror is in',
                            dtype=ChannelType.ENUM)
 
-    test = pvproperty(value=None,
-                      mock_record='bo',
-                      enum_strings=['False', 'True'],
-                      read_only=True,
-                      dtype=ChannelType.ENUM,
-                      name='TEST')
-
-    testput = pvproperty(value='False',
-                         mock_record='bo',
-                         enum_strings=['False', 'True'],
- #                        read_only=True,
-                         dtype=ChannelType.ENUM,
-                         name='TESTPUT')
-
     def __init__(self, prefix, *, ioc, test_val=False, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
@@ -112,15 +98,6 @@ class SystemGroup(PVGroup):
     async def t_3omega_calc(self, instance, value):
         transmission_value_error(value)
 
-    @test.startup
-    async def test(self, instance, value):
-        await instance.write(self.test_val)
-    
-    @testput.putter
-    async def testput(self, instance, value, async_lib=asyncio):
-        await self.test.write(value)
-        await async_lib.sleep(5)
-        await instance.write(0)
 
 def transmission_value_error(value):
     if value < 0 or value > 1:

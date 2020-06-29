@@ -1,3 +1,8 @@
+#====================================================================
+#  This is old code intended for testing the attenuation algorithm.
+#  Not for use in beamline operations.
+#====================================================================
+
 import logging
 from ophyd.device import Device, Component as Cpt, FormattedComponent as FCpt
 from ophyd import EpicsSignal, EpicsSignalRO

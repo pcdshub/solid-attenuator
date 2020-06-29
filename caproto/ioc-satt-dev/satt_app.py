@@ -22,22 +22,6 @@ class IOCMain(PVGroup):
         self.groups=groups
         self.eV=eV
         self.pmps_run=pmps_run
-        self.startup()
-
-    def startup(self):
-        print("startup!")
-        
-#        self.eV.add_callback(self.eV_callback)
-#        print("eV connected and callback set!")
-
-        self.pmps_run.add_callback(self.pmps_run_callback)
- #       print("pmps connected and callback set!")
-
-    def eV_callback(value, **kwargs):
-        print("eV changed to {}".format(value))
-
-    def pmps_run_callback(value, **kwargs):
-        print("PMPS run changed to {}".format(value))
 
 
 def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
@@ -48,7 +32,8 @@ def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
                   abs_data=absorption_data,
                   config_data=config_data,
                   eV=epics.get_pv(eV_pv, auto_monitor=True),
-                  pmps_run=epics.get_pv(pmps_run_pv, auto_monitor=True),
+                  pmps_run=epics.get_pv(pmps_run_pv,
+                                        auto_monitor=True),
                   **ioc_options)
 
     for group_prefix in filter_group:
