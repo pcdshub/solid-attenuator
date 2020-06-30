@@ -21,14 +21,11 @@ class IOCMain(PVGroup):
                  **kwargs):
         super().__init__(prefix, **kwargs)
         self.groups=groups
-        self.eV=eV
-        self.pmps_run=pmps_run
         self.config_data = config_data
         self.startup()
 
     def startup(self):
         self.config_table = self.load_configs(self.config_data)
-        print(self.groups)
 
     def load_configs(self, config_data):
         print("Loading configurations...")
@@ -44,15 +41,15 @@ def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
                   groups=groups,
                   abs_data=absorption_data,
                   config_data=config_data,
-                  eV=epics.get_pv(eV_pv, auto_monitor=True),
-                  pmps_run=epics.get_pv(pmps_run_pv,
-                                        auto_monitor=True),
+                  eV=eV_pv,
+                  pmps_run=pmps_run_pv,
                   **ioc_options)
 
     for group_prefix in filter_group:
         groups[group_prefix] = FilterGroup(
             f'{prefix}:FILTER:{group_prefix}:',
             abs_data=absorption_data,
+            eV=epics.get_pv(eV_pv, auto_monitor=True),
             ioc=ioc)
 
     groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)

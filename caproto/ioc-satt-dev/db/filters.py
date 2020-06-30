@@ -1,5 +1,6 @@
 from caproto.server import pvproperty, PVGroup
 from caproto import ChannelType
+from caproto.threading import pyepics_compat as epics
 import numpy as np
 
 class FilterGroup(PVGroup):
@@ -34,6 +35,12 @@ class FilterGroup(PVGroup):
                             read_only=True,
                             units='eV')
 
+    @pvproperty(name='EV_RBV',
+                read_only=True,
+                units='eV')
+    async def eV_RBV(self, instance):
+        return self.eV.get()
+
     # cmd_st = pvproperty(value='True',
     #                     name='CMD_STATE',
     #                     mock_record='bo',
@@ -41,11 +48,12 @@ class FilterGroup(PVGroup):
     #                     doc='Commanded filter state')
 
 
-    def __init__(self, prefix, *, abs_data, ioc, **kwargs):
+    def __init__(self, prefix, *, abs_data, eV, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.abs_data = abs_data
         self.ioc = ioc
-        
+        self.eV = eV
+
     def load_data(self, material):
         """
         Load the HDF5 dataset containing physical constants
@@ -59,6 +67,9 @@ class FilterGroup(PVGroup):
         self.eV_inc = (self.table[-1,0] - self.table[0,0])/len(self.table[:,0])
         print("Absorption table successfully loaded.")
         return self.constants, self.table, self.eV_min, self.eV_inc, self.eV_max
+
+    async def eV_callback(self, value, **kwargs):
+        await self.eV_RBV.write(value)
 
     @thickness.putter
     async def thickness(self, instance, value):
