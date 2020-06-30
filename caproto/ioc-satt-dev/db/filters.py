@@ -19,7 +19,6 @@ class FilterGroup(PVGroup):
                           name='MATERIAL',
                           mock_record='stringin',
                           doc='Filter material',
- #                         read_only=True,
                           dtype=ChannelType.STRING)
 
     is_stuck = pvproperty(value='False',
@@ -28,6 +27,12 @@ class FilterGroup(PVGroup):
                           enum_strings=['False', 'True'],
                           doc='Filter is stuck in place',
                           dtype=ChannelType.ENUM)
+
+    closest_eV = pvproperty(name='CLOSE_EV',
+                            doc='Closest eV value',
+                            mock_record='ao',
+                            read_only=True,
+                            units='eV')
 
     # cmd_st = pvproperty(value='True',
     #                     name='CMD_STATE',
@@ -40,6 +45,20 @@ class FilterGroup(PVGroup):
         super().__init__(prefix, **kwargs)
         self.abs_data = abs_data
         self.ioc = ioc
+        
+    def load_data(self, material):
+        """
+        Load the HDF5 dataset containing physical constants
+        and photon energy : atomic scattering factor table.
+        """
+        print("Loading absorption table for {}...".format(material))
+        self.table = np.asarray(self.abs_data['{}_table'.format(material)])
+        self.constants = np.asarray(self.abs_data['{}_constants'.format(material)])
+        self.eV_min = self.table[0,0]
+        self.eV_max = self.table[-1,0]
+        self.eV_inc = (self.table[-1,0] - self.table[0,0])/len(self.table[:,0])
+        print("Absorption table successfully loaded.")
+        return self.constants, self.table, self.eV_min, self.eV_inc, self.eV_max
 
     @thickness.putter
     async def thickness(self, instance, value):
@@ -57,15 +76,3 @@ class FilterGroup(PVGroup):
     @material.startup
     async def material(self, instance, value):
         await instance.write("Si")
-
-    def load_data(self, material):
-        print("Loading absorption table for {}...".format(material))
-        self.table = np.asarray(self.abs_data['{}_table'.format(material)])
-        self.constants = np.asarray(self.abs_data['{}_constants'.format(material)])
-        self.eV_min = self.table[0,0]
-        self.eV_max = self.table[-1,0]
-        self.eV_inc = (self.table[-1,0] - self.table[0,0])/len(self.table[:,0])
-        print("Absorption table successfully loaded.")
-        return self.constants, self.table, self.eV_min, self.eV_inc, self.eV_max
-
-    

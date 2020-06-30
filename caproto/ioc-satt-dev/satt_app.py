@@ -28,14 +28,15 @@ class IOCMain(PVGroup):
 
     def startup(self):
         self.config_table = self.load_configs(self.config_data)
-        
+        print(self.groups)
+
     def load_configs(self, config_data):
         print("Loading configurations...")
         self.config_table = np.asarray(config_data['configurations'])
         print("Configurations successfully loaded.")
         return self.config_table
-    
-    
+
+
 def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
                config_data, absorption_data, **ioc_options):
     groups = {}
@@ -58,4 +59,5 @@ def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
 
     for group in groups.values():
         ioc.pvdb.update(**group.pvdb)
+
     return ioc
