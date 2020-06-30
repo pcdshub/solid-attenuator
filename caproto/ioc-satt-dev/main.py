@@ -1,15 +1,15 @@
 from caproto.server import ioc_arg_parser, run
 from caproto.threading import pyepics_compat as epics
 from h5py import File as h5file
-from app import *
+from satt_app import *
 
 ################################################
 prefix = "AT2L0:SIM"
 num_blades = 18
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
-abs_data = h5file('../../absorption_data.h5')
-config_data = h5file('../../configs.h5')
+abs_data = h5file('../../../absorption_data.h5')
+config_data = h5file('../../../configs.h5')
 ################################################
 
 ioc_args = {
