@@ -34,42 +34,82 @@ class IOCMain(PVGroup):
         self.config_table = self.load_configs(self.config_data)
 
     def load_configs(self, config_data):
+        """
+        Load HDF5 table of filter state combinations.
+        """
         print("Loading configurations...")
         self.config_table = np.asarray(config_data['configurations'])
         print("Configurations successfully loaded.")
         return self.config_table
 
     def t_calc(self):
+        """
+        Total transmission through all filter blades.
+        Stuck blades are assumed to be 'OUT' and thus 
+        the total transmission will be overestimated
+        (in the case any blades are actually stuck 'IN').
+        """
         t = 1.
         for group in self.filter_group:
-            tN = self.groups[f'{group}'].pvdb[
-                f'{self.prefix}:FILTER:{group}:T'
+            is_stuck = self.groups[f'{group}'].pvdb[
+                f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
-            t *= tN
+            if is_stuck:
+                t *= 1.
+            else:
+                tN = self.groups[f'{group}'].pvdb[
+                    f'{self.prefix}:FILTER:{group}:T'
+                ].value
+                t *= tN
         return t
 
     def t_calc_3omega(self):
+        """
+        Total 3rd harmonictransmission through all filter
+        blades. Stuck blades are assumed to be 'OUT' and thus 
+        the total transmission will be overestimated
+        (in the case any blades are actually stuck 'IN').
+        """
         t = 1.
         for group in self.filter_group:
-            tN = self.groups[f'{group}'].pvdb[
-                f'{self.prefix}:FILTER:{group}:T_3OMEGA'
+            is_stuck = self.groups[f'{group}'].pvdb[
+                f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
-            t *= tN
+            if is_stuck:
+                t *= 1.
+            else:
+                tN = self.groups[f'{group}'].pvdb[
+                    f'{self.prefix}:FILTER:{group}:T_3OMEGA'
+                ].value
+                t *= tN
         return t
 
     def all_transmissions(self):
+        """
+        Return an array of the transmission values
+        for each filter at the current photon energy.
+        Stuck filters get a transmission of NaN, which
+        omits them from calculations/considerations.
+        """
         N = len(self.filter_group)
         T_arr = np.ones(N)
-        # TODO: check if filter is stuck...
-        # If so, replace with NaN.
         for i in range(N):
             group = str(i+1).zfill(2)
-            T_arr[i] = self.filter(i+1).pvdb[
-                f'{self.prefix}:FILTER:{group}:T'
+            is_stuck = self.filter(i+1).pvdb[
+                f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
+            if is_stuck:
+                T_arr[i] = np.nan
+            else:
+                T_arr[i] = self.filter(i+1).pvdb[
+                    f'{self.prefix}:FILTER:{group}:T'
+                ].value
         return T_arr
 
     def filter(self, i):
+        """
+        Return a filter PVGroup at index i.
+        """
         group = str(i).zfill(2)
         return self.groups[f'{group}']
 
@@ -88,8 +128,18 @@ class IOCMain(PVGroup):
                          +'between 0 and 1.')
 
     def find_configs(self, T_des=None):
+        """
+        Find the optimal configurations for attaining
+        desired transmission ``T_des`` at the 
+        current photon energy.  
+
+        Returns configurations which yield closest
+        highest and lowest transmissions and their 
+        transmission values.
+        """
         if not T_des:
             T_des = self.groups['SYS'].pvdb['{self.prefix}:SYS:T_DES'].value
+
         T_set = self.all_transmissions()
         T_table = np.nanprod(T_set*self.config_table,
                              axis=1)
@@ -99,14 +149,17 @@ class IOCMain(PVGroup):
         i = np.argmin(np.abs(T_config_table[:,0]-T_des))
         closest = self.config_table[int(T_config_table[i,1])]
         T_closest = np.nanprod(T_set*closest)
+
         if T_closest == T_des:
             config_bestHigh = config_bestLow = closest
             T_bestHigh = T_bestLow = T_closest
+
         if T_closest < T_des:
             config_bestHigh = self.config_table[int(T_config_table[i+1,1])]
             config_bestLow = closest
             T_bestHigh = np.nanprod(T_set*config_bestHigh)
             T_bestLow = T_closest
+
         if T_closest > T_des:
             config_bestHigh = closest
             config_bestLow = self.config_table[int(T_config_table[i-1,1])]
@@ -115,6 +168,9 @@ class IOCMain(PVGroup):
         return config_bestLow, config_bestHigh, T_bestLow, T_bestHigh
 
 def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorption_data, config_data, **ioc_options):
+    """
+    IOC Setup.
+    """
     groups = {}
     ioc = IOCMain(prefix=prefix,
                   filter_group=filter_group,
