@@ -32,14 +32,6 @@ class SystemGroup(PVGroup):
                        doc='Desired transmission '
                        +'best achievable (low)')
 
-    t_desired = pvproperty(value=0.1,
-                           name='T_DESIRED',
-                           mock_record='ao',
-                           upper_alarm_limit=1.0,
-                           lower_alarm_limit=0.0,
-                           read_only=True,
-                           doc='Desired transmission')
-
     run = pvproperty(value='False',
                      name='RUN',
                      mock_record='bo',
@@ -83,6 +75,7 @@ class SystemGroup(PVGroup):
         return t
 
     eV_RBV = pvproperty(name='EV_RBV',
+                value=1000.0,
                 read_only=True,
                 units='eV')
     @eV_RBV.startup
@@ -98,19 +91,30 @@ class SystemGroup(PVGroup):
                     filter.get_transmission(eV, filter.thickness.value))
                 await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T_3OMEGA'].write(
                     filter.get_transmission(3.*eV, filter.thickness.value))
-            await async_lib.library.sleep(0.25)
+                await instance.write(eV)
+                await async_lib.library.sleep(self.dt)
         return eV
+
+    t_desired = pvproperty(name='T_DES',
+                value=0.5,
+                read_only=True)
+    @t_desired.startup
+    async def t_desired(self, instance, async_lib):
+        while True:
+            pmps_tdes = self.pmps_tdes.get()
+            await instance.write(pmps_tdes)
+            await async_lib.library.sleep(self.dt)
+        return pmps_tdes
 
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
         self.eV = self.ioc.eV
+        self.pmps_run = self.ioc.pmps_run
+        self.pmps_tdes = self.ioc.pmps_tdes
         self.config_table = self.ioc.config_table
+        self.dt = 0.25
         
-    @t_desired.putter
-    async def t_desired(self, instance, value):
-        self.ioc.transmission_value_error(value)
-
     @t_low.putter
     async def t_low(self, instance, value):
         self.ioc.transmission_value_error(value)

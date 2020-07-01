@@ -19,6 +19,7 @@ class IOCMain(PVGroup):
                  config_data,
                  eV,
                  pmps_run,
+                 pmps_tdes,
                  **kwargs):
         super().__init__(prefix, **kwargs)
         self.filter_group = filter_group
@@ -26,7 +27,9 @@ class IOCMain(PVGroup):
         self.config_data = config_data
         self.startup()
         self.eV = epics.get_pv(eV, auto_monitor=True)
-        
+        self.pmps_run = epics.get_pv(pmps_run, auto_monitor=True)
+        self.pmps_tdes = epics.get_pv(pmps_tdes, auto_monitor=True)
+
     def startup(self):
         self.config_table = self.load_configs(self.config_data)
 
@@ -84,8 +87,8 @@ class IOCMain(PVGroup):
             raise ValueError('Transmission must be '
                          +'between 0 and 1.')
 
-def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
-               config_data, absorption_data, **ioc_options):
+
+def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorption_data, config_data, **ioc_options):
     groups = {}
     ioc = IOCMain(prefix=prefix,
                   filter_group=filter_group,
@@ -94,6 +97,7 @@ def create_ioc(prefix, filter_group, eV_pv, pmps_run_pv,
                   config_data=config_data,
                   eV=eV_pv,
                   pmps_run=pmps_run_pv,
+                  pmps_tdes=pmps_tdes_pv,
                   **ioc_options)
 
     for group_prefix in filter_group:
