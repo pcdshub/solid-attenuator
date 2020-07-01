@@ -39,9 +39,25 @@ class IOCMain(PVGroup):
     def t_calc(self):
         t = 1.
         for group in self.filter_group:
-            tfilter = self.groups[f'{group}'].pvdb[f'{self.prefix}:FILTER:{group}:T'].value
-            t *= tfilter
+            tN = self.groups[f'{group}'].pvdb[f'{self.prefix}:FILTER:{group}:T'].value
+            t *= tN
         return t
+
+    def all_transmissions(self):
+        N = len(self.filter_group)
+        T_arr = np.ones(N)
+        # TODO: check if filter is stuck...
+        # If so, replace with NaN.
+        for i in range(N):
+            group = str(i+1).zfill(2)
+            T_arr[i] = self.filter(i+1).pvdb[
+                f'{self.prefix}:FILTER:{group}:T'
+            ].value
+        return T_arr
+
+    def filter(self, i):
+        group = str(i).zfill(2)
+        return self.groups[f'{group}']
 
     def calc_closest_eV(self, eV, table, eV_min, eV_max, eV_inc):
         i = int(np.rint((eV - eV_min)/eV_inc))

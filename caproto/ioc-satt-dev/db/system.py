@@ -11,7 +11,7 @@ class SystemGroup(PVGroup):
                         mock_record='ao',
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
-#                        read_only=True,
+                        read_only=True,
                         doc='Calculated transmission')
 
     t_high = pvproperty(value=0.1,
@@ -103,7 +103,8 @@ class SystemGroup(PVGroup):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
         self.eV = self.ioc.eV
-
+        self.config_table = self.ioc.config_table
+        
     @t_desired.putter
     async def t_desired(self, instance, value):
         self.ioc.transmission_value_error(value)
