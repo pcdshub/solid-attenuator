@@ -87,6 +87,32 @@ class IOCMain(PVGroup):
             raise ValueError('Transmission must be '
                          +'between 0 and 1.')
 
+    def find_configs(self, T_des=None):
+        if not T_des:
+            T_des = self.groups['SYS'].pvdb['{self.prefix}:SYS:T_DES'].value
+        T_set = self.all_transmissions()
+        T_table = np.nanprod(T_set*self.config_table,
+                             axis=1)
+        T_config_table = np.asarray(sorted(np.transpose([T_table[:],
+                                    range(len(self.config_table))]),
+                                           key=lambda x: x[0]))
+        i = np.argmin(np.abs(T_config_table[:,0]-T_des))
+        closest = self.config_table[int(T_config_table[i,1])]
+        T_closest = np.nanprod(T_set*closest)
+        if T_closest == T_des:
+            config_bestHigh = config_bestLow = closest
+            T_bestHigh = T_bestLow = T_closest
+        if T_closest < T_des:
+            config_bestHigh = self.config_table[int(T_config_table[i+1,1])]
+            config_bestLow = closest
+            T_bestHigh = np.nanprod(T_set*config_bestHigh)
+            T_bestLow = T_closest
+        if T_closest > T_des:
+            config_bestHigh = closest
+            config_bestLow = self.config_table[int(T_config_table[i-1,1])]
+            T_bestHigh = T_closest
+            T_bestLow = np.nanprod(T_set*config_bestLow)
+        return config_bestLow, config_bestHigh, T_bestLow, T_bestHigh
 
 def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorption_data, config_data, **ioc_options):
     groups = {}

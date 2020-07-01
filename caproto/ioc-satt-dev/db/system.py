@@ -113,7 +113,7 @@ class SystemGroup(PVGroup):
         self.pmps_run = self.ioc.pmps_run
         self.pmps_tdes = self.ioc.pmps_tdes
         self.config_table = self.ioc.config_table
-        self.dt = 0.25
+        self.dt = 0.01
         
     @t_low.putter
     async def t_low(self, instance, value):
