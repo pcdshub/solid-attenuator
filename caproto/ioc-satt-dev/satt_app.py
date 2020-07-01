@@ -10,14 +10,6 @@ from db.system import SystemGroup
 class IOCMain(PVGroup):
     """
     """
-    @pvproperty(name=':GROUPS')
-    async def groupies(self, instance):
-        return self.t_calc()
-        
-        # await self.groups['01'].pvdb[f'{self.prefix}:FILTER:01:MATERIAL'].write('C')
-        # return self.groups['01'].pvdb[f'{self.prefix}:FILTER:01:T'].value
-    
-        
     def __init__(self,
                  prefix,
                  *,
