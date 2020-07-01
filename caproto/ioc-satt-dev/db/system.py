@@ -73,33 +73,49 @@ class SystemGroup(PVGroup):
                            doc='The inspection mirror is in',
                            dtype=ChannelType.ENUM)
 
-    def __init__(self, prefix, *, ioc, test_val=False, **kwargs):
+    @pvproperty(name='T_CALC',
+                value=0.5,
+                upper_alarm_limit=1.0,
+                lower_alarm_limit=0.0,
+                read_only=True)
+    async def t_calc(self, instance):
+        t = self.ioc.t_calc()
+        return t
+
+    eV_RBV = pvproperty(name='EV_RBV',
+                read_only=True,
+                units='eV')
+    @eV_RBV.startup
+    async def eV_RBV(self, instance, async_lib):
+        while True:
+            eV = self.eV.get()
+            for group in self.ioc.filter_group:
+                filter = self.ioc.groups[f'{group}']
+                closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
+                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV_INDEX'].write(i)
+                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV'].write(closest_eV)
+                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T'].write(
+                    filter.get_transmission(eV, filter.thickness.value))
+            await async_lib.library.sleep(0.25)
+        return eV
+
+    def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
-        self.test_val = test_val
-
-    @t_calc.putter
-    async def t_calc(self, instance, value):
-        transmission_value_error(value)
+        self.eV = self.ioc.eV
 
     @t_desired.putter
     async def t_desired(self, instance, value):
-        transmission_value_error(value)
+        self.ioc.transmission_value_error(value)
 
     @t_low.putter
     async def t_low(self, instance, value):
-        transmission_value_error(value)
+        self.ioc.transmission_value_error(value)
 
     @t_high.putter
     async def t_high(self, instance, value):
-        transmission_value_error(value)
+        self.ioc.transmission_value_error(value)
 
     @t_3omega_calc.putter
     async def t_3omega_calc(self, instance, value):
-        transmission_value_error(value)
-
-
-def transmission_value_error(value):
-    if value < 0 or value > 1:
-        raise ValueError('Transmission must be '
-                         +'between 0 and 1.')
+        self.ioc.transmission_value_error(value)
