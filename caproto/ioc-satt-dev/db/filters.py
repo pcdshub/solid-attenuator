@@ -65,8 +65,19 @@ class FilterGroup(PVGroup):
                 lower_alarm_limit=0.0,
                 read_only=True)
     async def transmission(self, instance):
-        i = self.closest_eV.value
-        return np.exp(-self.table[i,2]*self.thickness.value)
+        return self.get_transmission(
+            self.eV.get(), 
+            self.thickness.value)
+
+    @pvproperty(name='T_3OMEGA',
+                value=0.5,
+                upper_alarm_limit=1.0,
+                lower_alarm_limit=0.0,
+                read_only=True)
+    async def transmission_3omega(self, instance):
+        return self.get_transmission(
+            3*self.eV.get(),
+            self.thickness.value)
 
     def __init__(self, prefix, *, abs_data, ioc, **kwargs):
         super().__init__(prefix, **kwargs)

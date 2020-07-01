@@ -40,15 +40,6 @@ class SystemGroup(PVGroup):
                            read_only=True,
                            doc='Desired transmission')
 
-    t_3omega_calc = pvproperty(value=0.1,
-                               name='T_3OMEGA_CALC',
-                               mock_record='ao',
-                               upper_alarm_limit=1.0,
-                               lower_alarm_limit=0.0,
-                               read_only=True,
-                               doc='Calculated 3rd harmonic '
-                               +'transmission')
-
     run = pvproperty(value='False',
                      name='RUN',
                      mock_record='bo',
@@ -82,6 +73,15 @@ class SystemGroup(PVGroup):
         t = self.ioc.t_calc()
         return t
 
+    @pvproperty(name='T_3OMEGA',
+                value=0.5,
+                upper_alarm_limit=1.0,
+                lower_alarm_limit=0.0,
+                read_only=True)
+    async def t_calc_3omega(self, instance):
+        t = self.ioc.t_calc_3omega()
+        return t
+
     eV_RBV = pvproperty(name='EV_RBV',
                 read_only=True,
                 units='eV')
@@ -96,6 +96,8 @@ class SystemGroup(PVGroup):
                 await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV'].write(closest_eV)
                 await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T'].write(
                     filter.get_transmission(eV, filter.thickness.value))
+                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T_3OMEGA'].write(
+                    filter.get_transmission(3.*eV, filter.thickness.value))
             await async_lib.library.sleep(0.25)
         return eV
 
@@ -115,8 +117,4 @@ class SystemGroup(PVGroup):
 
     @t_high.putter
     async def t_high(self, instance, value):
-        self.ioc.transmission_value_error(value)
-
-    @t_3omega_calc.putter
-    async def t_3omega_calc(self, instance, value):
         self.ioc.transmission_value_error(value)

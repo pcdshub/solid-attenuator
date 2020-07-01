@@ -39,7 +39,18 @@ class IOCMain(PVGroup):
     def t_calc(self):
         t = 1.
         for group in self.filter_group:
-            tN = self.groups[f'{group}'].pvdb[f'{self.prefix}:FILTER:{group}:T'].value
+            tN = self.groups[f'{group}'].pvdb[
+                f'{self.prefix}:FILTER:{group}:T'
+            ].value
+            t *= tN
+        return t
+
+    def t_calc_3omega(self):
+        t = 1.
+        for group in self.filter_group:
+            tN = self.groups[f'{group}'].pvdb[
+                f'{self.prefix}:FILTER:{group}:T_3OMEGA'
+            ].value
             t *= tN
         return t
 
