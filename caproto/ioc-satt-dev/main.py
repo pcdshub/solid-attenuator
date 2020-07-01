@@ -8,8 +8,8 @@ prefix = "AT2L0:SIM"
 num_blades = 18
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
-abs_data = h5file('../../../absorption_data.h5')
-config_data = h5file('../../../configs.h5')
+abs_data = h5file('../../../absorption_data.h5', 'r')
+config_data = h5file('../../../configs.h5', 'r')
 ################################################
 
 ioc_args = {

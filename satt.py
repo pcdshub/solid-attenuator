@@ -251,7 +251,7 @@ class HXRSatt(Device):
                 T_arr[i] = self.blade(i+1).transmission(eV)
         return T_arr
 
-    def curr_transmission(self, eV=None):
+    adef curr_transmission(self, eV=None):
         """
         Calculates and returns transmission at 
         photon energy ``eV`` through current filter configuration.
