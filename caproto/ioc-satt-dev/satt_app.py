@@ -65,7 +65,7 @@ class IOCMain(PVGroup):
 
     def t_calc_3omega(self):
         """
-        Total 3rd harmonictransmission through all filter
+        Total 3rd harmonic transmission through all filter
         blades. Stuck blades are assumed to be 'OUT' and thus 
         the total transmission will be overestimated
         (in the case any blades are actually stuck 'IN').
