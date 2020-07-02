@@ -101,7 +101,6 @@ class IOCMain(PVGroup):
                 T_arr[i] = self.filter(i+1).pvdb[
                     f'{self.prefix}:FILTER:{group}:T'
                 ].value
-        print(T_arr)
         return T_arr
 
     def filter(self, i):
