@@ -1,6 +1,7 @@
 from caproto.server import pvproperty, PVGroup
 from caproto import ChannelType
 import asyncio 
+import numpy as np
 
 class SystemGroup(PVGroup):
     """
@@ -32,14 +33,6 @@ class SystemGroup(PVGroup):
                        doc='Desired transmission '
                        +'best achievable (low)')
 
-    run = pvproperty(value='False',
-                     name='RUN',
-                     mock_record='bo',
-                     enum_strings=['False', 'True'],
-                     doc='Change transmission',
-                     read_only=True,
-                     dtype=ChannelType.ENUM)
-
     running = pvproperty(value='False',
                          name='RUNNING',
                          mock_record='bo',
@@ -55,6 +48,20 @@ class SystemGroup(PVGroup):
                            read_only=True,
                            doc='The inspection mirror is in',
                            dtype=ChannelType.ENUM)
+
+    mode = pvproperty(value='Floor',
+                      name='MODE',
+                      mock_record='bo',
+                      enum_strings=['Floor', 'Ceiling'],
+                      read_only=True,
+                      doc='Mode for selecting floor or ceiling'+
+                      'transmission estimation',
+                      dtype=ChannelType.ENUM)
+
+    set_config = pvproperty(name='SET_CONFIG',
+                            value=0,
+                            max_length=18,
+                            read_only=True)
 
     @pvproperty(name='T_CALC',
                 value=0.5,
@@ -78,33 +85,79 @@ class SystemGroup(PVGroup):
                 value=1000.0,
                 read_only=True,
                 units='eV')
+
     @eV_RBV.startup
     async def eV_RBV(self, instance, async_lib):
+        """
+        Update beam energy and calculated values.
+        """
         while True:
             eV = self.eV.get()
-            for group in self.ioc.filter_group:
-                filter = self.ioc.groups[f'{group}']
-                closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
-                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV_INDEX'].write(i)
-                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV'].write(closest_eV)
-                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T'].write(
-                    filter.get_transmission(eV, filter.thickness.value))
-                await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T_3OMEGA'].write(
-                    filter.get_transmission(3.*eV, filter.thickness.value))
+            if instance.value != eV:
+                for group in self.ioc.filter_group:
+                    filter = self.ioc.groups[f'{group}']
+                    closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
+                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV_INDEX'].write(i)
+                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV'].write(closest_eV)
+                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T'].write(
+                        filter.get_transmission(eV, filter.thickness.value))
+                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T_3OMEGA'].write(
+                        filter.get_transmission(3.*eV, filter.thickness.value))
+                print("Photon energy changed to {} eV.".format(eV))
+                print("Closest tabulated photon energy value: {} eV".format(closest_eV))
                 await instance.write(eV)
-                await async_lib.library.sleep(self.dt)
+                await self.t_calc.write(self.ioc.t_calc())
+            await async_lib.library.sleep(self.dt)
         return eV
 
     t_desired = pvproperty(name='T_DES',
                 value=0.5,
                 read_only=True)
+
     @t_desired.startup
     async def t_desired(self, instance, async_lib):
+        """
+        Update PMPS desired transmission value.
+        """
         while True:
             pmps_tdes = self.pmps_tdes.get()
-            await instance.write(pmps_tdes)
+            if instance.value != pmps_tdes:
+                print("Desired transmission set to {}".format(
+                    pmps_tdes))
+                await instance.write(pmps_tdes)
             await async_lib.library.sleep(self.dt)
         return pmps_tdes
+
+
+    run = pvproperty(value='False',
+                     name='RUN',
+                     mock_record='bo',
+                     enum_strings=['False', 'True'],
+                     doc='Change transmission',
+                     read_only=True,
+                     dtype=ChannelType.ENUM)
+
+    @run.startup
+    async def run(self, instance, async_lib):
+        """
+        Update PMPS run command value.  When
+        true the `:SET_CONFIG` PV will update
+        to the optimal configuration for the
+        current desired transmission `:T_DES`.
+        """
+        while True:
+            pmps_run = self.pmps_run.get()
+            if pmps_run == 1 and instance.value == "False":
+                print("PMPS run command received.")
+                await instance.write(1)
+                await self.set_config.write(self.ioc.get_config()[0])
+                self.ioc.print_config()
+            if pmps_run == 1 and instance.value == "True":
+                pass
+            if pmps_run == 0 and instance.value == "True":
+                await instance.write(0)
+            await async_lib.library.sleep(self.dt)
+        return pmps_run
 
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)

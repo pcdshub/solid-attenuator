@@ -22,6 +22,7 @@ class IOCMain(PVGroup):
                  pmps_tdes,
                  **kwargs):
         super().__init__(prefix, **kwargs)
+        self.prefix = prefix
         self.filter_group = filter_group
         self.groups = groups
         self.config_data = config_data
@@ -54,9 +55,7 @@ class IOCMain(PVGroup):
             is_stuck = self.groups[f'{group}'].pvdb[
                 f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
-            if is_stuck:
-                t *= 1.
-            else:
+            if is_stuck != "True":
                 tN = self.groups[f'{group}'].pvdb[
                     f'{self.prefix}:FILTER:{group}:T'
                 ].value
@@ -75,9 +74,7 @@ class IOCMain(PVGroup):
             is_stuck = self.groups[f'{group}'].pvdb[
                 f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
-            if is_stuck:
-                t *= 1.
-            else:
+            if is_stuck != "True":
                 tN = self.groups[f'{group}'].pvdb[
                     f'{self.prefix}:FILTER:{group}:T_3OMEGA'
                 ].value
@@ -98,12 +95,13 @@ class IOCMain(PVGroup):
             is_stuck = self.filter(i+1).pvdb[
                 f'{self.prefix}:FILTER:{group}:IS_STUCK'
             ].value
-            if is_stuck:
+            if is_stuck == "True":
                 T_arr[i] = np.nan
             else:
                 T_arr[i] = self.filter(i+1).pvdb[
                     f'{self.prefix}:FILTER:{group}:T'
                 ].value
+        print(T_arr)
         return T_arr
 
     def filter(self, i):
@@ -138,17 +136,17 @@ class IOCMain(PVGroup):
         transmission values.
         """
         if not T_des:
-            T_des = self.groups['SYS'].pvdb['{self.prefix}:SYS:T_DES'].value
+            T_des = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:T_DES'].value
 
-        T_set = self.all_transmissions()
-        T_table = np.nanprod(T_set*self.config_table,
+        T_basis = self.all_transmissions()
+        T_table = np.nanprod(T_basis*self.config_table,
                              axis=1)
         T_config_table = np.asarray(sorted(np.transpose([T_table[:],
                                     range(len(self.config_table))]),
                                            key=lambda x: x[0]))
         i = np.argmin(np.abs(T_config_table[:,0]-T_des))
         closest = self.config_table[int(T_config_table[i,1])]
-        T_closest = np.nanprod(T_set*closest)
+        T_closest = np.nanprod(T_basis*closest)
 
         if T_closest == T_des:
             config_bestHigh = config_bestLow = closest
@@ -157,16 +155,44 @@ class IOCMain(PVGroup):
         if T_closest < T_des:
             config_bestHigh = self.config_table[int(T_config_table[i+1,1])]
             config_bestLow = closest
-            T_bestHigh = np.nanprod(T_set*config_bestHigh)
+            T_bestHigh = np.nanprod(T_basis*config_bestHigh)
             T_bestLow = T_closest
 
         if T_closest > T_des:
-            config_bestHigh = closest
+            config_bestHigh = closest.astype(np.int)
             config_bestLow = self.config_table[int(T_config_table[i-1,1])]
             T_bestHigh = T_closest
-            T_bestLow = np.nanprod(T_set*config_bestLow)
-        return config_bestLow, config_bestHigh, T_bestLow, T_bestHigh
+            T_bestLow = np.nanprod(T_basis*config_bestLow)
 
+        return np.nan_to_num(config_bestLow).astype(np.int), np.nan_to_num(config_bestHigh).astype(np.int), T_bestLow, T_bestHigh
+
+    def get_config(self, T_des=None):
+        """
+        Return the optimal floor or ceiling configuration
+        based on the current mode setting.
+        """
+        if not T_des:
+            T_des = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:T_DES'].value
+        mode = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:MODE'].value
+        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self.find_configs()
+        if mode == "Floor":
+            return config_bestLow, T_bestLow, T_des
+        else:
+            return config_bestHigh, T_bestHigh, T_des
+
+    def print_config(self, w=80):
+        """
+        Format and print the optimal configuration.
+        """
+        config, T_best, T_des = self.get_config()
+        print("="*w)
+        print("Desired transmission value: {}".format(T_des))
+        print("-"*w)
+        print("Best possible transmission value: {}".format(T_best))
+        print("-"*w)
+        print(config.astype(np.int))
+        print("="*w)
+        
 def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorption_data, config_data, **ioc_options):
     """
     IOC Setup.

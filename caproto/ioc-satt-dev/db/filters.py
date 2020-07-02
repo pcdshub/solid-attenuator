@@ -42,7 +42,6 @@ class FilterGroup(PVGroup):
                            mock_record='ao',
                            upper_alarm_limit=1.0,
                            lower_alarm_limit=0.0,
-#                           read_only=True,
                            doc='Filter thickness',
                            units='m')
 
@@ -94,6 +93,9 @@ class FilterGroup(PVGroup):
         if value < 0:
           raise ValueError('Thickness must be '
                            +'a positive number')
+        await self.transmission.write(
+            self.get_transmission(self.eV.get(),
+            value))
 
     @material.startup
     async def material(self, instance, value):
