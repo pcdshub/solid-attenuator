@@ -51,14 +51,10 @@ class IOCMain(PVGroup):
         (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for group in self.filter_group:
-            is_stuck = self.groups[f'{group}'].pvdb[
-                f'{self.prefix}:FILTER:{group}:IS_STUCK'
-            ].value
+        for f in range(1,len(self.filter_group)+1):
+            is_stuck = self.filter(f).is_stuck.value
             if is_stuck != "True":
-                tN = self.groups[f'{group}'].pvdb[
-                    f'{self.prefix}:FILTER:{group}:T'
-                ].value
+                tN = self.filter(f).transmission.value
                 t *= tN
         return t
 
@@ -70,14 +66,10 @@ class IOCMain(PVGroup):
         (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for group in self.filter_group:
-            is_stuck = self.groups[f'{group}'].pvdb[
-                f'{self.prefix}:FILTER:{group}:IS_STUCK'
-            ].value
+        for f in range(1,len(self.filter_group)+1):
+            is_stuck = self.filter(f).is_stuck.value
             if is_stuck != "True":
-                tN = self.groups[f'{group}'].pvdb[
-                    f'{self.prefix}:FILTER:{group}:T_3OMEGA'
-                ].value
+                tN = self.filter(f).transmission_3omega.value
                 t *= tN
         return t
 
@@ -90,17 +82,12 @@ class IOCMain(PVGroup):
         """
         N = len(self.filter_group)
         T_arr = np.ones(N)
-        for i in range(N):
-            group = str(i+1).zfill(2)
-            is_stuck = self.filter(i+1).pvdb[
-                f'{self.prefix}:FILTER:{group}:IS_STUCK'
-            ].value
+        for f in range(N):
+            is_stuck = self.filter(f+1).is_stuck.value
             if is_stuck == "True":
-                T_arr[i] = np.nan
+                T_arr[f] = np.nan
             else:
-                T_arr[i] = self.filter(i+1).pvdb[
-                    f'{self.prefix}:FILTER:{group}:T'
-                ].value
+                T_arr[f] = self.filter(f+1).transmission.value
         return T_arr
 
     def filter(self, i):
@@ -132,22 +119,41 @@ class IOCMain(PVGroup):
 
         Returns configurations which yield closest
         highest and lowest transmissions and their 
-        transmission values.
+        filter configurations.
         """
         if not T_des:
-            T_des = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:T_DES'].value
+            T_des = self.sys.t_desired.value
 
+        # Basis vector of all filter transmission values.
+        # Note: Stuck filters have transmission of `NaN`.
         T_basis = self.all_transmissions()
+        
+        # Table of transmissions for all configurations 
+        # is obtained by multiplying basis by 
+        # configurations in/out state matrix.
         T_table = np.nanprod(T_basis*self.config_table,
                              axis=1)
+
+        # Create a table of configurations and their associated
+        # beam transmission values, sorted by transmission value.
         T_config_table = np.asarray(sorted(np.transpose([T_table[:],
                                     range(len(self.config_table))]),
                                            key=lambda x: x[0]))
+
+        # Find the index of the filter configuration which 
+        # minimizes the differences between the desired
+        # and closest achievable transmissions.
         i = np.argmin(np.abs(T_config_table[:,0]-T_des))
+        
+        # Obtain the optimal filter configuration and its transmission. 
         closest = self.config_table[int(T_config_table[i,1])]
         T_closest = np.nanprod(T_basis*closest)
-
-        if T_closest == T_des:
+        
+        # Determine the optimal configurations for "best highest"
+        # and "best lowest" achievable transmissions.
+        if T_closest == T_des: 
+            # The optimal configuration achieves the desired
+            # transmission exactly.
             config_bestHigh = config_bestLow = closest
             T_bestHigh = T_bestLow = T_closest
 
@@ -167,12 +173,13 @@ class IOCMain(PVGroup):
 
     def get_config(self, T_des=None):
         """
-        Return the optimal floor or ceiling configuration
+        Return the optimal floor (lower than desired transmission)
+        or ceiling (higher than desired transmission) configuration
         based on the current mode setting.
         """
         if not T_des:
-            T_des = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:T_DES'].value
-        mode = self.groups['SYS'].pvdb[f'{self.prefix}:SYS:MODE'].value
+            T_des = self.sys.t_desired.value
+        mode = self.sys.mode.value
         config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self.find_configs()
         if mode == "Floor":
             return config_bestLow, T_bestLow, T_des
@@ -214,6 +221,7 @@ def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorp
             ioc=ioc)
 
     ioc.groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
+    ioc.sys = ioc.groups['SYS']
 
     for group in ioc.groups.values():
         ioc.pvdb.update(**group.pvdb)
