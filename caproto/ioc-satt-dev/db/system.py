@@ -53,7 +53,7 @@ class SystemGroup(PVGroup):
                       name='MODE',
                       mock_record='bo',
                       enum_strings=['Floor', 'Ceiling'],
-                      read_only=True,
+                      read_only=False,
                       doc='Mode for selecting floor or ceiling'+
                       'transmission estimation',
                       dtype=ChannelType.ENUM)
@@ -94,14 +94,14 @@ class SystemGroup(PVGroup):
         while True:
             eV = self.eV.get()
             if instance.value != eV:
-                for group in self.ioc.filter_group:
-                    filter = self.ioc.groups[f'{group}']
+                for f in range(len(self.ioc.filter_group)):
+                    filter = self.ioc.filter(f+1)
                     closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
-                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV_INDEX'].write(i)
-                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:CLOSE_EV'].write(closest_eV)
-                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T'].write(
+                    await filter.closest_eV_index.write(i)
+                    await filter.closest_eV.write(closest_eV)
+                    await filter.transmission.write(
                         filter.get_transmission(eV, filter.thickness.value))
-                    await filter.pvdb[f'{self.ioc.prefix}:FILTER:{group}:T_3OMEGA'].write(
+                    await filter.transmission_3omega.write(
                         filter.get_transmission(3.*eV, filter.thickness.value))
                 print("Photon energy changed to {} eV.".format(eV))
                 print("Closest tabulated photon energy value: {} eV".format(closest_eV))
