@@ -198,8 +198,17 @@ class IOCMain(PVGroup):
         print("-"*w)
         print(config.astype(np.int))
         print("="*w)
-        
-def create_ioc(prefix, *, eV_pv, pmps_run_pv, pmps_tdes_pv, filter_group, absorption_data, config_data, **ioc_options):
+
+    
+def create_ioc(prefix,
+               *,
+               eV_pv,
+               pmps_run_pv,
+               pmps_tdes_pv,
+               filter_group,
+               absorption_data,
+               config_data,
+               **ioc_options):
     """
     IOC Setup.
     """
