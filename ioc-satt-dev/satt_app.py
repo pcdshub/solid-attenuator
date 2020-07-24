@@ -1,7 +1,5 @@
 import numpy as np
-from caproto import ChannelType
-from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
-from caproto.threading import pyepics_compat as epics
+from caproto.server import PVGroup
 from db.filters import FilterGroup
 from db.system import SystemGroup
 
@@ -9,17 +7,9 @@ from db.system import SystemGroup
 class IOCMain(PVGroup):
     """
     """
-    def __init__(self,
-                 prefix,
-                 *,
-                 filter_group,
-                 groups,
-                 abs_data,
-                 config_data,
-                 eV,
-                 pmps_run,
-                 pmps_tdes,
-                 **kwargs):
+
+    def __init__(self, prefix, *, filter_group, groups, abs_data, config_data,
+                 eV, pmps_run, pmps_tdes, **kwargs):
         super().__init__(prefix, **kwargs)
         self.prefix = prefix
         self.filter_group = filter_group
@@ -52,7 +42,7 @@ class IOCMain(PVGroup):
         (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for f in range(1,len(self.filter_group)+1):
+        for f in range(1, len(self.filter_group)+1):
             is_stuck = self.filter(f).is_stuck.value
             if is_stuck != "True":
                 tN = self.filter(f).transmission.value
@@ -67,7 +57,7 @@ class IOCMain(PVGroup):
         (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for f in range(1,len(self.filter_group)+1):
+        for f in range(1, len(self.filter_group)+1):
             is_stuck = self.filter(f).is_stuck.value
             if is_stuck != "True":
                 tN = self.filter(f).transmission_3omega.value
@@ -101,16 +91,16 @@ class IOCMain(PVGroup):
     def calc_closest_eV(self, eV, table, eV_min, eV_max, eV_inc):
         i = int(np.rint((eV - eV_min)/eV_inc))
         if i < 0:
-            i = 0 # Use lowest tabulated value.
+            i = 0  # Use lowest tabulated value.
         if i > table.shape[0]:
-            i = -1 # Use greatest tabulated value.
-        closest_eV = table[i,0]
+            i = -1  # Use greatest tabulated value.
+        closest_eV = table[i, 0]
         return closest_eV, i
 
     def transmission_value_error(value):
         if value < 0 or value > 1:
             raise ValueError('Transmission must be '
-                         +'between 0 and 1.')
+                             + 'between 0 and 1.')
 
     def find_configs(self, T_des=None):
         """
@@ -137,17 +127,18 @@ class IOCMain(PVGroup):
 
         # Create a table of configurations and their associated
         # beam transmission values, sorted by transmission value.
-        T_config_table = np.asarray(sorted(np.transpose([T_table[:],
-                                    range(len(self.config_table))]),
-                                           key=lambda x: x[0]))
+        T_config_table = np.asarray(
+            sorted(np.transpose([T_table[:], range(len(self.config_table))]),
+                   key=lambda x: x[0])
+        )
 
         # Find the index of the filter configuration which
         # minimizes the differences between the desired
         # and closest achievable transmissions.
-        i = np.argmin(np.abs(T_config_table[:,0]-T_des))
+        i = np.argmin(np.abs(T_config_table[:, 0]-T_des))
 
         # Obtain the optimal filter configuration and its transmission.
-        closest = self.config_table[int(T_config_table[i,1])]
+        closest = self.config_table[int(T_config_table[i, 1])]
         T_closest = np.nanprod(T_basis*closest)
 
         # Determine the optimal configurations for "best highest"
@@ -159,18 +150,21 @@ class IOCMain(PVGroup):
             T_bestHigh = T_bestLow = T_closest
 
         if T_closest < T_des:
-            config_bestHigh = self.config_table[int(T_config_table[i+1,1])]
+            config_bestHigh = self.config_table[int(T_config_table[i+1, 1])]
             config_bestLow = closest
             T_bestHigh = np.nanprod(T_basis*config_bestHigh)
             T_bestLow = T_closest
 
         if T_closest > T_des:
             config_bestHigh = closest.astype(np.int)
-            config_bestLow = self.config_table[int(T_config_table[i-1,1])]
+            config_bestLow = self.config_table[int(T_config_table[i-1, 1])]
             T_bestHigh = T_closest
             T_bestLow = np.nanprod(T_basis*config_bestLow)
 
-        return np.nan_to_num(config_bestLow).astype(np.int), np.nan_to_num(config_bestHigh).astype(np.int), T_bestLow, T_bestHigh
+        return (np.nan_to_num(config_bestLow).astype(np.int),
+                np.nan_to_num(config_bestHigh).astype(np.int),
+                T_bestLow,
+                T_bestHigh)
 
     def get_config(self, T_des=None):
         """
@@ -181,11 +175,13 @@ class IOCMain(PVGroup):
         if not T_des:
             T_des = self.sys.t_desired.value
         mode = self.sys.mode.value
-        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self.find_configs()
+
+        conf = self.find_configs()
+        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = conf
+
         if mode == "Floor":
             return config_bestLow, T_bestLow, T_des
-        else:
-            return config_bestHigh, T_bestHigh, T_des
+        return config_bestHigh, T_bestHigh, T_des
 
     def print_config(self, w=80):
         """

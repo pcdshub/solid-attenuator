@@ -8,15 +8,15 @@ class FakePMPSGroup(PVGroup):
     incoming PMPS commands.
     """
     t_des = pvproperty(value=0.1,
-                        name='T_DES',
-                        mock_record='ao',
-                        upper_alarm_limit=1.0,
-                        lower_alarm_limit=0.0,
-                        doc='PMPS requested transmission')
+                       name='T_DES',
+                       record='ao',
+                       upper_alarm_limit=1.0,
+                       lower_alarm_limit=0.0,
+                       doc='PMPS requested transmission')
 
     run = pvproperty(value='False',
                      name='RUN',
-                     mock_record='bo',
+                     record='bo',
                      enum_strings=['False', 'True'],
                      doc='PMPS Change transmission command',
                      dtype=ChannelType.ENUM)
@@ -28,8 +28,8 @@ class FakePMPSGroup(PVGroup):
     @run.putter
     async def run(self, instance, value):
         if value == 1:
-            exit
-            await async_lib.library.sleep(1)
+            # TODO
+            # await async_lib.library.sleep(1)
             await instance.write(value='False')
 
     @t_des.putter

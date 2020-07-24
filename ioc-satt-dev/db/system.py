@@ -1,6 +1,3 @@
-import asyncio
-
-import numpy as np
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
@@ -13,7 +10,7 @@ class SystemGroup(PVGroup):
     """
     t_calc = pvproperty(value=0.1,
                         name='T_CALC',
-                        mock_record='ao',
+                        record='ao',
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
                         read_only=True,
@@ -21,25 +18,24 @@ class SystemGroup(PVGroup):
 
     t_high = pvproperty(value=0.1,
                         name='T_HIGH',
-                        mock_record='ao',
+                        record='ao',
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
                         read_only=True,
                         doc='Desired transmission '
-                        +'best achievable (high)')
+                        + 'best achievable (high)')
 
     t_low = pvproperty(value=0.1,
                        name='T_LOW',
-                       mock_record='ao',
+                       record='ao',
                        upper_alarm_limit=1.0,
                        lower_alarm_limit=0.0,
                        read_only=True,
-                       doc='Desired transmission '
-                       +'best achievable (low)')
+                       doc='Desired transmission best achievable (low)')
 
     running = pvproperty(value='False',
                          name='RUNNING',
-                         mock_record='bo',
+                         record='bo',
                          enum_strings=['False', 'True'],
                          read_only=True,
                          doc='The system is running',
@@ -47,7 +43,7 @@ class SystemGroup(PVGroup):
 
     mirror_in = pvproperty(value='False',
                            name='MIRROR_IN',
-                           mock_record='bo',
+                           record='bo',
                            enum_strings=['False', 'True'],
                            read_only=True,
                            doc='The inspection mirror is in',
@@ -55,11 +51,11 @@ class SystemGroup(PVGroup):
 
     mode = pvproperty(value='Floor',
                       name='MODE',
-                      mock_record='bo',
+                      record='bo',
                       enum_strings=['Floor', 'Ceiling'],
                       read_only=False,
-                      doc='Mode for selecting floor or ceiling'+
-                      'transmission estimation',
+                      doc=('Mode for selecting floor or ceiling transmission'
+                           'estimation'),
                       dtype=ChannelType.ENUM)
 
     set_config = pvproperty(name='SET_CONFIG',
@@ -90,15 +86,13 @@ class SystemGroup(PVGroup):
         return self.eV_RBV.value
 
     eV_RBV = pvproperty(name='EV_RBV',
-                value=1000.0,
-                read_only=True,
-                units='eV')
+                        value=1000.0,
+                        read_only=True,
+                        units='eV')
 
     @eV_RBV.startup
     async def eV_RBV(self, instance, async_lib):
-        """
-        Update beam energy and calculated values.
-        """
+        """Update beam energy and calculated values."""
         pvname = self.ioc.monitor_pvnames['ev']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
@@ -113,14 +107,15 @@ class SystemGroup(PVGroup):
                 await instance.write(eV)
                 for f in range(len(self.ioc.filter_group)):
                     filter = self.ioc.filter(f+1)
-                    closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
+                    closest_eV, i = self.ioc.calc_closest_eV(
+                        eV, **filter.table_kwargs)
                     await filter.closest_eV_index.write(i)
                     await filter.closest_eV.write(closest_eV)
                     await filter.transmission.write(
                         filter.get_transmission(eV, filter.thickness.value))
                     await filter.transmission_3omega.write(
                         filter.get_transmission(3.*eV, filter.thickness.value))
-                print("Closest tabulated photon energy value: {} eV".format(closest_eV))
+                print(f"Closest tabulated photon energy: {closest_eV} eV")
                 await self.t_calc.write(self.ioc.t_calc())
 
         return eV
@@ -135,9 +130,7 @@ class SystemGroup(PVGroup):
 
     @t_desired.startup
     async def t_desired(self, instance, async_lib):
-        """
-        Update PMPS desired transmission value.
-        """
+        """Update PMPS desired transmission value."""
         pvname = self.ioc.monitor_pvnames['pmps_tdes']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
@@ -159,7 +152,7 @@ class SystemGroup(PVGroup):
 
     run = pvproperty(value='False',
                      name='RUN',
-                     mock_record='bo',
+                     record='bo',
                      enum_strings=['False', 'True'],
                      doc='Change transmission',
                      read_only=True,
@@ -168,10 +161,9 @@ class SystemGroup(PVGroup):
     @run.startup
     async def run(self, instance, async_lib):
         """
-        Update PMPS run command value.  When
-        true the `:SET_CONFIG` PV will update
-        to the optimal configuration for the
-        current desired transmission `:T_DES`.
+        Update PMPS run command value.  When true the `:SET_CONFIG` PV will
+        update to the optimal configuration for the current desired
+        transmission `:T_DES`.
         """
 
         pvname = self.ioc.monitor_pvnames['pmps_run']

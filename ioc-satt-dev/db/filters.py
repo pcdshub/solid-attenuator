@@ -1,7 +1,6 @@
 import numpy as np
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
-from caproto.threading import pyepics_compat as epics
 
 
 class FilterGroup(PVGroup):
@@ -15,32 +14,32 @@ class FilterGroup(PVGroup):
         """
         print("Loading absorption table for {}...".format(value))
         material_str = str(value)
-        if material_str not in ['Si','C']:
-            raise ValueError('{} is not an available '
-                             +'material'.format(material_str))
-        self.table = np.asarray(self.abs_data['{}_table'.format(material_str)])
-        self.constants = np.asarray(
-            self.abs_data['{}_constants'.format(material_str)])
-        self.eV_min = self.table[0,0]
-        self.eV_max = self.table[-1,0]
-        self.eV_inc = (self.eV_max - self.eV_min)/len(self.table[:,0])
-        self.table_kwargs = {'eV_min' : self.eV_min,
-                             'eV_max' : self.eV_max,
-                             'eV_inc' : self.eV_inc,
-                             'table'  : self.table}
+        if material_str not in ['Si', 'C']:
+            raise ValueError(f'{material_str} is not an available material')
+        self.table = np.asarray(self.abs_data[f'{material_str}_table'])
+        self.constants = np.asarray(self.abs_data[f'{material_str}_constants'])
+        self.eV_min = self.table[0, 0]
+        self.eV_max = self.table[-1, 0]
+        self.eV_inc = (self.eV_max - self.eV_min) / len(self.table[:, 0])
+        self.table_kwargs = {
+            'eV_min': self.eV_min,
+            'eV_max': self.eV_max,
+            'eV_inc': self.eV_inc,
+            'table': self.table
+        }
         print("Absorption table successfully loaded.")
         return value
 
     material = pvproperty(value='Si',
                           put=load_data,
                           name='MATERIAL',
-                          mock_record='stringin',
+                          record='stringin',
                           doc='Filter material',
                           dtype=ChannelType.STRING)
 
     thickness = pvproperty(value=1E-6,
                            name='THICKNESS',
-                           mock_record='ao',
+                           record='ao',
                            upper_alarm_limit=1.0,
                            lower_alarm_limit=0.0,
                            doc='Filter thickness',
@@ -48,7 +47,7 @@ class FilterGroup(PVGroup):
 
     is_stuck = pvproperty(value='False',
                           name='IS_STUCK',
-                          mock_record='bo',
+                          record='bo',
                           enum_strings=['False', 'True'],
                           doc='Filter is stuck in place',
                           dtype=ChannelType.ENUM)
@@ -76,7 +75,7 @@ class FilterGroup(PVGroup):
                 read_only=True)
     async def transmission_3omega(self, instance):
         return self.get_transmission(
-            3*self.current_photon_energy,
+            3 * self.current_photon_energy,
             self.thickness.value)
 
     def __init__(self, prefix, *, abs_data, ioc, **kwargs):
@@ -91,16 +90,15 @@ class FilterGroup(PVGroup):
 
     def get_transmission(self, eV, thickness):
         i = self.ioc.calc_closest_eV(eV, **self.table_kwargs)[1]
-        return np.exp(-self.table[i,2]*thickness)
+        return np.exp(-self.table[i, 2]*thickness)
 
     @thickness.putter
     async def thickness(self, instance, value):
         if value < 0:
-          raise ValueError('Thickness must be '
-                           +'a positive number')
+            raise ValueError('Thickness must be a positive number')
         await self.transmission.write(
-            self.get_transmission(self.current_photon_energy,
-            value))
+            self.get_transmission(self.current_photon_energy, value)
+        )
 
     @material.startup
     async def material(self, instance, value):
