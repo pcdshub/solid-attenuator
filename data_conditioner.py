@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 from scipy.interpolate import interp1d
 import h5py
@@ -25,7 +27,7 @@ Si_data = {
     'atomic_weight': 28.08,      # grams
     'density'      : 2.329E6,    # grams/m^3
 }
-C_data = {    
+C_data = {
     'formula'      : 'C',
     'atomic_number': 6,          # Z
     'atomic_weight': 12.01,      # grams
@@ -36,7 +38,7 @@ C_data = {
 r0 = 2.81794E-15    # [m]      classical electron radius
 h = 4.135667E-15    # [eV s]    plancks constant
 c = 2.997945E8      # [m s^-1] Speed of light
-NA = 6.02240E23     # []       Avagadros number 
+NA = 6.02240E23     # []       Avagadros number
 
 data_dicts = [Si_data, C_data]
 
@@ -68,7 +70,7 @@ def eV_linear(eV_range, res=10, dec=2):
     Parameters:
     ---------------
     eV_range : ``tuple``
-       Upper and lower bounds of photon energy range. 
+       Upper and lower bounds of photon energy range.
 
     res : ``float``
        Magnitude of resolution.  Default of 10 yields 0.1 eV resolution.
@@ -91,7 +93,7 @@ def fill_data_linear(element, eV_range, res=10):
        Formula of the element to open e.g. "Si", "si", "C", "Au"
 
     eV_range : ``tuple``
-       Upper and lower bounds of photon energy range. 
+       Upper and lower bounds of photon energy range.
 
     res : ``float``
        Magnitude of resolution.  Default of 10 yields 0.1 eV resolution.
@@ -117,8 +119,9 @@ def abs_data(material, eV_range):
     return table
 
 
-def gen_table(data_dicts, eV_range=(1000,25000), res=10, dec=2):
-    h5 = h5py.File('./absorption_data.h5','w')
+def gen_table(data_dicts, eV_range=(1000,25000), res=10, dec=2,
+              output_filename='absorption_data.h5'):
+    h5 = h5py.File(output_filename, 'w')
     for data in data_dicts:
         element = data.get('formula')
         table = abs_data(data, eV_range)
@@ -136,4 +139,10 @@ def gen_table(data_dicts, eV_range=(1000,25000), res=10, dec=2):
 
 
 if __name__ == '__main__':
-    gen_table(data_dicts)
+    try:
+        output_filename = sys.argv[1]
+    except IndexError:
+        print(f'Usage: {sys.argv[0]} (output_filename.h5)')
+        sys.exit(1)
+
+    gen_table(data_dicts, output_filename=output_filename)
