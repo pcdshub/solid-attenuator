@@ -65,7 +65,7 @@ class FilterGroup(PVGroup):
                 read_only=True)
     async def transmission(self, instance):
         return self.get_transmission(
-            self.eV.get(), 
+            self.current_photon_energy,
             self.thickness.value)
 
     @pvproperty(name='T_3OMEGA',
@@ -75,15 +75,19 @@ class FilterGroup(PVGroup):
                 read_only=True)
     async def transmission_3omega(self, instance):
         return self.get_transmission(
-            3*self.eV.get(),
+            3*self.current_photon_energy,
             self.thickness.value)
 
     def __init__(self, prefix, *, abs_data, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.abs_data = abs_data
         self.ioc = ioc
-        self.eV = self.ioc.eV
-    
+
+    @property
+    def current_photon_energy(self):
+        """Current photon energy in eV."""
+        return self.ioc.sys.current_photon_energy
+
     def get_transmission(self, eV, thickness):
         i = self.ioc.calc_closest_eV(eV, **self.table_kwargs)[1]
         return np.exp(-self.table[i,2]*thickness)
@@ -94,7 +98,7 @@ class FilterGroup(PVGroup):
           raise ValueError('Thickness must be '
                            +'a positive number')
         await self.transmission.write(
-            self.get_transmission(self.eV.get(),
+            self.get_transmission(self.current_photon_energy,
             value))
 
     @material.startup
@@ -103,10 +107,12 @@ class FilterGroup(PVGroup):
 
     @closest_eV.startup
     async def closest_eV(self, instance, value):
-        closest_eV, i = self.ioc.calc_closest_eV(self.eV.get(), **self.table_kwargs)
+        closest_eV, i = self.ioc.calc_closest_eV(self.current_photon_energy,
+                                                 **self.table_kwargs)
         await instance.write(closest_eV)
 
     @closest_eV_index.startup
     async def closest_eV_index(self, instance, value):
-        closest_eV, i = self.ioc.calc_closest_eV(self.eV.get(), **self.table_kwargs)
+        closest_eV, i = self.ioc.calc_closest_eV(self.current_photon_energy,
+                                                 **self.table_kwargs)
         await instance.write(i)

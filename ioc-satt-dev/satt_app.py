@@ -27,9 +27,11 @@ class IOCMain(PVGroup):
         self.groups = groups
         self.config_data = config_data
         self.startup()
-        self.eV = epics.get_pv(eV, auto_monitor=True)
-        self.pmps_run = epics.get_pv(pmps_run, auto_monitor=True)
-        self.pmps_tdes = epics.get_pv(pmps_tdes, auto_monitor=True)
+        self.monitor_pvnames = dict(
+            ev=eV,
+            pmps_run=pmps_run,
+            pmps_tdes=pmps_tdes,
+        )
 
     def startup(self):
         self.config_table = self.load_configs(self.config_data)
@@ -46,7 +48,7 @@ class IOCMain(PVGroup):
     def t_calc(self):
         """
         Total transmission through all filter blades.
-        Stuck blades are assumed to be 'OUT' and thus 
+        Stuck blades are assumed to be 'OUT' and thus
         the total transmission will be overestimated
         (in the case any blades are actually stuck 'IN').
         """
@@ -61,7 +63,7 @@ class IOCMain(PVGroup):
     def t_calc_3omega(self):
         """
         Total 3rd harmonic transmission through all filter
-        blades. Stuck blades are assumed to be 'OUT' and thus 
+        blades. Stuck blades are assumed to be 'OUT' and thus
         the total transmission will be overestimated
         (in the case any blades are actually stuck 'IN').
         """
@@ -114,11 +116,11 @@ class IOCMain(PVGroup):
     def find_configs(self, T_des=None):
         """
         Find the optimal configurations for attaining
-        desired transmission ``T_des`` at the 
-        current photon energy.  
+        desired transmission ``T_des`` at the
+        current photon energy.
 
         Returns configurations which yield closest
-        highest and lowest transmissions and their 
+        highest and lowest transmissions and their
         filter configurations.
         """
         if not T_des:
@@ -127,9 +129,9 @@ class IOCMain(PVGroup):
         # Basis vector of all filter transmission values.
         # Note: Stuck filters have transmission of `NaN`.
         T_basis = self.all_transmissions()
-        
-        # Table of transmissions for all configurations 
-        # is obtained by multiplying basis by 
+
+        # Table of transmissions for all configurations
+        # is obtained by multiplying basis by
         # configurations in/out state matrix.
         T_table = np.nanprod(T_basis*self.config_table,
                              axis=1)
@@ -140,18 +142,18 @@ class IOCMain(PVGroup):
                                     range(len(self.config_table))]),
                                            key=lambda x: x[0]))
 
-        # Find the index of the filter configuration which 
+        # Find the index of the filter configuration which
         # minimizes the differences between the desired
         # and closest achievable transmissions.
         i = np.argmin(np.abs(T_config_table[:,0]-T_des))
-        
-        # Obtain the optimal filter configuration and its transmission. 
+
+        # Obtain the optimal filter configuration and its transmission.
         closest = self.config_table[int(T_config_table[i,1])]
         T_closest = np.nanprod(T_basis*closest)
-        
+
         # Determine the optimal configurations for "best highest"
         # and "best lowest" achievable transmissions.
-        if T_closest == T_des: 
+        if T_closest == T_des:
             # The optimal configuration achieves the desired
             # transmission exactly.
             config_bestHigh = config_bestLow = closest
@@ -199,7 +201,7 @@ class IOCMain(PVGroup):
         print(config.astype(np.int))
         print("="*w)
 
-    
+
 def create_ioc(prefix,
                *,
                eV_pv,

@@ -2,7 +2,6 @@ import os
 import pathlib
 
 from caproto.server import ioc_arg_parser, run
-from caproto.threading import pyepics_compat as epics
 from h5py import File as h5file
 from satt_app import *
 
@@ -25,6 +24,7 @@ ioc_args = {
     "pmps_run_pv" : pmps_run_name,
     "pmps_tdes_pv" : pmps_tdes_name
 }
+
 
 if __name__ == '__main__':
     ioc_options, run_options = ioc_arg_parser(

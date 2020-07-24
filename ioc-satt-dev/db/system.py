@@ -1,7 +1,10 @@
 from caproto.server import pvproperty, PVGroup
 from caproto import ChannelType
-import asyncio 
+import asyncio
 import numpy as np
+
+from .util import monitor_pvs
+
 
 class SystemGroup(PVGroup):
     """
@@ -81,6 +84,10 @@ class SystemGroup(PVGroup):
         t = self.ioc.t_calc_3omega()
         return t
 
+    @property
+    def current_photon_energy(self):
+        return self.eV_RBV.value
+
     eV_RBV = pvproperty(name='EV_RBV',
                 value=1000.0,
                 read_only=True,
@@ -91,9 +98,18 @@ class SystemGroup(PVGroup):
         """
         Update beam energy and calculated values.
         """
-        while True:
-            eV = self.eV.get()
+        pvname = self.ioc.monitor_pvnames['ev']
+        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
+            if event == 'connection':
+                self.log.info('%s %s', pv, data)
+                continue
+
+            eV = data.data[0]
+            self.log.debug('Photon energy changed: %s', eV)
+
             if instance.value != eV:
+                print("Photon energy changed to {} eV.".format(eV))
+                await instance.write(eV)
                 for f in range(len(self.ioc.filter_group)):
                     filter = self.ioc.filter(f+1)
                     closest_eV, i = self.ioc.calc_closest_eV(eV, **filter.table_kwargs)
@@ -103,31 +119,42 @@ class SystemGroup(PVGroup):
                         filter.get_transmission(eV, filter.thickness.value))
                     await filter.transmission_3omega.write(
                         filter.get_transmission(3.*eV, filter.thickness.value))
-                print("Photon energy changed to {} eV.".format(eV))
                 print("Closest tabulated photon energy value: {} eV".format(closest_eV))
-                await instance.write(eV)
                 await self.t_calc.write(self.ioc.t_calc())
-            await async_lib.library.sleep(self.dt)
+
         return eV
 
-    t_desired = pvproperty(name='T_DES',
-                value=0.5,
-                read_only=True)
+    t_desired = pvproperty(
+        name='T_DES',
+        value=0.5,
+        read_only=True,
+        lower_ctrl_limit=0.0,
+        upper_ctrl_limit=1.0,
+    )
 
     @t_desired.startup
     async def t_desired(self, instance, async_lib):
         """
         Update PMPS desired transmission value.
         """
-        while True:
-            pmps_tdes = self.pmps_tdes.get()
+        pvname = self.ioc.monitor_pvnames['pmps_tdes']
+        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
+            if event == 'connection':
+                self.log.info('%s %s', pv, data)
+                continue
+
+            pmps_tdes = data.data[0]
+            self.log.debug('Desired transmission changed: %s', pmps_tdes)
+
             if instance.value != pmps_tdes:
                 print("Desired transmission set to {}".format(
                     pmps_tdes))
-                await instance.write(pmps_tdes)
-            await async_lib.library.sleep(self.dt)
-        return pmps_tdes
+                try:
+                    await instance.write(pmps_tdes)
+                except Exception:
+                    self.log.exception('Failed to update desired transmission')
 
+        return pmps_tdes
 
     run = pvproperty(value='False',
                      name='RUN',
@@ -145,29 +172,42 @@ class SystemGroup(PVGroup):
         to the optimal configuration for the
         current desired transmission `:T_DES`.
         """
-        while True:
-            pmps_run = self.pmps_run.get()
+
+        pvname = self.ioc.monitor_pvnames['pmps_run']
+        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
+            if event == 'connection':
+                self.log.info('%s %s', pv, data)
+                continue
+
+            pmps_run = data.data[0]
+            self.log.debug('PMPS run request: %s', pmps_run)
+
             if pmps_run == 1 and instance.value == "False":
-                print("PMPS run command received.")
+                self.log.warning(
+                    "PMPS run command received. "
+                    "Desired transmission: %s (%s eV)",
+                    self.t_desired.value,
+                    self.current_photon_energy,
+                )
                 await instance.write(1)
-                await self.set_config.write(self.ioc.get_config()[0])
-                self.ioc.print_config()
+                try:
+                    await self.set_config.write(self.ioc.get_config()[0])
+                    self.ioc.print_config()
+                except Exception:
+                    self.log.exception('Get config failed?')
             if pmps_run == 1 and instance.value == "True":
                 pass
             if pmps_run == 0 and instance.value == "True":
                 await instance.write(0)
-            await async_lib.library.sleep(self.dt)
+
         return pmps_run
 
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
-        self.eV = self.ioc.eV
-        self.pmps_run = self.ioc.pmps_run
-        self.pmps_tdes = self.ioc.pmps_tdes
         self.config_table = self.ioc.config_table
         self.dt = 0.01
-        
+
     @t_low.putter
     async def t_low(self, instance, value):
         self.ioc.transmission_value_error(value)
