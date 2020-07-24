@@ -22,8 +22,7 @@ class SystemGroup(PVGroup):
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
                         read_only=True,
-                        doc='Desired transmission '
-                        + 'best achievable (high)')
+                        doc='Desired transmission best achievable (high)')
 
     t_low = pvproperty(value=0.1,
                        name='T_LOW',

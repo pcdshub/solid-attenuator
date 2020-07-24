@@ -26,9 +26,7 @@ class IOCMain(PVGroup):
         self.config_table = self.load_configs(self.config_data)
 
     def load_configs(self, config_data):
-        """
-        Load HDF5 table of filter state combinations.
-        """
+        """Load HDF5 table of filter state combinations."""
         print("Loading configurations...")
         self.config_table = np.asarray(config_data['configurations'])
         print("Configurations successfully loaded.")
@@ -37,9 +35,9 @@ class IOCMain(PVGroup):
     def t_calc(self):
         """
         Total transmission through all filter blades.
-        Stuck blades are assumed to be 'OUT' and thus
-        the total transmission will be overestimated
-        (in the case any blades are actually stuck 'IN').
+
+        Stuck blades are assumed to be 'OUT' and thus the total transmission
+        will be overestimated (in the case any blades are actually stuck 'IN').
         """
         t = 1.
         for f in range(1, len(self.filter_group)+1):
@@ -51,10 +49,10 @@ class IOCMain(PVGroup):
 
     def t_calc_3omega(self):
         """
-        Total 3rd harmonic transmission through all filter
-        blades. Stuck blades are assumed to be 'OUT' and thus
-        the total transmission will be overestimated
-        (in the case any blades are actually stuck 'IN').
+        Total 3rd harmonic transmission through all filter blades.
+
+        Stuck blades are assumed to be 'OUT' and thus the total transmission
+        will be overestimated (in the case any blades are actually stuck 'IN').
         """
         t = 1.
         for f in range(1, len(self.filter_group)+1):
@@ -66,10 +64,11 @@ class IOCMain(PVGroup):
 
     def all_transmissions(self):
         """
-        Return an array of the transmission values
-        for each filter at the current photon energy.
-        Stuck filters get a transmission of NaN, which
-        omits them from calculations/considerations.
+        Return an array of the transmission values for each filter at the
+        current photon energy.
+
+        Stuck filters get a transmission of NaN, which omits them from
+        calculations/considerations.
         """
         N = len(self.filter_group)
         T_arr = np.ones(N)
@@ -82,9 +81,7 @@ class IOCMain(PVGroup):
         return T_arr
 
     def filter(self, i):
-        """
-        Return a filter PVGroup at index i.
-        """
+        """Return a filter PVGroup at index i."""
         group = str(i).zfill(2)
         return self.groups[f'{group}']
 
@@ -99,18 +96,15 @@ class IOCMain(PVGroup):
 
     def transmission_value_error(value):
         if value < 0 or value > 1:
-            raise ValueError('Transmission must be '
-                             + 'between 0 and 1.')
+            raise ValueError('Transmission must be between 0 and 1.')
 
     def find_configs(self, T_des=None):
         """
-        Find the optimal configurations for attaining
-        desired transmission ``T_des`` at the
-        current photon energy.
+        Find the optimal configurations for attaining desired transmission
+        ``T_des`` at the current photon energy.
 
-        Returns configurations which yield closest
-        highest and lowest transmissions and their
-        filter configurations.
+        Returns configurations which yield closest highest and lowest
+        transmissions and their filter configurations.
         """
         if not T_des:
             T_des = self.sys.t_desired.value
@@ -168,9 +162,9 @@ class IOCMain(PVGroup):
 
     def get_config(self, T_des=None):
         """
-        Return the optimal floor (lower than desired transmission)
-        or ceiling (higher than desired transmission) configuration
-        based on the current mode setting.
+        Return the optimal floor (lower than desired transmission) or ceiling
+        (higher than desired transmission) configuration based on the current
+        mode setting.
         """
         if not T_des:
             T_des = self.sys.t_desired.value
@@ -184,9 +178,7 @@ class IOCMain(PVGroup):
         return config_bestHigh, T_bestHigh, T_des
 
     def print_config(self, w=80):
-        """
-        Format and print the optimal configuration.
-        """
+        """Format and print the optimal configuration."""
         config, T_best, T_des = self.get_config()
         print("="*w)
         print("Desired transmission value: {}".format(T_des))
@@ -206,9 +198,7 @@ def create_ioc(prefix,
                absorption_data,
                config_data,
                **ioc_options):
-    """
-    IOC Setup.
-    """
+    """IOC Setup."""
     groups = {}
     ioc = IOCMain(prefix=prefix,
                   filter_group=filter_group,
