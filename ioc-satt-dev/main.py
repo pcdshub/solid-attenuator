@@ -19,7 +19,8 @@ config_data = h5file(config_path / 'configs.h5', 'r')
 ioc_args = {
     "absorption_data": abs_data,
     "config_data": config_data,
-    "filter_group": [str(N+1).zfill(2) for N in range(num_blades)],
+    "filter_group": {N: str(N).zfill(2)
+                     for N in range(1, num_blades + 1)},
     "eV_pv": eV_name,
     "pmps_run_pv": pmps_run_name,
     "pmps_tdes_pv": pmps_tdes_name

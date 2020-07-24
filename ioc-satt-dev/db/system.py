@@ -104,8 +104,7 @@ class SystemGroup(PVGroup):
             if instance.value != eV:
                 print("Photon energy changed to {} eV.".format(eV))
                 await instance.write(eV)
-                for f in range(len(self.ioc.filter_group)):
-                    filter = self.ioc.filter(f+1)
+                for filter in self.ioc.filters.values():
                     closest_eV, i = self.ioc.calc_closest_eV(
                         eV, **filter.table_kwargs)
                     await filter.closest_eV_index.write(i)

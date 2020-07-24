@@ -8,11 +8,11 @@ class IOCMain(PVGroup):
     """
     """
 
-    def __init__(self, prefix, *, filter_group, groups, abs_data, config_data,
+    def __init__(self, prefix, *, filters, groups, abs_data, config_data,
                  eV, pmps_run, pmps_tdes, **kwargs):
         super().__init__(prefix, **kwargs)
         self.prefix = prefix
-        self.filter_group = filter_group
+        self.filters = filters
         self.groups = groups
         self.config_data = config_data
         self.startup()
@@ -32,6 +32,18 @@ class IOCMain(PVGroup):
         print("Configurations successfully loaded.")
         return self.config_table
 
+    @property
+    def working_filters(self):
+        """
+        Returns a dictionary of all filters that are in working order
+
+        That is to say, filters that are not stuck.
+        """
+        return {
+            idx: filt for idx, filt in self.filters.items()
+            if filt.is_stuck.value != "True"
+        }
+
     def t_calc(self):
         """
         Total transmission through all filter blades.
@@ -40,11 +52,9 @@ class IOCMain(PVGroup):
         will be overestimated (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for f in range(1, len(self.filter_group)+1):
-            is_stuck = self.filter(f).is_stuck.value
-            if is_stuck != "True":
-                tN = self.filter(f).transmission.value
-                t *= tN
+        for filt in self.working_filters.values():
+            tN = filt.transmission.value
+            t *= tN
         return t
 
     def t_calc_3omega(self):
@@ -55,11 +65,9 @@ class IOCMain(PVGroup):
         will be overestimated (in the case any blades are actually stuck 'IN').
         """
         t = 1.
-        for f in range(1, len(self.filter_group)+1):
-            is_stuck = self.filter(f).is_stuck.value
-            if is_stuck != "True":
-                tN = self.filter(f).transmission_3omega.value
-                t *= tN
+        for filt in self.working_filters.values():
+            tN = filt.transmission_3omega.value
+            t *= tN
         return t
 
     def all_transmissions(self):
@@ -70,20 +78,10 @@ class IOCMain(PVGroup):
         Stuck filters get a transmission of NaN, which omits them from
         calculations/considerations.
         """
-        N = len(self.filter_group)
-        T_arr = np.ones(N)
-        for f in range(N):
-            is_stuck = self.filter(f+1).is_stuck.value
-            if is_stuck == "True":
-                T_arr[f] = np.nan
-            else:
-                T_arr[f] = self.filter(f+1).transmission.value
+        T_arr = np.zeros(len(self.filters)) * np.nan
+        for idx, filt in self.working_filters.items():
+            T_arr[idx - 1] = filt.transmission.value
         return T_arr
-
-    def filter(self, i):
-        """Return a filter PVGroup at index i."""
-        group = str(i).zfill(2)
-        return self.groups[f'{group}']
 
     def calc_closest_eV(self, eV, table, eV_min, eV_max, eV_inc):
         i = int(np.rint((eV - eV_min)/eV_inc))
@@ -200,8 +198,9 @@ def create_ioc(prefix,
                **ioc_options):
     """IOC Setup."""
     groups = {}
+    filters = {}
     ioc = IOCMain(prefix=prefix,
-                  filter_group=filter_group,
+                  filters=filters,
                   groups=groups,
                   abs_data=absorption_data,
                   config_data=config_data,
@@ -210,11 +209,11 @@ def create_ioc(prefix,
                   pmps_tdes=pmps_tdes_pv,
                   **ioc_options)
 
-    for group_prefix in filter_group:
-        ioc.groups[group_prefix] = FilterGroup(
-            f'{prefix}:FILTER:{group_prefix}:',
-            abs_data=absorption_data,
-            ioc=ioc)
+    for index, group_prefix in filter_group.items():
+        filt = FilterGroup(f'{prefix}:FILTER:{group_prefix}:',
+                           abs_data=absorption_data, ioc=ioc, index=index)
+        ioc.filters[index] = filt
+        ioc.groups[group_prefix] = filt
 
     ioc.groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
     ioc.sys = ioc.groups['SYS']
