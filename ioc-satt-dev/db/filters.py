@@ -78,10 +78,11 @@ class FilterGroup(PVGroup):
             3 * self.current_photon_energy,
             self.thickness.value)
 
-    def __init__(self, prefix, *, abs_data, ioc, **kwargs):
+    def __init__(self, prefix, *, abs_data, ioc, index, **kwargs):
         super().__init__(prefix, **kwargs)
         self.abs_data = abs_data
         self.ioc = ioc
+        self.index = index
 
     @property
     def current_photon_energy(self):

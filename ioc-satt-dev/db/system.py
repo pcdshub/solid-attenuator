@@ -22,8 +22,7 @@ class SystemGroup(PVGroup):
                         upper_alarm_limit=1.0,
                         lower_alarm_limit=0.0,
                         read_only=True,
-                        doc='Desired transmission '
-                        + 'best achievable (high)')
+                        doc='Desired transmission best achievable (high)')
 
     t_low = pvproperty(value=0.1,
                        name='T_LOW',
@@ -105,8 +104,7 @@ class SystemGroup(PVGroup):
             if instance.value != eV:
                 print("Photon energy changed to {} eV.".format(eV))
                 await instance.write(eV)
-                for f in range(len(self.ioc.filter_group)):
-                    filter = self.ioc.filter(f+1)
+                for filter in self.ioc.filters.values():
                     closest_eV, i = self.ioc.calc_closest_eV(
                         eV, **filter.table_kwargs)
                     await filter.closest_eV_index.write(i)
