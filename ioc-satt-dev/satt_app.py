@@ -53,8 +53,7 @@ class IOCMain(PVGroup):
         """
         t = 1.
         for filt in self.working_filters.values():
-            tN = filt.transmission.value
-            t *= tN
+            t *= filt.transmission.value
         return t
 
     def t_calc_3omega(self):
@@ -66,8 +65,7 @@ class IOCMain(PVGroup):
         """
         t = 1.
         for filt in self.working_filters.values():
-            tN = filt.transmission_3omega.value
-            t *= tN
+            t *= filt.transmission_3omega.value
         return t
 
     def all_transmissions(self):
@@ -91,10 +89,6 @@ class IOCMain(PVGroup):
             i = -1  # Use greatest tabulated value.
         closest_eV = table[i, 0]
         return closest_eV, i
-
-    def transmission_value_error(value):
-        if value < 0 or value > 1:
-            raise ValueError('Transmission must be between 0 and 1.')
 
     def find_configs(self, T_des=None):
         """
