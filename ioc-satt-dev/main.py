@@ -12,7 +12,7 @@ num_blades = 18
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
 pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"
-config_path = pathlib.Path(os.environ.get('ATT_CONFIG_PATH', '../../../'))
+config_path = pathlib.Path(os.environ.get('ATT_CONFIG_PATH', '../../'))
 abs_data = h5file(config_path / 'absorption_data.h5', 'r')
 config_data = h5file(config_path / 'configs.h5', 'r')
 ################################################
