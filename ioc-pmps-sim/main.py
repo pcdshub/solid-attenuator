@@ -1,7 +1,5 @@
 from caproto.server import ioc_arg_parser, run
-from caproto.threading import pyepics_compat as epics
-from h5py import File as h5file
-from pmps_sim_app import *
+from pmps_sim_app import IOCMain, create_ioc
 
 ################################################
 eV_name = "LCLS:HXR:BEAM:EV"

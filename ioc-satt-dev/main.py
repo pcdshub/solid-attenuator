@@ -3,7 +3,7 @@ import pathlib
 
 from caproto.server import ioc_arg_parser, run
 from h5py import File as h5file
-from satt_app import *
+from satt_app import IOCMain, create_ioc
 
 ################################################
 prefix = "AT2L0:SIM"
@@ -17,12 +17,12 @@ config_data = h5file(config_path / 'configs.h5', 'r')
 ################################################
 
 ioc_args = {
-    "absorption_data" : abs_data,
-    "config_data" : config_data,
-    "filter_group" : [str(N+1).zfill(2) for N in range(num_blades)],
-    "eV_pv" : eV_name,
-    "pmps_run_pv" : pmps_run_name,
-    "pmps_tdes_pv" : pmps_tdes_name
+    "absorption_data": abs_data,
+    "config_data": config_data,
+    "filter_group": [str(N+1).zfill(2) for N in range(num_blades)],
+    "eV_pv": eV_name,
+    "pmps_run_pv": pmps_run_name,
+    "pmps_tdes_pv": pmps_tdes_name
 }
 
 
@@ -31,8 +31,6 @@ if __name__ == '__main__':
         default_prefix=prefix,
         desc=IOCMain.__doc__)
 
-    ioc = create_ioc(
-        **ioc_args,
-        **ioc_options)
+    ioc = create_ioc(**ioc_args, **ioc_options)
 
     run(ioc.pvdb, **run_options)

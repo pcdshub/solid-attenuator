@@ -1,14 +1,17 @@
-#====================================================================
+# ====================================================================
 #  This is old code intended for testing the attenuation algorithm.
 #  Not for use in beamline operations.
-#====================================================================
+# ====================================================================
 
 import logging
-from ophyd.device import Device, Component as Cpt, FormattedComponent as FCpt
-from ophyd import EpicsSignal, EpicsSignalRO
-from ophyd.status import wait as status_wait
-import numpy as np
+
 import h5py
+import numpy as np
+from ophyd import EpicsSignal, EpicsSignalRO
+from ophyd.device import Component as Cpt
+from ophyd.device import Device
+from ophyd.device import FormattedComponent as FCpt
+from ophyd.status import wait as status_wait
 from pcdsdevices.inout import TwinCATInOutPositioner
 
 logger = logging.getLogger(__name__)
@@ -24,7 +27,7 @@ class HXRFilter(Device):
     filter_data : ``file``
     index : ``int``
     """
-    _transmission = {} # TODO: this would be good to be dynamically set.
+    _transmission = {}  # TODO: this would be good to be dynamically set.
     # It will be set by Satt using eV RBV callback
 
     blade = FCpt(TwinCATInOutPositioner,
@@ -36,10 +39,10 @@ class HXRFilter(Device):
                      '{prefix}:FILTER:{self.index_str}:THICKNESS',
                      kind='normal')
     stuck = FCpt(EpicsSignal,
-                     '{prefix}:FILTER:{self.index_str}:IS_STUCK',
-                     kind='normal')
+                 '{prefix}:FILTER:{self.index_str}:IS_STUCK',
+                 kind='normal')
     tab_whitelist = ['inserted', 'removed', 'insert', 'remove', 'transmission']
-    
+
     def __init__(self,
                  prefix,
                  h5file=None,
@@ -49,10 +52,11 @@ class HXRFilter(Device):
         self.index_str = f'{index}'.zfill(2)
         self.index = index
         super().__init__(prefix, name=name, **kwargs)
-        self.constants, self._data, self._eV_min, self._eV_inc, self._eV_max = self.load_data(h5file)
-        self.Z = self.atomic_number = int(self.constants[0]) # atomic number
-        self.A = self.atomic_weight = self.constants[1] # atomic weight [g]
-        self.p = self.density = self.constants[2] # density [g/cm^3]
+        self.constants, self._data, self._eV_min, self._eV_inc, self._eV_max = self.load_data(
+            h5file)
+        self.Z = self.atomic_number = int(self.constants[0])  # atomic number
+        self.A = self.atomic_weight = self.constants[1]  # atomic weight [g]
+        self.p = self.density = self.constants[2]  # density [g/cm^3]
         self.d = self.thickness.get()
 
     def load_data(self, h5file):
@@ -60,10 +64,11 @@ class HXRFilter(Device):
         Loads HDF5 physics data into tables.
         """
         table = np.asarray(h5file['{}_table'.format(self.material.get())])
-        constants = np.asarray(h5file['{}_constants'.format(self.material.get())])
-        eV_min = table[0,0]
-        eV_max = table[-1,0]
-        eV_inc = (table[-1,0] - table[0,0])/len(table[:,0])
+        constants = np.asarray(
+            h5file['{}_constants'.format(self.material.get())])
+        eV_min = table[0, 0]
+        eV_max = table[-1, 0]
+        eV_inc = (table[-1, 0] - table[0, 0])/len(table[:, 0])
         return constants, table, eV_min, eV_inc, eV_max
 
     def _closest_eV(self, eV):
@@ -74,11 +79,11 @@ class HXRFilter(Device):
         either the lowest or highest value available.
         """
         i = int(np.rint((eV - self._eV_min)/self._eV_inc))
-        if i < 0: 
-            i = 0 # Use lowest tabulated value.
+        if i < 0:
+            i = 0  # Use lowest tabulated value.
         if i > self._data.shape[0]:
-            i = -1 # Use greatest tabulated value.
-        closest_eV = self._data[i,0]
+            i = -1  # Use greatest tabulated value.
+        closest_eV = self._data[i, 0]
         return closest_eV, i
 
     def get_vals(self, eV):
@@ -86,9 +91,9 @@ class HXRFilter(Device):
         Return closest photon energy to ``eV`` and its transmission.
         """
         close_eV, i = self._closest_eV(eV)
-        T = np.exp(-self._data[i,2]*self.d)
+        T = np.exp(-self._data[i, 2]*self.d)
         return close_eV, T
-    
+
     def transmission(self, eV):
         """
         Return beam transmission at photon energy closest ``eV``.
@@ -129,35 +134,36 @@ class HXRSatt(Device):
     retries = 3
     tab_component_names = True
     tab_whitelist = []
-    
+
     eV = FCpt(EpicsSignalRO, "LCLS:HXR:BEAM:EV", kind='hinted')
 
     locked = FCpt(EpicsSignalRO, '{prefix}:SYS:LOCKED',
-                    kind='hinted') # lock the system (all motion)
+                  kind='hinted')  # lock the system (all motion)
     unlock = FCpt(EpicsSignalRO, '{prefix}:SYS:UNLOCK',
-                    kind='hinted') # unlock the system
+                  kind='hinted')  # unlock the system
     set_mode = FCpt(EpicsSignal, '{prefix}:SYS:SET_MODE',
-                    kind='hinted') # select best lowest or highest
+                    kind='hinted')  # select best lowest or highest
     T_actual = FCpt(EpicsSignal, '{prefix}:SYS:T_ACTUAL',
-                    kind='hinted') # current transmission
+                    kind='hinted')  # current transmission
     T_high = FCpt(EpicsSignal, '{prefix}:SYS:T_HIGH',
-                    kind='hinted') # closest achievable high
+                  kind='hinted')  # closest achievable high
     T_low = FCpt(EpicsSignal, '{prefix}:SYS:T_LOW',
-                    kind='hinted') # closest achievable low
+                 kind='hinted')  # closest achievable low
     T_des = FCpt(EpicsSignal, '{prefix}:SYS:T_DESIRED',
-                    kind='hinted')
+                 kind='hinted')
     T_3omega = FCpt(EpicsSignal, '{prefix}:SYS:T_3OMEGA',
                     kind='hinted')
-    run = FCpt(EpicsSignal, '{prefix}:SYS:RUN', 
-                    kind='hinted')
+    run = FCpt(EpicsSignal, '{prefix}:SYS:RUN',
+               kind='hinted')
     running = FCpt(EpicsSignal, '{prefix}:SYS:MOVING',
-                    kind='hinted')
+                   kind='hinted')
 #    mirror_in = FCpt(EpicsSignalRO, '{prefix}:SYS:T_VALID',
 #                    kind='hinted')
 #    transmission_valid = FCpt(EpicsSignalRO, '{prefix}:SYS:T_VALID',
 #                    kind='hinted')
 #    pv_config = FCpt(EpicsSignalRO, '{prefix}:SYS:CONFIG',
 #                    kind='hinted') # not implemented
+
     def __init__(self, prefix, eV_prefix="LCLS:HXR:BEAM:EV",
                  name='HXRSatt', **kwargs):
         super().__init__(prefix, name=name, **kwargs)
@@ -189,7 +195,7 @@ class HXRSatt(Device):
         inserted = self.blade(index).blade.insert()
         self._curr_config_arr()
         return inserted
-    
+
     def remove(self, index):
         """
         Retract  filter at `index` into the 'OUT' position.
@@ -207,22 +213,22 @@ class HXRSatt(Device):
         for f in self.filters:
             blade = self.filters.get(f)
             if blade.inserted():
-                config_dict.update({ blade.index : 'IN' })
+                config_dict.update({blade.index: 'IN'})
             if blade.removed():
-                config_dict.update({ blade.index : 'OUT' })
-            if not blade.inserted() and not blade.removed(): 
-                config_dict.update({ blade.index : 'UKNOWN' })
+                config_dict.update({blade.index: 'OUT'})
+            if not blade.inserted() and not blade.removed():
+                config_dict.update({blade.index: 'UKNOWN'})
             if blade.is_stuck():
-                config_dict.update({ blade.index : 'STUCK' })
+                config_dict.update({blade.index: 'STUCK'})
         return config_dict
-            
+
     def _load_configs(self):
         """
         Load the HDF5 table of possible configurations.
         """
         self.config_table = self.configs['configurations']
         return self.config_table
-        
+
     # Need a callback on every blade to grab its state and update config...
     def _curr_config_arr(self):
         """
@@ -253,7 +259,7 @@ class HXRSatt(Device):
 
     def curr_transmission(self, eV=None):
         """
-        Calculates and returns transmission at 
+        Calculates and returns transmission at
         photon energy ``eV`` through current filter configuration.
         """
         print("updating transmission")
@@ -299,10 +305,10 @@ class HXRSatt(Device):
         """
         Find the optimal configurations for attaining
         desired transmission ``T_des`` at photon
-        energy ``eV``.  
+        energy ``eV``.
 
         Returns configurations which yield closest
-        highest and lowest transmissions and their 
+        highest and lowest transmissions and their
         transmission values.
         """
         if not T_des:
@@ -311,26 +317,26 @@ class HXRSatt(Device):
         T_table = np.nanprod(T_set*self.config_table,
                              axis=1)
         T_config_table = np.asarray(sorted(np.transpose([T_table[:],
-                                    range(len(self.config_table))]),
+                                                         range(len(self.config_table))]),
                                            key=lambda x: x[0]))
-        i = np.argmin(np.abs(T_config_table[:,0]-T_des))
-        closest = self.config_table[T_config_table[i,1]]
+        i = np.argmin(np.abs(T_config_table[:, 0]-T_des))
+        closest = self.config_table[T_config_table[i, 1]]
         T_closest = np.nanprod(T_set*closest)
         if T_closest == T_des:
             config_bestHigh = config_bestLow = closest
             T_bestHigh = T_bestLow = T_closest
         if T_closest < T_des:
-            config_bestHigh = self.config_table[T_config_table[i+1,1]]
+            config_bestHigh = self.config_table[T_config_table[i+1, 1]]
             config_bestLow = closest
             T_bestHigh = np.nanprod(T_set*config_bestHigh)
             T_bestLow = T_closest
         if T_closest > T_des:
             config_bestHigh = closest
-            config_bestLow = self.config_table[T_config_table[i-1,1]]
+            config_bestLow = self.config_table[T_config_table[i-1, 1]]
             T_bestHigh = T_closest
             T_bestLow = np.nanprod(T_set*config_bestLow)
         return config_bestLow, config_bestHigh, T_bestLow, T_bestHigh
-    
+
     def get_3omega_transmission(self):
         """
         Calculates 3rd harmonic transmission through the current
@@ -338,12 +344,13 @@ class HXRSatt(Device):
         """
         return self.T_3omega.put(np.nanprod(
             self._all_transmissions(3*self.eV.get())*self._curr_config_arr()))
-    
+
     def transmission_desired(self, T_des):
         """
         Set the desired transmission.
         """
-        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self._find_configs(self.eV.get())
+        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self._find_configs(
+            self.eV.get())
         self.T_low.put(T_bestLow)
         self.T_high.put(T_bestHigh)
         return self.T_des.put(T_des)
@@ -356,7 +363,8 @@ class HXRSatt(Device):
         """
         print("setting running to high")
         self.running.put(1)
-        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self._find_configs(self.eV.get())
+        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = self._find_configs(
+            self.eV.get())
         if self.set_mode.get() == 0:
             config = config_bestLow
             T = T_bestLow
@@ -391,8 +399,8 @@ class HXRSatt(Device):
         if in_status:
             inserted = in_status
         else:
-            inserted = True # Not correct, this should be a status object.
-        # TODO: if any inserted motion fails then do not remove any filters! 
+            inserted = True  # Not correct, this should be a status object.
+        # TODO: if any inserted motion fails then do not remove any filters!
 #        logger.debug("Removing blades {}".format(to_remove))
         print("removing blades")
         for f in to_remove:
@@ -411,73 +419,72 @@ class HXRSatt(Device):
         self.curr_transmission()
         print("resetting running to 0")
         self.running.put(0)
-#        return inserted & removed 
+#        return inserted & removed
+
 
 class AT2L0(HXRSatt):
 
     absorption_data = h5py.File('absorption_data.h5', 'r')
     configs = h5py.File('configs.h5', 'r')
 
-    f01 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data, 
-             index=1, kind='normal')
+    f01 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
+               index=1, kind='normal')
     f02 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=2, kind='normal')
+               index=2, kind='normal')
     f03 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=3, kind='normal')
+               index=3, kind='normal')
     f04 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=4, kind='normal')
-    f05 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data, 
-             index=5, kind='normal')
+               index=4, kind='normal')
+    f05 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
+               index=5, kind='normal')
     f06 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=6, kind='normal')
+               index=6, kind='normal')
     f07 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=7, kind='normal')
+               index=7, kind='normal')
     f08 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=8, kind='normal')
-    f09 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data, 
-             index=9, kind='normal')
+               index=8, kind='normal')
+    f09 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
+               index=9, kind='normal')
     f10 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=10, kind='normal')
+               index=10, kind='normal')
     f11 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=11, kind='normal')
+               index=11, kind='normal')
     f12 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=12, kind='normal')
-    f13 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data, 
-             index=13, kind='normal')
+               index=12, kind='normal')
+    f13 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
+               index=13, kind='normal')
     f14 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=14, kind='normal')
+               index=14, kind='normal')
     f15 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=15, kind='normal')
+               index=15, kind='normal')
     f16 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=16, kind='normal')
-    f17 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data, 
-             index=17, kind='normal')
+               index=16, kind='normal')
+    f17 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
+               index=17, kind='normal')
     f18 = FCpt(HXRFilter, '{prefix}', h5file=absorption_data,
-             index=18, kind='normal')
+               index=18, kind='normal')
 
     def __init__(self, prefix, name='at2l0', **kwargs):
         self.prefix = prefix
         super().__init__(prefix, name=name, **kwargs)
         self.filters = {
-            str(self.f01.index) : self.f01,
-            str(self.f02.index) : self.f02,
-            str(self.f03.index) : self.f03,
-            str(self.f04.index) : self.f04,
-            str(self.f05.index) : self.f05,
-            str(self.f06.index) : self.f06,
-            str(self.f07.index) : self.f07,
-            str(self.f08.index) : self.f08,
-            str(self.f09.index) : self.f09,
-            str(self.f10.index) : self.f10,
-            str(self.f11.index) : self.f11,
-            str(self.f12.index) : self.f12,
-            str(self.f13.index) : self.f13,
-            str(self.f14.index) : self.f14,
-            str(self.f15.index) : self.f15,
-            str(self.f16.index) : self.f16,
-            str(self.f17.index) : self.f17,
-            str(self.f18.index) : self.f18,
+            str(self.f01.index): self.f01,
+            str(self.f02.index): self.f02,
+            str(self.f03.index): self.f03,
+            str(self.f04.index): self.f04,
+            str(self.f05.index): self.f05,
+            str(self.f06.index): self.f06,
+            str(self.f07.index): self.f07,
+            str(self.f08.index): self.f08,
+            str(self.f09.index): self.f09,
+            str(self.f10.index): self.f10,
+            str(self.f11.index): self.f11,
+            str(self.f12.index): self.f12,
+            str(self.f13.index): self.f13,
+            str(self.f14.index): self.f14,
+            str(self.f15.index): self.f15,
+            str(self.f16.index): self.f16,
+            str(self.f17.index): self.f17,
+            str(self.f18.index): self.f18,
         }
         super()._startup()
-
-

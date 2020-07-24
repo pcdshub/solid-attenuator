@@ -1,8 +1,8 @@
-import numpy as np
 import itertools
 import sys
-import h5py
 
+import h5py
+import numpy as np
 
 try:
     kind = str(sys.argv[1])
@@ -18,7 +18,7 @@ def in_out_attenuator(N):
     Generate all possible in/out state configurations
     of ``N`` attenuator blades.
     """
-    return np.asarray(list(itertools.product([np.nan,1], repeat=N)))
+    return np.asarray(list(itertools.product([np.nan, 1], repeat=N)))
 
 
 def write_h5(config_table):
@@ -29,7 +29,8 @@ def write_h5(config_table):
        config_table : ``NumPy Array``
     """
     h5 = h5py.File('configs.h5', 'w')
-    configs = h5.create_dataset('configurations', (len(config_table),N,), dtype='f')
+    configs = h5.create_dataset(
+        'configurations', (len(config_table), N,), dtype='f')
     configs[:] = config_table[:]
     h5.close()
 
