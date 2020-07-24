@@ -1,8 +1,7 @@
-from caproto.server import pvproperty, PVGroup, ioc_arg_parser, run
-from caproto.threading import pyepics_compat as epics
-from caproto import ChannelType
 import numpy as np
-
+from caproto import ChannelType
+from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
+from caproto.threading import pyepics_compat as epics
 from db.filters import FilterGroup
 from db.system import SystemGroup
 

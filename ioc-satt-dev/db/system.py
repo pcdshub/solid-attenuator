@@ -1,7 +1,8 @@
-from caproto.server import pvproperty, PVGroup
-from caproto import ChannelType
 import asyncio
+
 import numpy as np
+from caproto import ChannelType
+from caproto.server import PVGroup, pvproperty
 
 from .util import monitor_pvs
 

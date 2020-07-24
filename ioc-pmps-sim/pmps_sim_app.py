@@ -1,9 +1,9 @@
-from caproto.server import pvproperty, PVGroup, ioc_arg_parser, run
-from caproto.threading import pyepics_compat as epics
 from caproto import ChannelType
-
+from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
+from caproto.threading import pyepics_compat as epics
 from db.fake_ev import FakeEVGroup
 from db.fake_pmps import FakePMPSGroup
+
 
 class IOCMain(PVGroup):
     """
@@ -27,7 +27,7 @@ def create_ioc(prefix, eV_pv, pmps_run_pv,
         f'LCLS:HXR:BEAM:',ioc=ioc)
     groups['PMPS:HXR:AT2L0'] = FakePMPSGroup(
         f'PMPS:HXR:AT2L0:',ioc=ioc)
-    
+
     for group in groups.values():
         ioc.pvdb.update(**group.pvdb)
     return ioc

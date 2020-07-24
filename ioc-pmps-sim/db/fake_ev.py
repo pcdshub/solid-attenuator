@@ -1,5 +1,6 @@
-from caproto.server import pvproperty, PVGroup
 from caproto import ChannelType
+from caproto.server import PVGroup, pvproperty
+
 
 class FakeEVGroup(PVGroup):
     """
@@ -21,4 +22,3 @@ class FakeEVGroup(PVGroup):
     async def fake_eV(self, instance, value):
         if value < 0:
             raise ValueError('Invalid photon energy')
-

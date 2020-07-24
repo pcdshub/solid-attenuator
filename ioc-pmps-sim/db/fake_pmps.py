@@ -1,5 +1,6 @@
-from caproto.server import pvproperty, PVGroup
 from caproto import ChannelType
+from caproto.server import PVGroup, pvproperty
+
 
 class FakePMPSGroup(PVGroup):
     """
@@ -35,5 +36,3 @@ class FakePMPSGroup(PVGroup):
     async def t_des(self, instance, value):
         if value < 0 or value > 1:
             raise ValueError('Invalid transmission request')
-
-    

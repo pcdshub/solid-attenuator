@@ -1,8 +1,8 @@
-import numpy as np
 import itertools
 import sys
-import h5py
 
+import h5py
+import numpy as np
 
 try:
     kind = str(sys.argv[1])

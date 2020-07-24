@@ -1,8 +1,8 @@
 import sys
 
+import h5py
 import numpy as np
 from scipy.interpolate import interp1d
-import h5py
 
 """
 Program for populating photoabsorption datasets for
