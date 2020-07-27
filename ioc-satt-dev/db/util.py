@@ -14,21 +14,16 @@ def get_default_thread_context():
 def _monitor_pvs(*pv_names, context, queue, data_type='time'):
     """
     Monitor pv_names in the given threading context, putting events to `queue`.
-
     Parameters
     ----------
     *pv_names : str
         PV names to monitor.
-
     context : caproto.threading.client.Context
         The threading context to use.
-
     queue : ThreadsafeQueue
         Thread-safe queue for the current server async library.
-
     data_type : {'time', 'control', 'native'}
         The subscription type.
-
     Returns
     -------
     subscriptions : list
@@ -37,7 +32,7 @@ def _monitor_pvs(*pv_names, context, queue, data_type='time'):
     """
 
     def add_to_queue(sub, event_add_response):
-        queue.put(('subscription', sub.pv, event_add_response))
+        queue.put(('subscription', sub, event_add_response))
 
     def connection_state_callback(pv, state):
         queue.put(('connection', pv, state))
@@ -49,7 +44,7 @@ def _monitor_pvs(*pv_names, context, queue, data_type='time'):
 
     subscriptions = []
     for pv in pvs:
-        sub = pv.subscribe(data_type='time')
+        sub = pv.subscribe(data_type=data_type)
         token = sub.add_callback(add_to_queue)
         subscriptions.append((sub, token, add_to_queue,
                               connection_state_callback))
@@ -60,29 +55,23 @@ def _monitor_pvs(*pv_names, context, queue, data_type='time'):
 async def monitor_pvs(*pv_names, async_lib, context=None, data_type='time'):
     """
     Monitor pv_names asynchronously, yielding events as they happen.
-
     Parameters
     ----------
     *pv_names : str
         PV names to monitor.
-
     async_lib : caproto.server.AsyncLibraryLayer
         The async library layer shim to get compatible classes from.
-
     context : caproto.threading.client.Context
         The threading context to use.
-
     data_type : {'time', 'control', 'native'}
         The subscription type.
-
     Yields
     -------
     event : {'subscription', 'connection'}
         The event type.
-
-    pv : str
-        The PV name.
-
+    context : str or Subscription
+        For a 'connection' event, this is the PV name.  For a 'subscription'
+        event, this is the `Subscription` instance.
     data : str or EventAddResponse
         For a 'subscription' event, the `EventAddResponse` holds the data and
         timestamp.  For a 'connection' event, this is one of ``{'connected',
@@ -97,8 +86,8 @@ async def monitor_pvs(*pv_names, async_lib, context=None, data_type='time'):
                                  data_type=data_type)
     try:
         while True:
-            info = await queue.async_get()
-            yield info
+            event, context, data = await queue.async_get()
+            yield event, context, data
     finally:
         for sub, token, *callbacks in subscriptions:
             sub.remove_callback(token)

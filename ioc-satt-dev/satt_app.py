@@ -1,7 +1,8 @@
 import numpy as np
 from caproto.server import PVGroup
-from db.filters import FilterGroup
-from db.system import SystemGroup
+
+from .db.filters import FilterGroup
+from .db.system import SystemGroup
 
 
 class IOCMain(PVGroup):
