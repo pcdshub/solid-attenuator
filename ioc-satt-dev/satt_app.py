@@ -53,8 +53,7 @@ class IOCMain(PVGroup):
         """
         t = 1.
         for filt in self.working_filters.values():
-            tN = filt.transmission.value
-            t *= tN
+            t *= filt.transmission.value
         return t
 
     def t_calc_3omega(self):
@@ -66,8 +65,7 @@ class IOCMain(PVGroup):
         """
         t = 1.
         for filt in self.working_filters.values():
-            tN = filt.transmission_3omega.value
-            t *= tN
+            t *= filt.transmission_3omega.value
         return t
 
     def all_transmissions(self):
@@ -92,10 +90,6 @@ class IOCMain(PVGroup):
         closest_eV = table[i, 0]
         return closest_eV, i
 
-    def transmission_value_error(value):
-        if value < 0 or value > 1:
-            raise ValueError('Transmission must be between 0 and 1.')
-
     def find_configs(self, T_des=None):
         """
         Find the optimal configurations for attaining desired transmission
@@ -119,10 +113,11 @@ class IOCMain(PVGroup):
 
         # Create a table of configurations and their associated
         # beam transmission values, sorted by transmission value.
-        T_config_table = np.asarray(
-            sorted(np.transpose([T_table[:], range(len(self.config_table))]),
-                   key=lambda x: x[0])
-        )
+        configs = np.asarray([T_table, np.arange(len(self.config_table))])
+
+        # Sort based on transmission value, retaining index order:
+        sort_indices = configs[0, :].argsort()
+        T_config_table = configs.T[sort_indices]
 
         # Find the index of the filter configuration which
         # minimizes the differences between the desired
@@ -140,16 +135,16 @@ class IOCMain(PVGroup):
             # transmission exactly.
             config_bestHigh = config_bestLow = closest
             T_bestHigh = T_bestLow = T_closest
-
-        if T_closest < T_des:
-            config_bestHigh = self.config_table[int(T_config_table[i+1, 1])]
+        elif T_closest < T_des:
+            idx = min((i + 1, len(T_config_table) - 1))
+            config_bestHigh = self.config_table[int(T_config_table[idx, 1])]
             config_bestLow = closest
             T_bestHigh = np.nanprod(T_basis*config_bestHigh)
             T_bestLow = T_closest
-
-        if T_closest > T_des:
+        elif T_closest > T_des:
+            idx = max((i - 1, 0))
             config_bestHigh = closest.astype(np.int)
-            config_bestLow = self.config_table[int(T_config_table[i-1, 1])]
+            config_bestLow = self.config_table[int(T_config_table[idx, 1])]
             T_bestHigh = T_closest
             T_bestLow = np.nanprod(T_basis*config_bestLow)
 

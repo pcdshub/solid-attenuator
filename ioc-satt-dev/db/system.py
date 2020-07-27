@@ -19,16 +19,16 @@ class SystemGroup(PVGroup):
     t_high = pvproperty(value=0.1,
                         name='T_HIGH',
                         record='ao',
-                        upper_alarm_limit=1.0,
-                        lower_alarm_limit=0.0,
+                        upper_ctrl_limit=1.0,
+                        lower_ctrl_limit=0.0,
                         read_only=True,
                         doc='Desired transmission best achievable (high)')
 
     t_low = pvproperty(value=0.1,
                        name='T_LOW',
                        record='ao',
-                       upper_alarm_limit=1.0,
-                       lower_alarm_limit=0.0,
+                       upper_ctrl_limit=1.0,
+                       lower_ctrl_limit=0.0,
                        read_only=True,
                        doc='Desired transmission best achievable (low)')
 
@@ -198,11 +198,3 @@ class SystemGroup(PVGroup):
         self.ioc = ioc
         self.config_table = self.ioc.config_table
         self.dt = 0.01
-
-    @t_low.putter
-    async def t_low(self, instance, value):
-        self.ioc.transmission_value_error(value)
-
-    @t_high.putter
-    async def t_high(self, instance, value):
-        self.ioc.transmission_value_error(value)
