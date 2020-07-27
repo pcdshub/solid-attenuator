@@ -16,22 +16,11 @@ class IOCMain(PVGroup):
         self.filters = filters
         self.groups = groups
         self.config_data = config_data
-        self.startup()
         self.monitor_pvnames = dict(
             ev=eV,
             pmps_run=pmps_run,
             pmps_tdes=pmps_tdes,
         )
-
-    def startup(self):
-        self.config_table = self.load_configs(self.config_data)
-
-    def load_configs(self, config_data):
-        """Load HDF5 table of filter state combinations."""
-        print("Loading configurations...")
-        self.config_table = np.asarray(config_data['configurations'])
-        print("Configurations successfully loaded.")
-        return self.config_table
 
     @property
     def working_filters(self):
@@ -82,16 +71,7 @@ class IOCMain(PVGroup):
             T_arr[idx - 1] = filt.transmission.value
         return T_arr
 
-    def calc_closest_eV(self, eV, table, eV_min, eV_max, eV_inc):
-        i = int(np.rint((eV - eV_min)/eV_inc))
-        if i < 0:
-            i = 0  # Use lowest tabulated value.
-        if i > table.shape[0]:
-            i = -1  # Use greatest tabulated value.
-        closest_eV = table[i, 0]
-        return closest_eV, i
-
-    def find_configs(self, T_des=None):
+    def _find_configs(self, T_des=None):
         """
         Find the optimal configurations for attaining desired transmission
         ``T_des`` at the current photon energy.
@@ -154,7 +134,7 @@ class IOCMain(PVGroup):
                 T_bestLow,
                 T_bestHigh)
 
-    def get_config(self, T_des=None):
+    def _get_config(self, T_des=None):
         """
         Return the optimal floor (lower than desired transmission) or ceiling
         (higher than desired transmission) configuration based on the current
@@ -171,7 +151,7 @@ class IOCMain(PVGroup):
             return config_bestLow, T_bestLow, T_des
         return config_bestHigh, T_bestHigh, T_des
 
-    def print_config(self, w=80):
+    def _print_config(self, w=80):
         """Format and print the optimal configuration."""
         config, T_best, T_des = self.get_config()
         print("="*w)
