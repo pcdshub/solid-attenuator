@@ -288,7 +288,10 @@ def get_absorption_table(formula: str,
         dependency.
     """
     if atomic_weight is None:
-        atomic_weight = periodictable.formula(formula).mass
+        try:
+            atomic_weight = filter_data[formula]['atomic_weight']
+        except KeyError:
+            atomic_weight = periodictable.formula(formula).mass
 
     if density is None:
         try:
