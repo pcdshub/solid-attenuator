@@ -2,6 +2,7 @@ from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
 from .. import calculator
+from .autosave import autosaved
 
 
 class FilterGroup(PVGroup):
@@ -33,30 +34,37 @@ class FilterGroup(PVGroup):
         }
         self.log.info("Absorption table successfully loaded.")
 
-    material = pvproperty(value='Si',
-                          name='MATERIAL',
-                          record='stringin',
-                          doc='Filter material',
-                          dtype=ChannelType.STRING)
+    material = autosaved(
+        pvproperty(value='Si',
+                   name='MATERIAL',
+                   record='stringin',
+                   doc='Filter material',
+                   dtype=ChannelType.STRING
+                   )
+    )
 
     @material.putter
     async def material(self, instance, value):
         self.load_data(formula=value)
 
-    thickness = pvproperty(value=1E-6,
-                           name='THICKNESS',
-                           record='ao',
-                           upper_ctrl_limit=1.0,
-                           lower_ctrl_limit=0.0,
-                           doc='Filter thickness',
-                           units='m')
+    thickness = autosaved(
+        pvproperty(value=1E-6,
+                   name='THICKNESS',
+                   record='ao',
+                   upper_ctrl_limit=1.0,
+                   lower_ctrl_limit=0.0,
+                   doc='Filter thickness',
+                   units='m')
+    )
 
-    is_stuck = pvproperty(value='False',
-                          name='IS_STUCK',
-                          record='bo',
-                          enum_strings=['False', 'True'],
-                          doc='Filter is stuck in place',
-                          dtype=ChannelType.ENUM)
+    is_stuck = autosaved(
+        pvproperty(value='False',
+                   name='IS_STUCK',
+                   record='bo',
+                   enum_strings=['False', 'True'],
+                   doc='Filter is stuck in place',
+                   dtype=ChannelType.ENUM)
+    )
 
     closest_eV = pvproperty(name='CLOSE_EV',
                             read_only=True)

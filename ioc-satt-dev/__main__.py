@@ -29,5 +29,4 @@ if __name__ == '__main__':
         desc=IOCMain.__doc__)
 
     ioc = create_ioc(**ioc_args, **ioc_options)
-
     run(ioc.pvdb, **run_options)

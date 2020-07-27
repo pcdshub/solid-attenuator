@@ -1,6 +1,7 @@
 import numpy as np
-from caproto.server import PVGroup
+from caproto.server import PVGroup, SubGroup
 
+from .db.autosave import AutosaveHelper
 from .db.filters import FilterGroup
 from .db.system import SystemGroup
 
@@ -20,6 +21,8 @@ class IOCMain(PVGroup):
             pmps_run=pmps_run,
             pmps_tdes=pmps_tdes,
         )
+
+    autosave_helper = SubGroup(AutosaveHelper)
 
     @property
     def working_filters(self):
