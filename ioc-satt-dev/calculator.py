@@ -18,24 +18,16 @@ import pathlib
 import typing
 
 import numpy as np
+import periodictable
 import scipy.constants
 from scipy.interpolate import interp1d
 
 CXRO_PATH = pathlib.Path(__file__).parent / 'CXRO'
 
-# TODO: Read these from a config file (or different data source?)
+# TODO: NOTE: these are for overriding data that comes from periodictable.
 filter_data = {
-    'Si': {
-        'formula': 'Si',
-        'atomic_number': 14,     # Z
-        'atomic_weight': 28.08,  # grams
-        'density': 2.329E6,      # grams/m^3
-    },
     'C': {
-        'formula': 'C',
-        'atomic_number': 6,      # Z
-        'atomic_weight': 12.01,  # grams
-        'density': 3.51E6,       # grams/m^3
+        'density': 3.51E6,       # grams/m^3 (**diamond**)
     },
 }
 
@@ -287,17 +279,23 @@ def get_absorption_table(formula: str,
 
     atomic_weight : float, optional
         Atomic weight of ``formula``. [g]
-        Required if information unavailable in ``filter_data``.
+        Required if information unavailable or incorrect in ``periodictable``
+        dependency.
 
     density : float, optional
         Density of ``formula``. [g/m^3]
-        Required if information unavailable in ``filter_data``.
+        Required if information unavailable or incorrect in ``periodictable``
+        dependency.
     """
     if atomic_weight is None:
-        atomic_weight = filter_data[formula]['atomic_weight']
+        atomic_weight = periodictable.formula(formula).mass
 
     if density is None:
-        density = filter_data[formula]['density']
+        try:
+            density = filter_data[formula]['density']
+        except KeyError:
+            density = periodictable.formula(formula).density * 1e6
+            # units: g/cm^3 -> m^3
 
     fs = _fill_data_linear(formula, ev_low, ev_high)
     table = np.zeros([fs.shape[0], 3])
