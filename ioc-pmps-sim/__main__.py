@@ -1,5 +1,6 @@
 from caproto.server import ioc_arg_parser, run
-from pmps_sim_app import IOCMain, create_ioc
+
+from .pmps_sim_app import IOCMain, create_ioc
 
 ################################################
 eV_name = "LCLS:HXR:BEAM:EV"

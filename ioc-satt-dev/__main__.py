@@ -3,7 +3,8 @@ import pathlib
 
 from caproto.server import ioc_arg_parser, run
 from h5py import File as h5file
-from satt_app import IOCMain, create_ioc
+
+from .satt_app import IOCMain, create_ioc
 
 ################################################
 prefix = "AT2L0:SIM"

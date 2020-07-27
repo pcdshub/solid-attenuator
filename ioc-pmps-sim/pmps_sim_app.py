@@ -1,6 +1,7 @@
 from caproto.server import PVGroup
-from db.fake_ev import FakeEVGroup
-from db.fake_pmps import FakePMPSGroup
+
+from .db.fake_ev import FakeEVGroup
+from .db.fake_pmps import FakePMPSGroup
 
 
 class IOCMain(PVGroup):

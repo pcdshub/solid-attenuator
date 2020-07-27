@@ -17,6 +17,6 @@ export PATH="${PYDEV}/bin:${PATH}"
 export PYTHONPATH="${PYDEV}:${PYTHONPATH}"
 ##########################################
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")"/..
 python --version
-python ${TOP}main.py --prefix ${PREFIX} --list-pvs
+python -m ioc-satt-dev --prefix ${PREFIX} --list-pvs
