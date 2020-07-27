@@ -60,22 +60,24 @@ def in_out_combinations(num_blades: int):
 
 
 class Config:
-    def __init__(self, all_transmissions, config, transmission):
+    def __init__(self, all_transmissions, filter_states, transmission):
         self.all_transmissions = all_transmissions
-        self.config = config
+        self.filter_states = filter_states
         self.transmission = transmission
 
+    def __repr__(self):
+        return f'<Config {self.filter_states} transmission={self.transmission}>'
+
     def __str__(self):
-        """Format and print the optimal configuration."""
-        config, T_best, T_des = self.get_config()
+        """Format and print this configuration."""
         width = 80
-        print("="*width)
-        print(f"Desired transmission value: {self.t_des}")
-        print("-"*width)
-        print(f"Best possible transmission value: {self.transmission}")
-        print("-"*width)
-        print(self.config.astype(np.int))
-        print("="*width)
+        return '\n'.join((
+            "-" * width,
+            f"Calculated transmission value: {self.transmission}",
+            "-" * width,
+            str(self.filter_states.astype(np.int)),
+            "=" * width,
+        ))
 
 
 def find_configs(
@@ -143,10 +145,10 @@ def find_configs(
 
     return [
         Config(all_transmissions=list(all_transmissions),
-               filters=np.nan_to_num(config_bestLow).astype(np.int),
+               filter_states=np.nan_to_num(config_bestLow).astype(np.int),
                transmission=T_bestLow),
         Config(all_transmissions=list(all_transmissions),
-               filters=np.nan_to_num(config_bestHigh).astype(np.int),
+               filter_states=np.nan_to_num(config_bestHigh).astype(np.int),
                transmission=T_bestHigh)
     ]
 
@@ -171,12 +173,29 @@ def get_best_config(all_transmissions: typing.List[float],
 
 
 def find_closest_energy(photon_energy: float,
-                        table: np.ndarray,
-                        energy_increment: float):
+                        table: np.ndarray) -> typing.Tuple[float, int]:
     """
+    Find the closest tabulated photon energy in the given table.
 
+    Parameters
+    ----------
+    photon_energy : float
+        The photon energy to find. [eV]
+
+    table : np.ndarray
+        The absorption table.
+
+    Returns
+    -------
+    closest_energy : float
+        The closest energy. [eV]
+
+    closest_index : int
+        The array index of the closest energy.
     """
     min_energy = table[0, 0]
+    max_energy = table[-1, 0]
+    energy_increment = (max_energy - min_energy) / table.shape[0]
     closest_idx = int(np.rint((photon_energy - min_energy) / energy_increment))
     if closest_idx < 0:
         closest_idx = 0
@@ -220,9 +239,8 @@ def _ev_linear(ev_low, ev_high, res=10, dec=2):
     dec : int
        Decimal places.
     """
-    return np.around(np.linspace(ev_low,
-                                 ev_high,
-                                 (ev_high - ev_low) * res + 1), dec)
+    num = int(ev_high - ev_low) * res + 1
+    return np.around(np.linspace(ev_low, ev_high, num), dec)
 
 
 def _fill_data_linear(element, ev_low, ev_high, res=10):
@@ -249,8 +267,8 @@ def _fill_data_linear(element, ev_low, ev_high, res=10):
 
 
 def get_absorption_table(formula: str,
-                         ev_low: float,
-                         ev_high: float, *,
+                         ev_low: float = 10.,
+                         ev_high: float = 30000., *,
                          atomic_weight: float = None,
                          density: float = None) -> np.ndarray:
     """
@@ -295,3 +313,33 @@ def get_absorption_table(formula: str,
     table[:, 2] = ((2 * r0 * h * c * fs/eV_space) * density *
                    (NA / atomic_weight))  # absorption constant \mu
     return table
+
+
+def get_transmission(photon_energy: float,
+                     table: np.ndarray,
+                     thickness: float,
+                     ) -> float:
+    """
+    Get transmission at the given energy with a filter.
+
+    The filter is specified by the supplied absorption table and thickness,
+    in units of meters.
+
+    Parameters
+    ----------
+    photon_energy : float
+        The photon energy to find. [eV]
+
+    table : np.ndarray
+        The absorption table.
+
+    thickness : float
+        Thickness of the filter. [m]
+
+    Returns
+    -------
+    float
+        Normalized transmission value.
+    """
+    _, idx = find_closest_energy(photon_energy, table)
+    return np.exp(-table[idx, 2] * thickness)

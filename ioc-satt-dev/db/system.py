@@ -1,6 +1,7 @@
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
+from .. import calculator
 from .util import monitor_pvs
 
 
@@ -105,8 +106,8 @@ class SystemGroup(PVGroup):
                 print("Photon energy changed to {} eV.".format(eV))
                 await instance.write(eV)
                 for filter in self.ioc.filters.values():
-                    closest_eV, i = self.ioc.calc_closest_eV(
-                        eV, **filter.table_kwargs)
+                    closest_eV, i = calculator.find_closest_energy(
+                        eV, filter.table)
                     await filter.closest_eV_index.write(i)
                     await filter.closest_eV.write(closest_eV)
                     await filter.transmission.write(
@@ -182,8 +183,13 @@ class SystemGroup(PVGroup):
                 )
                 await instance.write(1)
                 try:
-                    await self.set_config.write(self.ioc.get_config()[0])
-                    self.ioc.print_config()
+                    config = calculator.get_best_config(
+                        all_transmissions=self.ioc.all_transmissions,
+                        t_des=self.t_desired.value,
+                        mode=self.mode.value
+                    )
+                    await self.set_config.write(config.filter_states)
+                    print(str(config))
                 except Exception:
                     self.log.exception('Get config failed?')
             if pmps_run == 1 and instance.value == "True":
@@ -196,5 +202,4 @@ class SystemGroup(PVGroup):
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
-        self.config_table = self.ioc.config_table
         self.dt = 0.01
