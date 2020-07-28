@@ -202,4 +202,3 @@ class SystemGroup(PVGroup):
     def __init__(self, prefix, *, ioc, **kwargs):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
-        self.dt = 0.01

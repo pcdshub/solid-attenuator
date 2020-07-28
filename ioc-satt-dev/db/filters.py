@@ -21,18 +21,14 @@ class FilterGroup(PVGroup):
         Load the HDF5 dataset containing physical constants
         and photon energy : atomic scattering factor table.
         """
-        self.log.info("Loading absorption table for %s...", formula)
-        self.table = calculator.get_absorption_table(formula=formula)
-        self.eV_min = self.table[0, 0]
-        self.eV_max = self.table[-1, 0]
-        self.eV_inc = (self.eV_max - self.eV_min) / len(self.table[:, 0])
-        self.table_kwargs = {
-            'eV_min': self.eV_min,
-            'eV_max': self.eV_max,
-            'eV_inc': self.eV_inc,
-            'table': self.table
-        }
-        self.log.info("Absorption table successfully loaded.")
+        try:
+            self.table = calculator.get_absorption_table(formula=formula)
+        except Exception:
+            self.table = None
+            self.log.exception("Failed to load absorption table for %s",
+                               formula)
+        else:
+            self.log.info("Loaded absorption table for %s", formula)
 
     material = autosaved(
         pvproperty(value='Si',
