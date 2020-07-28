@@ -1,5 +1,6 @@
 import sys
 
+import caproto
 import caproto._log as caproto_log
 import caproto.threading
 
@@ -141,3 +142,27 @@ def config_logging(logger, file=sys.stdout, datefmt='%H:%M:%S', color=True,
     caproto_log._set_handler_with_logger(logger_name=logger.name,
                                          file=file, datefmt=datefmt,
                                          color=color, level=level)
+
+
+def hack_max_length_of_channeldata(channeldata: caproto.ChannelData,
+                                   new_value: list,
+                                   max_length=None):
+    """
+    Force in a maximum length value. Should only be done at init time.
+
+    Parameters
+    ----------
+    channeldata : caproto.ChannelData
+        The ChannelData instance.
+
+    new_value : list
+        The new value to set.
+
+    max_length : int, optional
+        The new maximum length to use. Defaults to `len(new_value)`, and
+        must be `>= len(new_value)`.
+    """
+    max_length = max_length or len(new_value)
+    assert max_length >= len(new_value)
+    channeldata._max_length = max_length
+    channeldata._data['value'] = list(new_value)

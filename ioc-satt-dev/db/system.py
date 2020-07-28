@@ -4,6 +4,7 @@ from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
 from .. import calculator
+from . import util
 from .util import monitor_pvs
 
 
@@ -16,6 +17,10 @@ class SystemGroup(PVGroup):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
         self.log = logging.getLogger(f'{self.ioc.log.name}.System')
+
+        # TODO: this could be done by wrapping SystemGroup
+        util.hack_max_length_of_channeldata(
+            self.set_config, [0] * len(self.ioc.filters))
 
     t_calc = pvproperty(value=0.1,
                         name='T_CALC',
@@ -68,7 +73,7 @@ class SystemGroup(PVGroup):
 
     set_config = pvproperty(name='SET_CONFIG',
                             value=0,
-                            max_length=18,
+                            max_length=1,
                             read_only=True)
 
     @pvproperty(name='T_CALC',
