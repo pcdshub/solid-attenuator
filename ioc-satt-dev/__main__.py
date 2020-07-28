@@ -1,5 +1,6 @@
 from caproto.server import ioc_arg_parser, run
 
+from .db import util
 from .satt_app import IOCMain, create_ioc
 
 ################################################
@@ -25,4 +26,5 @@ if __name__ == '__main__':
         desc=IOCMain.__doc__)
 
     ioc = create_ioc(**ioc_args, **ioc_options)
+    util.config_logging(ioc.log, level='DEBUG')
     run(ioc.pvdb, **run_options)

@@ -54,7 +54,7 @@ def in_out_combinations(num_blades: int):
 class Config:
     def __init__(self, all_transmissions, filter_states, transmission):
         self.all_transmissions = all_transmissions
-        self.filter_states = filter_states
+        self.filter_states = filter_states.astype(np.int)
         self.transmission = transmission
 
     def __repr__(self):

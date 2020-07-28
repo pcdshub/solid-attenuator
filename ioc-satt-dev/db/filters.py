@@ -1,3 +1,5 @@
+import logging
+
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
@@ -15,6 +17,7 @@ class FilterGroup(PVGroup):
         self.index = index
         # Default to silicon, for now
         self.load_data('Si')
+        self.log = logging.getLogger(f'{self.ioc.log.name}.Filter{index}')
 
     def load_data(self, formula):
         """
