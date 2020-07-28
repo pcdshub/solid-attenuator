@@ -1,4 +1,5 @@
 import sys
+import typing
 
 import caproto
 import caproto._log as caproto_log
@@ -166,3 +167,27 @@ def hack_max_length_of_channeldata(channeldata: caproto.ChannelData,
     assert max_length >= len(new_value)
     channeldata._max_length = max_length
     channeldata._data['value'] = list(new_value)
+
+
+def process_writes_value(pvprop: caproto.server.pvproperty, *,
+                         value: typing.Any = None):
+    """
+    When `.PROC` is changed, write the value `value` to the pvproperty.
+
+    Parameters
+    ----------
+    pvprop : caproto.server.pvproperty
+        The property.
+
+    value : any
+        The value to write upon processing.  If `None`, defaults to re-writing
+        the current value of `pvprop`.
+    """
+
+    async def wrapped(fields, instance, proc_value, *, value_to_write=value):
+        pvprop_instance = fields.parent
+        if value_to_write is None:
+            value_to_write = pvprop_instance.value
+        await pvprop_instance.write(value_to_write)
+
+    pvprop.fields.process_record.putter(wrapped)
