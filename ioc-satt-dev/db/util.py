@@ -1,3 +1,6 @@
+import sys
+
+import caproto._log as caproto_log
 import caproto.threading
 
 _default_thread_context = None
@@ -91,3 +94,50 @@ async def monitor_pvs(*pv_names, async_lib, context=None, data_type='time'):
     finally:
         for sub, token, *callbacks in subscriptions:
             sub.remove_callback(token)
+
+
+def config_logging(logger, file=sys.stdout, datefmt='%H:%M:%S', color=True,
+                   level='WARNING'):
+    """
+    Add a new handler to the logger.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        The logger to configure.
+
+    file : object with ``write`` method or filename string
+        Default is ``sys.stdout``.
+
+    datefmt : string
+        Date format. Default is ``'%H:%M:%S'``.
+
+    color : boolean
+        Use ANSI color codes. True by default.
+
+    level : str or int
+        Python logging level, given as string or corresponding integer.
+        Default is 'WARNING'.
+
+    Examples
+    --------
+    Log to a file.
+
+    >>> config_logging(file='/tmp/what_is_happening.txt')
+
+    Include the date along with the time. (The log messages will always include
+    microseconds, which are configured separately, not as part of 'datefmt'.)
+
+    >>> config_logging(datefmt="%Y-%m-%d %H:%M:%S")
+
+    Turn off ANSI color codes.
+
+    >>> config_logging(color=False)
+
+    Increase verbosity: show level INFO or higher.
+
+    >>> config_logging(level='INFO')
+    """
+    caproto_log._set_handler_with_logger(logger_name=logger.name,
+                                         file=file, datefmt=datefmt,
+                                         color=color, level=level)

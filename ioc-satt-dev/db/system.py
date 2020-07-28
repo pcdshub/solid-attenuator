@@ -1,3 +1,5 @@
+import logging
+
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
@@ -9,6 +11,12 @@ class SystemGroup(PVGroup):
     """
     PV group for attenuator system-spanning information.
     """
+
+    def __init__(self, prefix, *, ioc, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.ioc = ioc
+        self.log = logging.getLogger(f'{self.ioc.log.name}.System')
+
     t_calc = pvproperty(value=0.1,
                         name='T_CALC',
                         record='ao',
@@ -103,7 +111,7 @@ class SystemGroup(PVGroup):
             self.log.debug('Photon energy changed: %s', eV)
 
             if instance.value != eV:
-                print("Photon energy changed to {} eV.".format(eV))
+                self.log.info("Photon energy changed to %s eV.", eV)
                 await instance.write(eV)
                 for filter in self.ioc.filters.values():
                     closest_eV, i = calculator.find_closest_energy(
@@ -114,7 +122,8 @@ class SystemGroup(PVGroup):
                         filter.get_transmission(eV, filter.thickness.value))
                     await filter.transmission_3omega.write(
                         filter.get_transmission(3.*eV, filter.thickness.value))
-                print(f"Closest tabulated photon energy: {closest_eV} eV")
+                self.log.info("Closest tabulated photon energy %s eV",
+                              closest_eV)
                 await self.t_calc.write(self.ioc.t_calc())
 
         return eV
@@ -140,8 +149,6 @@ class SystemGroup(PVGroup):
             self.log.debug('Desired transmission changed: %s', pmps_tdes)
 
             if instance.value != pmps_tdes:
-                print("Desired transmission set to {}".format(
-                    pmps_tdes))
                 try:
                     await instance.write(pmps_tdes)
                 except Exception:
@@ -189,7 +196,15 @@ class SystemGroup(PVGroup):
                         mode=self.mode.value
                     )
                     await self.set_config.write(config.filter_states)
-                    print(str(config))
+                    self.log.info(
+                        '%s transmission desired %.2g estimated %.2g '
+                        '(delta %.3g) configuration: %s',
+                        self.mode.value,
+                        self.t_desired.value,
+                        config.transmission,
+                        config.transmission - self.t_desired.value,
+                        config.filter_states,
+                    )
                 except Exception:
                     self.log.exception('Get config failed?')
             if pmps_run == 1 and instance.value == "True":
@@ -198,7 +213,3 @@ class SystemGroup(PVGroup):
                 await instance.write(0)
 
         return pmps_run
-
-    def __init__(self, prefix, *, ioc, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.ioc = ioc
