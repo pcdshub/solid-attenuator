@@ -1,6 +1,7 @@
 import numpy as np
-from caproto.server import PVGroup
+from caproto.server import PVGroup, SubGroup
 
+from .db.autosave import AutosaveHelper
 from .db.filters import FilterGroup
 from .db.system import SystemGroup
 
@@ -20,6 +21,8 @@ class IOCMain(PVGroup):
             pmps_run=pmps_run,
             pmps_tdes=pmps_tdes,
         )
+
+    autosave_helper = SubGroup(AutosaveHelper)
 
     @property
     def working_filters(self):
@@ -70,23 +73,6 @@ class IOCMain(PVGroup):
         for idx, filt in self.working_filters.items():
             T_arr[idx - 1] = filt.transmission.value
         return T_arr
-
-    def _get_config(self, T_des=None):
-        """
-        Return the optimal floor (lower than desired transmission) or ceiling
-        (higher than desired transmission) configuration based on the current
-        mode setting.
-        """
-        if not T_des:
-            T_des = self.sys.t_desired.value
-        mode = self.sys.mode.value
-
-        conf = self.find_configs()
-        config_bestLow, config_bestHigh, T_bestLow, T_bestHigh = conf
-
-        if mode == "Floor":
-            return config_bestLow, T_bestLow, T_des
-        return config_bestHigh, T_bestHigh, T_des
 
 
 def create_ioc(prefix,
