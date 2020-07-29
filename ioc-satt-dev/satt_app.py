@@ -15,7 +15,7 @@ class IOCMain(PVGroup):
         super().__init__(prefix, **kwargs)
         self.prefix = prefix
         self.filters = filters
-        self.groups = groups
+        self._groups = groups
         self.monitor_pvnames = dict(
             ev=eV,
             pmps_run=pmps_run,
@@ -97,12 +97,12 @@ def create_ioc(prefix,
         filt = FilterGroup(f'{prefix}:FILTER:{group_prefix}:', ioc=ioc,
                            index=index)
         ioc.filters[index] = filt
-        ioc.groups[group_prefix] = filt
+        groups[group_prefix] = filt
 
-    ioc.groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
-    ioc.sys = ioc.groups['SYS']
+    groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
+    ioc.sys = groups['SYS']
 
-    for group in ioc.groups.values():
+    for group in groups.values():
         ioc.pvdb.update(**group.pvdb)
 
     return ioc
