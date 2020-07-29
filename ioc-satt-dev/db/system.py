@@ -4,6 +4,7 @@ from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
 from .. import calculator
+from . import util
 from .util import monitor_pvs
 
 
@@ -16,6 +17,10 @@ class SystemGroup(PVGroup):
         super().__init__(prefix, **kwargs)
         self.ioc = ioc
         self.log = logging.getLogger(f'{self.ioc.log.name}.System')
+
+        # TODO: this could be done by wrapping SystemGroup
+        util.hack_max_length_of_channeldata(
+            self.set_config, [0] * len(self.ioc.filters))
 
     t_calc = pvproperty(value=0.1,
                         name='T_CALC',
@@ -68,7 +73,7 @@ class SystemGroup(PVGroup):
 
     set_config = pvproperty(name='SET_CONFIG',
                             value=0,
-                            max_length=18,
+                            max_length=1,
                             read_only=True)
 
     @pvproperty(name='T_CALC',
@@ -160,56 +165,35 @@ class SystemGroup(PVGroup):
                      name='RUN',
                      record='bo',
                      enum_strings=['False', 'True'],
-                     doc='Change transmission',
-                     read_only=True,
+                     doc='Run calculation',
                      dtype=ChannelType.ENUM)
 
-    @run.startup
-    async def run(self, instance, async_lib):
-        """
-        Update PMPS run command value.  When true the `:SET_CONFIG` PV will
-        update to the optimal configuration for the current desired
-        transmission `:T_DES`.
-        """
+    async def run_calculation(self):
+        config = calculator.get_best_config(
+            all_transmissions=self.ioc.all_transmissions,
+            t_des=self.t_desired.value,
+            mode=self.mode.value
+        )
+        await self.set_config.write(config.filter_states)
+        self.log.info(
+            '%s transmission desired %.2g estimated %.2g '
+            '(delta %.3g) configuration: %s',
+            self.mode.value,
+            self.t_desired.value,
+            config.transmission,
+            config.transmission - self.t_desired.value,
+            config.filter_states,
+        )
 
-        pvname = self.ioc.monitor_pvnames['pmps_run']
-        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
-            if event == 'connection':
-                self.log.info('%s %s', pv, data)
-                continue
+    @run.putter
+    async def run(self, instance, value):
+        if value == 'False':
+            return
 
-            pmps_run = data.data[0]
-            self.log.debug('PMPS run request: %s', pmps_run)
+        try:
+            await self.run_calculation()
+        except Exception:
+            self.log.exception('update_config failed?')
 
-            if pmps_run == 1 and instance.value == "False":
-                self.log.warning(
-                    "PMPS run command received. "
-                    "Desired transmission: %s (%s eV)",
-                    self.t_desired.value,
-                    self.current_photon_energy,
-                )
-                await instance.write(1)
-                try:
-                    config = calculator.get_best_config(
-                        all_transmissions=self.ioc.all_transmissions,
-                        t_des=self.t_desired.value,
-                        mode=self.mode.value
-                    )
-                    await self.set_config.write(config.filter_states)
-                    self.log.info(
-                        '%s transmission desired %.2g estimated %.2g '
-                        '(delta %.3g) configuration: %s',
-                        self.mode.value,
-                        self.t_desired.value,
-                        config.transmission,
-                        config.transmission - self.t_desired.value,
-                        config.filter_states,
-                    )
-                except Exception:
-                    self.log.exception('Get config failed?')
-            if pmps_run == 1 and instance.value == "True":
-                pass
-            if pmps_run == 0 and instance.value == "True":
-                await instance.write(0)
-
-        return pmps_run
+    # RUN.PROC -> run = 1
+    util.process_writes_value(run, value=1)

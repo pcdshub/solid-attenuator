@@ -1,5 +1,7 @@
 import sys
+import typing
 
+import caproto
 import caproto._log as caproto_log
 import caproto.threading
 
@@ -141,3 +143,51 @@ def config_logging(logger, file=sys.stdout, datefmt='%H:%M:%S', color=True,
     caproto_log._set_handler_with_logger(logger_name=logger.name,
                                          file=file, datefmt=datefmt,
                                          color=color, level=level)
+
+
+def hack_max_length_of_channeldata(channeldata: caproto.ChannelData,
+                                   new_value: list,
+                                   max_length=None):
+    """
+    Force in a maximum length value. Should only be done at init time.
+
+    Parameters
+    ----------
+    channeldata : caproto.ChannelData
+        The ChannelData instance.
+
+    new_value : list
+        The new value to set.
+
+    max_length : int, optional
+        The new maximum length to use. Defaults to `len(new_value)`, and
+        must be `>= len(new_value)`.
+    """
+    max_length = max_length or len(new_value)
+    assert max_length >= len(new_value)
+    channeldata._max_length = max_length
+    channeldata._data['value'] = list(new_value)
+
+
+def process_writes_value(pvprop: caproto.server.pvproperty, *,
+                         value: typing.Any = None):
+    """
+    When `.PROC` is changed, write the value `value` to the pvproperty.
+
+    Parameters
+    ----------
+    pvprop : caproto.server.pvproperty
+        The property.
+
+    value : any
+        The value to write upon processing.  If `None`, defaults to re-writing
+        the current value of `pvprop`.
+    """
+
+    async def wrapped(fields, instance, proc_value, *, value_to_write=value):
+        pvprop_instance = fields.parent
+        if value_to_write is None:
+            value_to_write = pvprop_instance.value
+        await pvprop_instance.write(value_to_write)
+
+    pvprop.fields.process_record.putter(wrapped)

@@ -9,6 +9,7 @@ num_blades = 18
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
 pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"
+log_level = 'DEBUG'
 ################################################
 
 ioc_args = {
@@ -26,5 +27,5 @@ if __name__ == '__main__':
         desc=IOCMain.__doc__)
 
     ioc = create_ioc(**ioc_args, **ioc_options)
-    util.config_logging(ioc.log, level='DEBUG')
+    util.config_logging(ioc.log, level=log_level)
     run(ioc.pvdb, **run_options)
