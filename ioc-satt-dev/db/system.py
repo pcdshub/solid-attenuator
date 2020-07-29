@@ -1,5 +1,3 @@
-import logging
-
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 
@@ -13,14 +11,12 @@ class SystemGroup(PVGroup):
     PV group for attenuator system-spanning information.
     """
 
-    def __init__(self, prefix, *, ioc, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.ioc = ioc
-        self.log = logging.getLogger(f'{self.ioc.log.name}.System')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # TODO: this could be done by wrapping SystemGroup
         util.hack_max_length_of_channeldata(
-            self.set_config, [0] * len(self.ioc.filters))
+            self.set_config, [0] * self.parent.num_filters)
 
     t_calc = pvproperty(value=0.1,
                         name='T_CALC',
@@ -82,7 +78,7 @@ class SystemGroup(PVGroup):
                 lower_alarm_limit=0.0,
                 read_only=True)
     async def t_calc(self, instance):
-        t = self.ioc.t_calc()
+        t = self.parent.t_calc()
         return t
 
     @pvproperty(name='T_3OMEGA',
@@ -91,7 +87,7 @@ class SystemGroup(PVGroup):
                 lower_alarm_limit=0.0,
                 read_only=True)
     async def t_calc_3omega(self, instance):
-        t = self.ioc.t_calc_3omega()
+        t = self.parent.t_calc_3omega()
         return t
 
     @property
@@ -106,7 +102,7 @@ class SystemGroup(PVGroup):
     @eV_RBV.startup
     async def eV_RBV(self, instance, async_lib):
         """Update beam energy and calculated values."""
-        pvname = self.ioc.monitor_pvnames['ev']
+        pvname = self.parent.monitor_pvnames['ev']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
                 self.log.info('%s %s', pv, data)
@@ -118,7 +114,7 @@ class SystemGroup(PVGroup):
             if instance.value != eV:
                 self.log.info("Photon energy changed to %s eV.", eV)
                 await instance.write(eV)
-                for filter in self.ioc.filters.values():
+                for filter in self.parent.filters.values():
                     closest_eV, i = calculator.find_closest_energy(
                         eV, filter.table)
                     await filter.closest_eV_index.write(i)
@@ -129,7 +125,7 @@ class SystemGroup(PVGroup):
                         filter.get_transmission(3.*eV, filter.thickness.value))
                 self.log.info("Closest tabulated photon energy %s eV",
                               closest_eV)
-                await self.t_calc.write(self.ioc.t_calc())
+                await self.t_calc.write(self.parent.t_calc())
 
         return eV
 
@@ -144,7 +140,7 @@ class SystemGroup(PVGroup):
     @t_desired.startup
     async def t_desired(self, instance, async_lib):
         """Update PMPS desired transmission value."""
-        pvname = self.ioc.monitor_pvnames['pmps_tdes']
+        pvname = self.parent.monitor_pvnames['pmps_tdes']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
                 self.log.info('%s %s', pv, data)
@@ -170,7 +166,7 @@ class SystemGroup(PVGroup):
 
     async def run_calculation(self):
         config = calculator.get_best_config(
-            all_transmissions=self.ioc.all_transmissions,
+            all_transmissions=self.parent.all_transmissions,
             t_des=self.t_desired.value,
             mode=self.mode.value
         )

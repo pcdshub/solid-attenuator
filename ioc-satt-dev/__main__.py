@@ -1,7 +1,7 @@
 from caproto.server import ioc_arg_parser, run
 
 from .db import util
-from .satt_app import IOCMain, create_ioc
+from .satt_app import create_ioc
 
 ################################################
 prefix = "AT2L0:SIM"
@@ -9,7 +9,7 @@ num_blades = 18
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
 pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"
-log_level = 'DEBUG'
+log_level = 'INFO'
 ################################################
 
 ioc_args = {
@@ -24,7 +24,7 @@ ioc_args = {
 if __name__ == '__main__':
     ioc_options, run_options = ioc_arg_parser(
         default_prefix=prefix,
-        desc=IOCMain.__doc__)
+        desc='Solid attenuator IOC')
 
     ioc = create_ioc(**ioc_args, **ioc_options)
     util.config_logging(ioc.log, level=log_level)

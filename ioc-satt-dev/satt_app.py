@@ -1,21 +1,24 @@
 import numpy as np
 from caproto.server import PVGroup, SubGroup
+from caproto.server.autosave import AutosaveHelper
 
-from .db.autosave import AutosaveHelper
 from .db.filters import FilterGroup
 from .db.system import SystemGroup
 
 
-class IOCMain(PVGroup):
+class IOCBase(PVGroup):
     """
     """
 
-    def __init__(self, prefix, *, filters, groups, eV, pmps_run, pmps_tdes,
+    num_filters = None
+
+    def __init__(self, prefix, *, eV, pmps_run, pmps_tdes,
+                 filter_index_to_attribute,
                  **kwargs):
         super().__init__(prefix, **kwargs)
         self.prefix = prefix
-        self.filters = filters
-        self.groups = groups
+        self.filters = {idx: getattr(self, attr)
+                        for idx, attr in filter_index_to_attribute.items()}
         self.monitor_pvnames = dict(
             ev=eV,
             pmps_run=pmps_run,
@@ -23,6 +26,7 @@ class IOCMain(PVGroup):
         )
 
     autosave_helper = SubGroup(AutosaveHelper)
+    sys = SubGroup(SystemGroup, prefix=':SYS:')
 
     @property
     def working_filters(self):
@@ -83,26 +87,27 @@ def create_ioc(prefix,
                filter_group,
                **ioc_options):
     """IOC Setup."""
-    groups = {}
-    filters = {}
+
+    filter_index_to_attribute = {
+        index: f'filter_{suffix}'
+        for index, suffix in filter_group.items()
+    }
+
+    subgroups = {
+        filter_index_to_attribute[index]: SubGroup(
+            FilterGroup, prefix=f':FILTER:{suffix}:', index=index)
+        for index, suffix in filter_group.items()
+    }
+
+    class IOCMain(IOCBase):
+        num_filters = len(filter_index_to_attribute)
+        locals().update(**subgroups)
+
     ioc = IOCMain(prefix=prefix,
-                  filters=filters,
-                  groups=groups,
                   eV=eV_pv,
+                  filter_index_to_attribute=filter_index_to_attribute,
                   pmps_run=pmps_run_pv,
                   pmps_tdes=pmps_tdes_pv,
                   **ioc_options)
-
-    for index, group_prefix in filter_group.items():
-        filt = FilterGroup(f'{prefix}:FILTER:{group_prefix}:', ioc=ioc,
-                           index=index)
-        ioc.filters[index] = filt
-        ioc.groups[group_prefix] = filt
-
-    ioc.groups['SYS'] = SystemGroup(f'{prefix}:SYS:', ioc=ioc)
-    ioc.sys = ioc.groups['SYS']
-
-    for group in ioc.groups.values():
-        ioc.pvdb.update(**group.pvdb)
 
     return ioc

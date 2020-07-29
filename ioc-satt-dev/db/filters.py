@@ -1,23 +1,19 @@
-import logging
-
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
+from caproto.server.autosave import autosaved
 
 from .. import calculator
-from .autosave import autosaved
 
 
 class FilterGroup(PVGroup):
     """
     PV group for filter metadata.
     """
-    def __init__(self, prefix, *, ioc, index, **kwargs):
+    def __init__(self, prefix, *, index, **kwargs):
         super().__init__(prefix, **kwargs)
-        self.ioc = ioc
         self.index = index
         # Default to silicon, for now
         self.load_data('Si')
-        self.log = logging.getLogger(f'{self.ioc.log.name}.Filter{index}')
 
     def load_data(self, formula):
         """
@@ -94,7 +90,7 @@ class FilterGroup(PVGroup):
     @property
     def current_photon_energy(self):
         """Current photon energy in eV."""
-        return self.ioc.sys.current_photon_energy
+        return self.parent.sys.current_photon_energy
 
     def get_transmission(self, eV, thickness):
         return calculator.get_transmission(
