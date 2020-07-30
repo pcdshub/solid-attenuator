@@ -12,6 +12,7 @@ class FilterGroup(PVGroup):
     def __init__(self, prefix, *, index, **kwargs):
         super().__init__(prefix, **kwargs)
         self.index = index
+        self._last_photon_energy = 0.0
         # Default to silicon, for now
         self.load_data('Si')
 
@@ -30,12 +31,13 @@ class FilterGroup(PVGroup):
             self.log.info("Loaded absorption table for %s", formula)
 
     material = autosaved(
-        pvproperty(value='Si',
-                   name='MATERIAL',
-                   record='stringin',
-                   doc='Filter material',
-                   dtype=ChannelType.STRING
-                   )
+        pvproperty(
+            value='Si',
+            name='Material',
+            record='stringin',
+            doc='Filter material',
+            dtype=ChannelType.STRING
+        )
     )
 
     @material.putter
@@ -43,54 +45,68 @@ class FilterGroup(PVGroup):
         self.load_data(formula=value)
 
     thickness = autosaved(
-        pvproperty(value=1E-6,
-                   name='THICKNESS',
-                   record='ao',
-                   upper_ctrl_limit=1.0,
-                   lower_ctrl_limit=0.0,
-                   doc='Filter thickness',
-                   units='m')
+        pvproperty(
+            value=1E-6,
+            name='Thickness',
+            record='ao',
+            upper_ctrl_limit=1.0,
+            lower_ctrl_limit=0.0,
+            doc='Filter thickness',
+            units='m'
+        )
     )
 
     is_stuck = autosaved(
-        pvproperty(value='False',
-                   name='IS_STUCK',
-                   record='bo',
-                   enum_strings=['False', 'True'],
-                   doc='Filter is stuck in place',
-                   dtype=ChannelType.ENUM)
+        pvproperty(
+            value='False',
+            name='IsStuck',
+            record='bo',
+            enum_strings=['False', 'True'],
+            doc='Filter is stuck in place',
+            dtype=ChannelType.ENUM
+        )
     )
 
-    closest_eV = pvproperty(name='CLOSE_EV',
-                            read_only=True)
+    closest_energy = pvproperty(
+        name='ClosestEnergy_RBV',
+        read_only=True,
+    )
 
-    closest_eV_index = pvproperty(name='CLOSE_EV_INDEX',
-                                  read_only=True)
+    closest_index = pvproperty(
+        name='ClosestIndex_RBV',
+        read_only=True,
+    )
 
-    @pvproperty(name='T',
-                value=0.5,
-                upper_ctrl_limit=1.0,
-                lower_ctrl_limit=0.0,
-                read_only=True)
-    async def transmission(self, instance):
-        return self.get_transmission(
-            self.current_photon_energy,
-            self.thickness.value)
+    transmission = pvproperty(
+        name='Transmission_RBV',
+        value=0.5,
+        upper_ctrl_limit=1.0,
+        lower_ctrl_limit=0.0,
+        read_only=True
+    )
 
-    @pvproperty(name='T_3OMEGA',
-                value=0.5,
-                upper_alarm_limit=1.0,
-                lower_alarm_limit=0.0,
-                read_only=True)
-    async def transmission_3omega(self, instance):
-        return self.get_transmission(
-            3 * self.current_photon_energy,
-            self.thickness.value)
+    transmission_3omega = pvproperty(
+        name='Transmission3Omega_RBV',
+        value=0.5,
+        upper_alarm_limit=1.0,
+        lower_alarm_limit=0.0,
+        read_only=True
+    )
 
-    @property
-    def current_photon_energy(self):
-        """Current photon energy in eV."""
-        return self.parent.sys.current_photon_energy
+    async def set_photon_energy(self, energy_ev):
+        self._last_photon_energy = energy_ev
+        closest_energy, i = calculator.find_closest_energy(
+            energy_ev, self.table)
+
+        await self.closest_index.write(i)
+        await self.closest_energy.write(closest_energy)
+
+        await self.transmission.write(
+            self.get_transmission(energy_ev, self.thickness.value)
+        )
+        await self.transmission_3omega.write(
+            self.get_transmission(3.*energy_ev, self.thickness.value)
+        )
 
     def get_transmission(self, eV, thickness):
         return calculator.get_transmission(
@@ -100,6 +116,7 @@ class FilterGroup(PVGroup):
 
     @thickness.putter
     async def thickness(self, instance, value):
+        energy = self._last_photon_energy
         await self.transmission.write(
-            self.get_transmission(self.current_photon_energy, value)
+            self.get_transmission(energy, value)
         )

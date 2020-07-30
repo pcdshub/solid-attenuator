@@ -40,7 +40,7 @@ class IOCBase(PVGroup):
             if filt.is_stuck.value != "True"
         }
 
-    def t_calc(self):
+    def calculate_transmission(self):
         """
         Total transmission through all filter blades.
 
@@ -52,7 +52,7 @@ class IOCBase(PVGroup):
             t *= filt.transmission.value
         return t
 
-    def t_calc_3omega(self):
+    def calculate_transmission_3omega(self):
         """
         Total 3rd harmonic transmission through all filter blades.
 
