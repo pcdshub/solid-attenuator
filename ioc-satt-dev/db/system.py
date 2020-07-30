@@ -1,4 +1,4 @@
-from caproto import ChannelType
+from caproto import AlarmSeverity, AlarmStatus, ChannelType
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
 
@@ -110,7 +110,8 @@ class SystemGroup(PVGroup):
         name='ActualPhotonEnergy_RBV',
         value=0.0,
         read_only=True,
-        units='eV'
+        units='eV',
+        alarm_group='valid_photon_energy',
     )
 
     energy_custom = pvproperty(
@@ -133,10 +134,19 @@ class SystemGroup(PVGroup):
     @energy_actual.startup
     async def energy_actual(self, instance, async_lib):
         """Update beam energy and calculated values."""
+        async def update_connection_status(status):
+            if status == 'connected':
+                status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
+            else:
+                status, severity = AlarmStatus.LINK, AlarmSeverity.MAJOR_ALARM
+            await instance.alarm.write(status=status, severity=severity)
+
+        await update_connection_status('disconnected')
         pvname = self.parent.monitor_pvnames['ev']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
                 self.log.info('%s %s', pv, data)
+                await update_connection_status(data)
                 continue
 
             eV = data.data[0]
