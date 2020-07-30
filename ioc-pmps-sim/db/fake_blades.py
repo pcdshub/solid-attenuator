@@ -128,6 +128,8 @@ class FakeTwinCATStateConfigAll(PVGroup):
 
 
 class FakeTwinCATStatePositioner(PVGroup):
+    _delay = 0.2
+
     state_get = pvproperty(value=0, name='GET_RBV')
     state_set = pvproperty(value=0, name='SET')
     error = pvproperty(value=0.0, name='ERR_RBV')
@@ -137,6 +139,18 @@ class FakeTwinCATStatePositioner(PVGroup):
     done = pvproperty(value=0, name='DONE_RBV')
     reset_cmd = pvproperty_with_rbv(dtype=int, name='RESET')
     config = SubGroup(FakeTwinCATStateConfigAll, prefix='')
+
+    @state_set.startup
+    async def state_set(self, instance, async_lib):
+        self.async_lib = async_lib
+
+    @state_set.putter
+    async def state_set(self, instance, value):
+        await self.busy.write(1)
+        await self.async_lib.library.sleep(self._delay)
+        await self.state_get.write(value)
+        await self.busy.write(0)
+        await self.done.write(1)
 
 
 class FakeBeckhoffAxis(PVGroup):
