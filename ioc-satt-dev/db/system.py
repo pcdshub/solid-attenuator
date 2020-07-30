@@ -1,5 +1,6 @@
 from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
+from caproto.server.autosave import autosaved
 
 from .. import calculator
 from . import util
@@ -15,92 +16,119 @@ class SystemGroup(PVGroup):
         super().__init__(*args, **kwargs)
 
         # TODO: this could be done by wrapping SystemGroup
-        util.hack_max_length_of_channeldata(
-            self.set_config, [0] * self.parent.num_filters)
+        for obj in (self.best_config, self.active_config):
+            util.hack_max_length_of_channeldata(obj,
+                                                [0] * self.parent.num_filters)
 
-    t_calc = pvproperty(value=0.1,
-                        name='T_CALC',
-                        record='ao',
-                        upper_alarm_limit=1.0,
-                        lower_alarm_limit=0.0,
-                        read_only=True,
-                        doc='Calculated transmission')
+    calculated_transmission = pvproperty(
+        value=0.1,
+        name='T_CALC',
+        record='ao',
+        upper_alarm_limit=1.0,
+        lower_alarm_limit=0.0,
+        read_only=True,
+        doc='Calculated transmission (all blades)'
+    )
 
-    t_high = pvproperty(value=0.1,
-                        name='T_HIGH',
-                        record='ao',
-                        upper_ctrl_limit=1.0,
-                        lower_ctrl_limit=0.0,
-                        read_only=True,
-                        doc='Desired transmission best achievable (high)')
+    calculated_transmission_3omega = pvproperty(
+        name='T_3OMEGA',
+        value=0.5,
+        upper_alarm_limit=1.0,
+        lower_alarm_limit=0.0,
+        read_only=True,
+        doc='Calculated 3omega transmission (all blades)'
+    )
 
-    t_low = pvproperty(value=0.1,
-                       name='T_LOW',
-                       record='ao',
-                       upper_ctrl_limit=1.0,
-                       lower_ctrl_limit=0.0,
-                       read_only=True,
-                       doc='Desired transmission best achievable (low)')
+    calculated_transmission_error = pvproperty(
+        value=0.1,
+        name='T_CALC_ERROR',
+        record='ao',
+        upper_alarm_limit=1.0,
+        lower_alarm_limit=0.0,
+        read_only=True,
+        doc='Calculated transmission error'
+    )
 
-    running = pvproperty(value='False',
-                         name='RUNNING',
-                         record='bo',
-                         enum_strings=['False', 'True'],
-                         read_only=True,
-                         doc='The system is running',
-                         dtype=ChannelType.ENUM)
+    running = pvproperty(
+        value='False',
+        name='Running',
+        record='bo',
+        enum_strings=['False', 'True'],
+        read_only=True,
+        doc='The system is running',
+        dtype=ChannelType.ENUM
+    )
 
-    mirror_in = pvproperty(value='False',
-                           name='MIRROR_IN',
-                           record='bo',
-                           enum_strings=['False', 'True'],
-                           read_only=True,
-                           doc='The inspection mirror is in',
-                           dtype=ChannelType.ENUM)
+    mirror_in = pvproperty(
+        value='False',
+        name='MIRROR_IN',
+        record='bo',
+        enum_strings=['False', 'True'],
+        read_only=True,
+        doc='The inspection mirror is in',
+        dtype=ChannelType.ENUM
+    )
 
-    mode = pvproperty(value='Floor',
-                      name='MODE',
-                      record='bo',
-                      enum_strings=['Floor', 'Ceiling'],
-                      read_only=False,
-                      doc=('Mode for selecting floor or ceiling transmission'
-                           'estimation'),
-                      dtype=ChannelType.ENUM)
+    calc_mode = pvproperty(
+        value='Floor',
+        name='CalcMode',
+        record='bo',
+        enum_strings=['Floor', 'Ceiling'],
+        read_only=False,
+        doc='Mode for selecting floor or ceiling transmission estimation',
+        dtype=ChannelType.ENUM
+    )
 
-    set_config = pvproperty(name='SET_CONFIG',
-                            value=0,
-                            max_length=1,
-                            read_only=True)
+    energy_source = pvproperty(
+        value='Actual',
+        name='EnergySource',
+        record='bo',
+        enum_strings=['Actual', 'Custom'],
+        read_only=False,
+        doc='Choose the source of photon energy',
+        dtype=ChannelType.ENUM,
+    )
 
-    @pvproperty(name='T_CALC',
-                value=0.5,
-                upper_alarm_limit=1.0,
-                lower_alarm_limit=0.0,
-                read_only=True)
-    async def t_calc(self, instance):
-        t = self.parent.t_calc()
-        return t
+    best_config = pvproperty(
+        name='BestConfiguration_RBV',
+        value=0,
+        max_length=1,
+        read_only=True
+    )
 
-    @pvproperty(name='T_3OMEGA',
-                value=0.5,
-                upper_alarm_limit=1.0,
-                lower_alarm_limit=0.0,
-                read_only=True)
-    async def t_calc_3omega(self, instance):
-        t = self.parent.t_calc_3omega()
-        return t
+    active_config = pvproperty(
+        name='ActiveConfiguration_RBV',
+        value=0,
+        max_length=1,
+        read_only=True
+    )
 
-    @property
-    def current_photon_energy(self):
-        return self.eV_RBV.value
+    energy_actual = pvproperty(
+        name='ActualPhotonEnergy_RBV',
+        value=0.0,
+        read_only=True,
+        units='eV'
+    )
 
-    eV_RBV = pvproperty(name='EV_RBV',
-                        value=1000.0,
-                        read_only=True,
-                        units='eV')
+    energy_custom = pvproperty(
+        name='CustomPhotonEnergy',
+        value=0.0,
+        read_only=False,
+        units='eV',
+        lower_ctrl_limit=100.0,
+        upper_ctrl_limit=30000.0,
+    )
 
-    @eV_RBV.startup
-    async def eV_RBV(self, instance, async_lib):
+    energy_calc = pvproperty(
+        name='LastPhotonEnergy_RBV',
+        value=0.0,
+        read_only=True,
+        units='eV',
+        doc='Energy that was used for the calculation.'
+    )
+
+    @energy_actual.startup
+    async def energy_actual(self, instance, async_lib):
         """Update beam energy and calculated values."""
         pvname = self.parent.monitor_pvnames['ev']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
@@ -114,70 +142,66 @@ class SystemGroup(PVGroup):
             if instance.value != eV:
                 self.log.info("Photon energy changed to %s eV.", eV)
                 await instance.write(eV)
-                for filter in self.parent.filters.values():
-                    closest_eV, i = calculator.find_closest_energy(
-                        eV, filter.table)
-                    await filter.closest_eV_index.write(i)
-                    await filter.closest_eV.write(closest_eV)
-                    await filter.transmission.write(
-                        filter.get_transmission(eV, filter.thickness.value))
-                    await filter.transmission_3omega.write(
-                        filter.get_transmission(3.*eV, filter.thickness.value))
-                self.log.info("Closest tabulated photon energy %s eV",
-                              closest_eV)
-                await self.t_calc.write(self.parent.t_calc())
 
         return eV
 
-    t_desired = pvproperty(
-        name='T_DES',
-        value=0.5,
-        read_only=True,
-        lower_ctrl_limit=0.0,
-        upper_ctrl_limit=1.0,
+    desired_transmission = autosaved(
+        pvproperty(
+            name='DesiredTransmission',
+            value=0.5,
+            lower_ctrl_limit=0.0,
+            upper_ctrl_limit=1.0,
+            doc='Desired transmission value',
+        )
     )
 
-    @t_desired.startup
-    async def t_desired(self, instance, async_lib):
-        """Update PMPS desired transmission value."""
-        pvname = self.parent.monitor_pvnames['pmps_tdes']
-        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
-            if event == 'connection':
-                self.log.info('%s %s', pv, data)
-                continue
-
-            pmps_tdes = data.data[0]
-            self.log.debug('Desired transmission changed: %s', pmps_tdes)
-
-            if instance.value != pmps_tdes:
-                try:
-                    await instance.write(pmps_tdes)
-                except Exception:
-                    self.log.exception('Failed to update desired transmission')
-
-        return pmps_tdes
-
-    run = pvproperty(value='False',
-                     name='RUN',
-                     record='bo',
-                     enum_strings=['False', 'True'],
-                     doc='Run calculation',
-                     dtype=ChannelType.ENUM)
+    run = pvproperty(
+        value='False',
+        name='Run',
+        record='bo',
+        enum_strings=['False', 'True'],
+        doc='Run calculation',
+        dtype=ChannelType.ENUM
+    )
 
     async def run_calculation(self):
+        energy = {
+            'Actual': self.energy_actual.value,
+            'Custom': self.energy_custom.value,
+        }[self.energy_source.value]
+
+        await self.energy_calc.write(energy)
+
+        # Update all of the filters first, to determine their transmission
+        # at this energy
+        for filter in self.parent.filters.values():
+            await filter.set_photon_energy(energy)
+
+        await self.calculated_transmission.write(
+            self.parent.calculate_transmission()
+        )
+        await self.calculated_transmission_3omega.write(
+            self.parent.calculate_transmission_3omega()
+        )
+
+        # Using the above-calculated transmissions, find the best configuration
         config = calculator.get_best_config(
             all_transmissions=self.parent.all_transmissions,
-            t_des=self.t_desired.value,
-            mode=self.mode.value
+            t_des=self.desired_transmission.value,
+            mode=self.calc_mode.value
         )
-        await self.set_config.write(config.filter_states)
+        await self.best_config.write(config.filter_states)
+        await self.calculated_transmission_error.write(
+            config.transmission - self.desired_transmission.value
+        )
         self.log.info(
-            '%s transmission desired %.2g estimated %.2g '
+            'Energy %s eV %s transmission desired %.2g estimated %.2g '
             '(delta %.3g) configuration: %s',
-            self.mode.value,
-            self.t_desired.value,
+            energy,
+            self.calc_mode.value,
+            self.desired_transmission.value,
             config.transmission,
-            config.transmission - self.t_desired.value,
+            self.calculated_transmission_error.value,
             config.filter_states,
         )
 
