@@ -5,7 +5,7 @@ from .pmps_sim_app import IOCMain, create_ioc
 ################################################
 eV_name = "LCLS:HXR:BEAM:EV"
 pmps_run_name = "PMPS:HXR:AT2L0:RUN"
-prefix = "PMPS:HXR:AT2L0"
+prefix = ""
 ################################################
 
 if __name__ == '__main__':
