@@ -1,4 +1,5 @@
-from caproto import ChannelType
+from caproto import AlarmSeverity, AlarmStatus, ChannelType
+from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
 
@@ -20,6 +21,11 @@ class SystemGroup(PVGroup):
             util.hack_max_length_of_channeldata(obj,
                                                 [0] * self.parent.num_filters)
 
+        # TODO: caproto does not make this easy. We explicitly will be using
+        # asyncio here.
+        self.async_lib = AsyncioAsyncLayer()
+        self._context = {}
+
     calculated_transmission = pvproperty(
         value=0.1,
         name='T_CALC',
@@ -27,7 +33,8 @@ class SystemGroup(PVGroup):
         upper_alarm_limit=1.0,
         lower_alarm_limit=0.0,
         read_only=True,
-        doc='Calculated transmission (all blades)'
+        doc='Calculated transmission (all blades)',
+        precision=3,
     )
 
     calculated_transmission_3omega = pvproperty(
@@ -36,17 +43,19 @@ class SystemGroup(PVGroup):
         upper_alarm_limit=1.0,
         lower_alarm_limit=0.0,
         read_only=True,
-        doc='Calculated 3omega transmission (all blades)'
+        doc='Calculated 3omega transmission (all blades)',
+        precision=3,
     )
 
-    calculated_transmission_error = pvproperty(
+    best_config_error = pvproperty(
         value=0.1,
-        name='T_CALC_ERROR',
+        name='BestConfigError_RBV',
         record='ao',
         upper_alarm_limit=1.0,
-        lower_alarm_limit=0.0,
+        lower_alarm_limit=-1.0,
         read_only=True,
-        doc='Calculated transmission error'
+        doc='Calculated transmission error',
+        precision=3,
     )
 
     running = pvproperty(
@@ -107,7 +116,8 @@ class SystemGroup(PVGroup):
         name='ActualPhotonEnergy_RBV',
         value=0.0,
         read_only=True,
-        units='eV'
+        units='eV',
+        alarm_group='valid_photon_energy',
     )
 
     energy_custom = pvproperty(
@@ -130,10 +140,19 @@ class SystemGroup(PVGroup):
     @energy_actual.startup
     async def energy_actual(self, instance, async_lib):
         """Update beam energy and calculated values."""
+        async def update_connection_status(status):
+            if status == 'connected':
+                status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
+            else:
+                status, severity = AlarmStatus.LINK, AlarmSeverity.MAJOR_ALARM
+            await instance.alarm.write(status=status, severity=severity)
+
+        await update_connection_status('disconnected')
         pvname = self.parent.monitor_pvnames['ev']
         async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
             if event == 'connection':
                 self.log.info('%s %s', pv, data)
+                await update_connection_status(data)
                 continue
 
             eV = data.data[0]
@@ -164,6 +183,7 @@ class SystemGroup(PVGroup):
         dtype=ChannelType.ENUM
     )
 
+    @util.block_on_reentry()
     async def run_calculation(self):
         energy = {
             'Actual': self.energy_actual.value,
@@ -191,7 +211,7 @@ class SystemGroup(PVGroup):
             mode=self.calc_mode.value
         )
         await self.best_config.write(config.filter_states)
-        await self.calculated_transmission_error.write(
+        await self.best_config_error.write(
             config.transmission - self.desired_transmission.value
         )
         self.log.info(
@@ -201,7 +221,7 @@ class SystemGroup(PVGroup):
             self.calc_mode.value,
             self.desired_transmission.value,
             config.transmission,
-            self.calculated_transmission_error.value,
+            self.best_config_error.value,
             config.filter_states,
         )
 

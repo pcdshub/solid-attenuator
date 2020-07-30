@@ -19,4 +19,4 @@ export PYTHONPATH="${PYDEV}:${PYTHONPATH}"
 
 cd "$(dirname "$0")"/..
 python --version
-python -m ioc-satt-dev --prefix ${PREFIX} --list-pvs
+python -m ioc-satt-dev --production --prefix ${PREFIX} --list-pvs

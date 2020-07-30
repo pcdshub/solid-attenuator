@@ -2,8 +2,7 @@ import numpy as np
 from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper
 
-from .db.filters import FilterGroup
-from .db.system import SystemGroup
+from .db import FilterGroup, SystemGroup
 
 
 class IOCBase(PVGroup):
