@@ -27,7 +27,8 @@ class SystemGroup(PVGroup):
         upper_alarm_limit=1.0,
         lower_alarm_limit=0.0,
         read_only=True,
-        doc='Calculated transmission (all blades)'
+        doc='Calculated transmission (all blades)',
+        precision=3,
     )
 
     calculated_transmission_3omega = pvproperty(
@@ -36,17 +37,19 @@ class SystemGroup(PVGroup):
         upper_alarm_limit=1.0,
         lower_alarm_limit=0.0,
         read_only=True,
-        doc='Calculated 3omega transmission (all blades)'
+        doc='Calculated 3omega transmission (all blades)',
+        precision=3,
     )
 
-    calculated_transmission_error = pvproperty(
+    best_config_error = pvproperty(
         value=0.1,
-        name='T_CALC_ERROR',
+        name='BestConfigError_RBV',
         record='ao',
         upper_alarm_limit=1.0,
-        lower_alarm_limit=0.0,
+        lower_alarm_limit=-1.0,
         read_only=True,
-        doc='Calculated transmission error'
+        doc='Calculated transmission error',
+        precision=3,
     )
 
     running = pvproperty(
@@ -191,7 +194,7 @@ class SystemGroup(PVGroup):
             mode=self.calc_mode.value
         )
         await self.best_config.write(config.filter_states)
-        await self.calculated_transmission_error.write(
+        await self.best_config_error.write(
             config.transmission - self.desired_transmission.value
         )
         self.log.info(
@@ -201,7 +204,7 @@ class SystemGroup(PVGroup):
             self.calc_mode.value,
             self.desired_transmission.value,
             config.transmission,
-            self.calculated_transmission_error.value,
+            self.best_config_error.value,
             config.filter_states,
         )
 
