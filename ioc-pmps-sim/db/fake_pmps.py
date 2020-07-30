@@ -4,8 +4,7 @@ from caproto.server import PVGroup, pvproperty
 
 class FakePMPSGroup(PVGroup):
     """
-    Fake PV group for simulating
-    incoming PMPS commands.
+    Fake PV group for simulating incoming PMPS commands.
     """
     t_des = pvproperty(value=0.1,
                        name='T_DES',
