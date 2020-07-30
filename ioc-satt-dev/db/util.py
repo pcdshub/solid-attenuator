@@ -1,3 +1,4 @@
+import functools
 import sys
 import typing
 
@@ -191,3 +192,34 @@ def process_writes_value(pvprop: caproto.server.pvproperty, *,
         await pvprop_instance.write(value_to_write)
 
     pvprop.fields.process_record.putter(wrapped)
+
+
+def block_on_reentry(token=None):
+    """
+    [Decorator] If an asynchronous handler is called multiple times, block.
+
+    Requires that a dictionary `self._context` be available for usage, where
+    the Lock will be stored with the provided token.
+
+    Also requires `self.async_lib` to exist.
+
+    Parameters
+    ----------
+    token : str, optional
+        Defaults to the wrapped method name if not provided.
+    """
+
+    def inner(func):
+        @functools.wraps(func)
+        async def wrapped(self, *args, **kwargs):
+            key = token or func.__name__
+            if key not in self._context:
+                self._context[key] = self.async_lib.library.Lock()
+
+            lock = self._context[key]
+            async with lock:
+                return await func(self, *args, **kwargs)
+
+        return wrapped
+
+    return inner

@@ -1,4 +1,5 @@
 from caproto import AlarmSeverity, AlarmStatus, ChannelType
+from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
 
@@ -19,6 +20,11 @@ class SystemGroup(PVGroup):
         for obj in (self.best_config, self.active_config):
             util.hack_max_length_of_channeldata(obj,
                                                 [0] * self.parent.num_filters)
+
+        # TODO: caproto does not make this easy. We explicitly will be using
+        # asyncio here.
+        self.async_lib = AsyncioAsyncLayer()
+        self._context = {}
 
     calculated_transmission = pvproperty(
         value=0.1,
@@ -177,6 +183,7 @@ class SystemGroup(PVGroup):
         dtype=ChannelType.ENUM
     )
 
+    @util.block_on_reentry()
     async def run_calculation(self):
         energy = {
             'Actual': self.energy_actual.value,
