@@ -1,4 +1,4 @@
-from caproto.server import PVGroup, SubGroup, pvproperty
+from caproto.server import PVGroup, SubGroup, get_pv_pair_wrapper, pvproperty
 from caproto.server.records import MotorFields
 
 
@@ -86,8 +86,72 @@ class FakeMotor(PVGroup):
             await fields.done_moving_to_value.write(1)
 
 
+class FakeBeckhoffAxisPLC(PVGroup):
+    status = pvproperty(value='No error', name='sErrorMessage_RBV')
+    err_code = pvproperty(value=0, name='nErrorId_RBV')
+    cmd_err_reset = pvproperty(value=0, name='bReset')
+    cmd_err_reset_rbv = pvproperty(value=0, name='bReset_RBV')
+
+
+pvproperty_with_rbv = get_pv_pair_wrapper(setpoint_suffix='',
+                                          readback_suffix='_RBV')
+
+
+class FakeTwinCATStateConfigOne(PVGroup):
+    state_name = pvproperty(dtype=str, name='NAME_RBV')
+    setpoint = pvproperty_with_rbv(dtype=float, name='SETPOINT')
+    delta = pvproperty_with_rbv(dtype=float, name='DELTA')
+    velo = pvproperty_with_rbv(dtype=float, name='VELO')
+    accl = pvproperty_with_rbv(dtype=float, name='ACCL')
+    dccl = pvproperty_with_rbv(dtype=float, name='DCCL')
+    move_ok = pvproperty(value=0, name='MOVE_OK_RBV')
+    locked = pvproperty(value=0, name='LOCKED_RBV')
+    valid = pvproperty(value=0, name='VALID_RBV')
+
+
+class FakeTwinCATStateConfigAll(PVGroup):
+    state01 = SubGroup(FakeTwinCATStateConfigOne, prefix='01:')
+    state02 = SubGroup(FakeTwinCATStateConfigOne, prefix='02:')
+    state03 = SubGroup(FakeTwinCATStateConfigOne, prefix='03:')
+    state04 = SubGroup(FakeTwinCATStateConfigOne, prefix='04:')
+    state05 = SubGroup(FakeTwinCATStateConfigOne, prefix='05:')
+    state06 = SubGroup(FakeTwinCATStateConfigOne, prefix='06:')
+    state07 = SubGroup(FakeTwinCATStateConfigOne, prefix='07:')
+    state08 = SubGroup(FakeTwinCATStateConfigOne, prefix='08:')
+    state09 = SubGroup(FakeTwinCATStateConfigOne, prefix='09:')
+    state10 = SubGroup(FakeTwinCATStateConfigOne, prefix='10:')
+    state11 = SubGroup(FakeTwinCATStateConfigOne, prefix='11:')
+    state12 = SubGroup(FakeTwinCATStateConfigOne, prefix='12:')
+    state13 = SubGroup(FakeTwinCATStateConfigOne, prefix='13:')
+    state14 = SubGroup(FakeTwinCATStateConfigOne, prefix='14:')
+    state15 = SubGroup(FakeTwinCATStateConfigOne, prefix='15:')
+
+
+class FakeTwinCATStatePositioner(PVGroup):
+    state_get = pvproperty(value=0, name='GET_RBV')
+    state_set = pvproperty(value=0, name='SET')
+    error = pvproperty(value=0.0, name='ERR_RBV')
+    error_id = pvproperty(value=0, name='ERRID_RBV')
+    error_message = pvproperty(dtype=str, name='ERRMSG_RBV')
+    busy = pvproperty(value=0, name='BUSY_RBV')
+    done = pvproperty(value=0, name='DONE_RBV')
+    reset_cmd = pvproperty_with_rbv(dtype=int, name='RESET')
+    config = SubGroup(FakeTwinCATStateConfigAll, prefix='')
+
+
+class FakeBeckhoffAxis(PVGroup):
+    plc = SubGroup(FakeBeckhoffAxisPLC, prefix=':PLC:')
+    state = SubGroup(FakeTwinCATStatePositioner, prefix=':STATE:')
+    motor = SubGroup(FakeMotor, velocity=2, prefix='')
+
+
 class FakeBladeGroup(PVGroup):
     """
-    PV group for fake photon energy readback
+    PV group for fake motion axes.
     """
-    blade1 = SubGroup(FakeMotor, velocity=2, prefix='Blade1:Mtr')
+    locals().update(
+        **{f'axis{axis:02d}': SubGroup(FakeBeckhoffAxis,
+                                       prefix=f'MMS:{axis:02d}')
+           for axis in range(1, 20)
+           }
+    )
