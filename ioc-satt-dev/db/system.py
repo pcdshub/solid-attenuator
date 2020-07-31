@@ -134,6 +134,7 @@ class SystemGroup(PVGroup):
         read_only=True,
         units='eV',
         alarm_group='valid_photon_energy',
+        precision=1,
     )
 
     energy_custom = pvproperty(
@@ -143,6 +144,7 @@ class SystemGroup(PVGroup):
         units='eV',
         lower_ctrl_limit=100.0,
         upper_ctrl_limit=30000.0,
+        precision=1,
     )
 
     energy_calc = pvproperty(
@@ -150,7 +152,8 @@ class SystemGroup(PVGroup):
         value=0.0,
         read_only=True,
         units='eV',
-        doc='Energy that was used for the calculation.'
+        doc='Energy that was used for the calculation.',
+        precision=1,
     )
 
     apply_config = pvproperty(
@@ -170,6 +173,7 @@ class SystemGroup(PVGroup):
             lower_ctrl_limit=0.0,
             upper_ctrl_limit=1.0,
             doc='Desired transmission value',
+            precision=3,
         )
     )
 
