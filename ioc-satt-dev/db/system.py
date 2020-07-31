@@ -167,8 +167,9 @@ class SystemGroup(PVGroup):
                 idx = motor_pvnames['get'].index(pvname)
                 new_config = list(self.active_config.value)
                 new_config[idx] = value
-                self.log.info('New config: %s', new_config)
-                await self.active_config.write(new_config)
+                if tuple(new_config) != tuple(self.active_config.value):
+                    self.log.info('Active config changed: %s', new_config)
+                    await self.active_config.write(new_config)
 
     @energy_actual.startup
     async def energy_actual(self, instance, async_lib):
