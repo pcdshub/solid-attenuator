@@ -55,4 +55,4 @@ caput AT2L0:SIM:FILTER:16:IsStuck 0
 caput AT2L0:SIM:FILTER:17:IsStuck 0
 caput AT2L0:SIM:FILTER:18:IsStuck 0
 
-caput PMPS:HXR:AT2L0:RUN 0
+caput AT2L0:SIM:SYS:Run 0
