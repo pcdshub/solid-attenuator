@@ -12,6 +12,7 @@ if '--production' in sys.argv:
     eV_name = "PMPS:LFE:PE:UND:CurrentPhotonEnergy_RBV"
     pmps_run_name = "PMPS:HXR:AT2L0:RUN"  # TODO
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"  # TODO
+    motor_prefix = "AT2L0:XTES:MMS:"  # TODO
     log_level = 'INFO'
     sys.argv.remove('--production')
 else:
@@ -19,6 +20,7 @@ else:
     eV_name = "LCLS:HXR:BEAM:EV"
     pmps_run_name = "PMPS:HXR:AT2L0:RUN"
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"
+    motor_prefix = "AT2L0:SIM:MMS:"
     log_level = 'DEBUG'
 
 ################################################
@@ -28,7 +30,8 @@ ioc_args = {
                      for N in range(1, NUM_BLADES + 1)},
     "eV_pv": eV_name,
     "pmps_run_pv": pmps_run_name,
-    "pmps_tdes_pv": pmps_tdes_name
+    "pmps_tdes_pv": pmps_tdes_name,
+    "motor_prefix": motor_prefix,
 }
 
 
