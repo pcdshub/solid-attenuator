@@ -52,7 +52,8 @@ class FilterGroup(PVGroup):
             upper_ctrl_limit=1.0,
             lower_ctrl_limit=0.0,
             doc='Filter thickness',
-            units='m'
+            units='m',
+            precision=7,
         )
     )
 
@@ -68,8 +69,10 @@ class FilterGroup(PVGroup):
     )
 
     closest_energy = pvproperty(
+        value=0.0,
         name='ClosestEnergy_RBV',
         read_only=True,
+        precision=1,
     )
 
     closest_index = pvproperty(
@@ -82,7 +85,8 @@ class FilterGroup(PVGroup):
         value=0.5,
         upper_ctrl_limit=1.0,
         lower_ctrl_limit=0.0,
-        read_only=True
+        read_only=True,
+        precision=3,
     )
 
     transmission_3omega = pvproperty(
@@ -90,7 +94,8 @@ class FilterGroup(PVGroup):
         value=0.5,
         upper_alarm_limit=1.0,
         lower_alarm_limit=0.0,
-        read_only=True
+        read_only=True,
+        precision=3,
     )
 
     async def set_photon_energy(self, energy_ev):
