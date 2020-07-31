@@ -1,3 +1,5 @@
+import threading
+
 from caproto import AlarmSeverity, AlarmStatus, ChannelType
 from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
@@ -6,6 +8,17 @@ from caproto.server.autosave import autosaved
 from .. import calculator
 from . import util
 from .util import monitor_pvs
+
+STATE_FROM_MOTOR = {
+    0: 0,  # unknown -> out
+    1: 0,  # out
+    2: 1,  # in
+}
+
+STATE_TO_MOTOR = {
+    0: 1,  # out
+    1: 2,  # in
+}
 
 
 class SystemGroup(PVGroup):
@@ -25,6 +38,8 @@ class SystemGroup(PVGroup):
         # asyncio here.
         self.async_lib = AsyncioAsyncLayer()
         self._context = {}
+        self._pv_put_queue = None
+        self._put_thread = None
 
     calculated_transmission = pvproperty(
         value=0.1,
@@ -138,6 +153,35 @@ class SystemGroup(PVGroup):
         doc='Energy that was used for the calculation.'
     )
 
+    apply_config = pvproperty(
+        name='ApplyConfiguration',
+        value='False',
+        record='bo',
+        enum_strings=['False', 'True'],
+        doc='Apply the calculated configuration.',
+        dtype=ChannelType.ENUM,
+        alarm_group='motors',
+    )
+
+    desired_transmission = autosaved(
+        pvproperty(
+            name='DesiredTransmission',
+            value=0.5,
+            lower_ctrl_limit=0.0,
+            upper_ctrl_limit=1.0,
+            doc='Desired transmission value',
+        )
+    )
+
+    run = pvproperty(
+        value='False',
+        name='Run',
+        record='bo',
+        enum_strings=['False', 'True'],
+        doc='Run calculation',
+        dtype=ChannelType.ENUM
+    )
+
     @active_config.startup
     async def active_config(self, instance, async_lib):
         motor_pvnames = self.parent.monitor_pvnames['motors']
@@ -166,7 +210,7 @@ class SystemGroup(PVGroup):
             if pvname in motor_pvnames['get']:
                 idx = motor_pvnames['get'].index(pvname)
                 new_config = list(self.active_config.value)
-                new_config[idx] = value
+                new_config[idx] = STATE_FROM_MOTOR.get(value, value)
                 if tuple(new_config) != tuple(self.active_config.value):
                     self.log.info('Active config changed: %s', new_config)
                     await self.active_config.write(new_config)
@@ -198,25 +242,6 @@ class SystemGroup(PVGroup):
                 await instance.write(eV)
 
         return eV
-
-    desired_transmission = autosaved(
-        pvproperty(
-            name='DesiredTransmission',
-            value=0.5,
-            lower_ctrl_limit=0.0,
-            upper_ctrl_limit=1.0,
-            doc='Desired transmission value',
-        )
-    )
-
-    run = pvproperty(
-        value='False',
-        name='Run',
-        record='bo',
-        enum_strings=['False', 'True'],
-        doc='Run calculation',
-        dtype=ChannelType.ENUM
-    )
 
     @util.block_on_reentry()
     async def run_calculation(self):
@@ -272,3 +297,34 @@ class SystemGroup(PVGroup):
 
     # RUN.PROC -> run = 1
     util.process_writes_value(run, value=1)
+
+    @apply_config.startup
+    async def apply_config(self, instance, async_lib):
+        def put_thread():
+            while True:
+                pv, value = self._pv_put_queue.get()
+                try:
+                    pv.write([value])
+                except Exception:
+                    self.log.exception('Failed to put value: %s=%s', pv, value)
+
+        ctx = util.get_default_thread_context()
+
+        self._set_pvs = ctx.get_pvs(
+            *self.parent.monitor_pvnames['motors']['set'], timeout=None)
+
+        self._pv_put_queue = self.async_lib.ThreadsafeQueue()
+        self._put_thread = threading.Thread(target=put_thread, daemon=True)
+        self._put_thread.start()
+
+    @apply_config.putter
+    async def apply_config(self, instance, value):
+        if value == 'False':
+            return
+
+        for set_pv, value in zip(self._set_pvs, self.best_config.value):
+            await self._pv_put_queue.async_put(
+                (set_pv, STATE_TO_MOTOR.get(value, value)))
+
+    # apply_config.PROC -> apply_config = 1
+    util.process_writes_value(apply_config, value=1)
