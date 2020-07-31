@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 
-PREFIX="AT2L0:SIM"
-TOP=../
+PREFIX=
+TOP="$(dirname "$0")"/../../
 ATT_CONFIG_PATH=${TOP}
+export EPICS_CA_AUTO_ADDR_LIST=NO
+export EPICS_CA_ADDR_LIST=172.21.91.255
+IOC_DATA_SATT=/reg/d/iocData/ioc-lfe-satt
 
 unset LD_LIBRARY_PATH
 unset PYTHONPATH
 
 ##########################################
-# use Raj's env for development
-export PCDS_CONDA_VER='3.2.0'
+# currently unused:
+# export PCDS_CONDA_VER='3.2.0'
 source /reg/g/pcds/pyps/conda/pcds_conda
 
-PYDEV=/reg/neh/home/rajan-01/pydev
-export PATH="${PYDEV}/bin:${PATH}"
-export PYTHONPATH="${PYDEV}:${PYTHONPATH}"
+CONDA_ENV=/reg/g/pcds/epics-dev/klauer/hxr-attenuator-conda-env
 ##########################################
 
-cd "$(dirname "$0")"/..
+cd ${TOP}
+
+conda activate $CONDA_ENV
 python --version
-python -m ioc-satt-dev --production --prefix ${PREFIX} --list-pvs
+python -m ioc-satt-dev --production --list-pvs
