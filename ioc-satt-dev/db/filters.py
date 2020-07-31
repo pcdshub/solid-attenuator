@@ -46,14 +46,14 @@ class FilterGroup(PVGroup):
 
     thickness = autosaved(
         pvproperty(
-            value=1E-6,
+            value=10.,
             name='Thickness',
             record='ao',
-            upper_ctrl_limit=1.0,
             lower_ctrl_limit=0.0,
+            upper_ctrl_limit=900000.0,
             doc='Filter thickness',
-            units='m',
-            precision=7,
+            units='um',
+            precision=1,
         )
     )
 
@@ -105,23 +105,19 @@ class FilterGroup(PVGroup):
 
         await self.closest_index.write(i)
         await self.closest_energy.write(closest_energy)
-
-        await self.transmission.write(
-            self.get_transmission(energy_ev, self.thickness.value)
-        )
+        await self.transmission.write(self.get_transmission(energy_ev))
         await self.transmission_3omega.write(
-            self.get_transmission(3.*energy_ev, self.thickness.value)
-        )
+            self.get_transmission(3.*energy_ev))
 
-    def get_transmission(self, eV, thickness):
+    def get_transmission(self, photon_energy_ev):
         return calculator.get_transmission(
-            photon_energy=eV,
+            photon_energy=photon_energy_ev,
             table=self.table,
-            thickness=thickness)
+            thickness=self.thickness.value * 1e-6,  # um -> meters
+        )
 
     @thickness.putter
     async def thickness(self, instance, value):
         energy = self._last_photon_energy
-        await self.transmission.write(
-            self.get_transmission(energy, value)
-        )
+        await self.thickness.write(value, verify_value=False)
+        await self.transmission.write(self.get_transmission(energy))

@@ -28,8 +28,10 @@ else:
 ################################################
 
 ioc_args = {
-    "filter_group": {N: str(N).zfill(2)
-                     for N in range(1, NUM_BLADES + 1)},
+    "filter_group": {
+        N: f'{N:02d}'
+        for N in range(1, NUM_BLADES + 1)
+    },
     "eV_pv": eV_name,
     "pmps_run_pv": pmps_run_name,
     "pmps_tdes_pv": pmps_tdes_name,
