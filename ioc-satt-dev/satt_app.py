@@ -1,6 +1,6 @@
 import numpy as np
 from caproto.server import PVGroup, SubGroup
-from caproto.server.autosave import AutosaveHelper
+from caproto.server.autosave import AutosaveHelper, RotatingFileManager
 
 from .db import FilterGroup, SystemGroup
 
@@ -87,6 +87,7 @@ def create_ioc(prefix,
                pmps_run_pv,
                pmps_tdes_pv,
                filter_group,
+               autosave_path,
                **ioc_options):
     """IOC Setup."""
 
@@ -124,4 +125,6 @@ def create_ioc(prefix,
                   pmps_tdes=pmps_tdes_pv,
                   **ioc_options)
 
+    ioc.autosave_helper.filename = autosave_path
+    ioc.autosave_helper.file_manager = RotatingFileManager(autosave_path)
     return ioc

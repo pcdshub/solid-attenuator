@@ -14,6 +14,7 @@ if '--production' in sys.argv:
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"  # TODO
     motor_prefix = "AT2L0:XTES:MMS:"  # TODO
     log_level = 'INFO'
+    autosave_path = 'autosave.json'
     sys.argv.remove('--production')
 else:
     prefix = "AT2L0:SIM"
@@ -21,6 +22,7 @@ else:
     pmps_run_name = "PMPS:HXR:AT2L0:RUN"
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"
     motor_prefix = "AT2L0:SIM:MMS:"
+    autosave_path = 'autosave_development.json'
     log_level = 'DEBUG'
 
 ################################################
@@ -32,6 +34,7 @@ ioc_args = {
     "pmps_run_pv": pmps_run_name,
     "pmps_tdes_pv": pmps_tdes_name,
     "motor_prefix": motor_prefix,
+    "autosave_path": autosave_path,
 }
 
 
