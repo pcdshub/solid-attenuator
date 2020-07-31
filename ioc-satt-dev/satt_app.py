@@ -112,7 +112,7 @@ def create_ioc(prefix,
 
     motors = {
         'get': [f'{motor}:GET_RBV' for idx, motor in motor_prefixes.items()],
-        'set': [f'{motor}:GET_RBV' for idx, motor in motor_prefixes.items()],
+        'set': [f'{motor}:SET' for idx, motor in motor_prefixes.items()],
         'error': [f'{motor}:ERR_RBV' for idx, motor in motor_prefixes.items()],
     }
 
