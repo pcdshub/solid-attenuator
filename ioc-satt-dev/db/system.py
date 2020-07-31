@@ -242,7 +242,9 @@ class SystemGroup(PVGroup):
             self.log.debug('Photon energy changed: %s', eV)
 
             if instance.value != eV:
-                self.log.info("Photon energy changed to %s eV.", eV)
+                delta = instance.value - eV
+                if abs(delta) > 1000:
+                    self.log.info("Photon energy changed to %s eV.", eV)
                 await instance.write(eV)
 
         return eV
