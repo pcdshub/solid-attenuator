@@ -109,7 +109,8 @@ class SystemGroup(PVGroup):
         name='ActiveConfiguration_RBV',
         value=0,
         max_length=1,
-        read_only=True
+        read_only=True,
+        alarm_group='motors',
     )
 
     energy_actual = pvproperty(
@@ -137,6 +138,38 @@ class SystemGroup(PVGroup):
         doc='Energy that was used for the calculation.'
     )
 
+    @active_config.startup
+    async def active_config(self, instance, async_lib):
+        motor_pvnames = self.parent.monitor_pvnames['motors']
+        monitor_list = sum((pvlist for pvlist in motor_pvnames.values()),
+                           [])
+        all_status = {pv: False for pv in monitor_list}
+
+        async def update_connection_status(pv, status):
+            all_status[pv] = (status == 'connected')
+            if all(all_status.values()):
+                status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
+            else:
+                status, severity = AlarmStatus.LINK, AlarmSeverity.MAJOR_ALARM
+
+            if instance.alarm.status != status:
+                await instance.alarm.write(status=status, severity=severity)
+
+        async for event, context, data in monitor_pvs(*monitor_list,
+                                                      async_lib=async_lib):
+            if event == 'connection':
+                await update_connection_status(context.name, data)
+                continue
+
+            value = data.data[0]
+            pvname = context.pv.name
+            if pvname in motor_pvnames['get']:
+                idx = motor_pvnames['get'].index(pvname)
+                new_config = list(self.active_config.value)
+                new_config[idx] = value
+                self.log.info('New config: %s', new_config)
+                await self.active_config.write(new_config)
+
     @energy_actual.startup
     async def energy_actual(self, instance, async_lib):
         """Update beam energy and calculated values."""
@@ -149,9 +182,10 @@ class SystemGroup(PVGroup):
 
         await update_connection_status('disconnected')
         pvname = self.parent.monitor_pvnames['ev']
-        async for event, pv, data in monitor_pvs(pvname, async_lib=async_lib):
+        async for event, context, data in monitor_pvs(pvname,
+                                                      async_lib=async_lib):
             if event == 'connection':
-                self.log.info('%s %s', pv, data)
+                self.log.info('%s %s', context, data)
                 await update_connection_status(data)
                 continue
 

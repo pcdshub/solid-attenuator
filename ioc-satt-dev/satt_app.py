@@ -13,6 +13,7 @@ class IOCBase(PVGroup):
 
     def __init__(self, prefix, *, eV, pmps_run, pmps_tdes,
                  filter_index_to_attribute,
+                 motors,
                  **kwargs):
         super().__init__(prefix, **kwargs)
         self.prefix = prefix
@@ -22,6 +23,7 @@ class IOCBase(PVGroup):
             ev=eV,
             pmps_run=pmps_run,
             pmps_tdes=pmps_tdes,
+            motors=motors,
         )
 
     autosave_helper = SubGroup(AutosaveHelper)
@@ -81,6 +83,7 @@ class IOCBase(PVGroup):
 def create_ioc(prefix,
                *,
                eV_pv,
+               motor_prefix,
                pmps_run_pv,
                pmps_tdes_pv,
                filter_group,
@@ -98,6 +101,17 @@ def create_ioc(prefix,
         for index, suffix in filter_group.items()
     }
 
+    motor_prefixes = {
+        idx: f'{motor_prefix}{idx:02d}:STATE'
+        for idx in range(1, len(filter_group) + 1)
+    }
+
+    motors = {
+        'get': [f'{motor}:GET_RBV' for idx, motor in motor_prefixes.items()],
+        'set': [f'{motor}:GET_RBV' for idx, motor in motor_prefixes.items()],
+        'error': [f'{motor}:ERR_RBV' for idx, motor in motor_prefixes.items()],
+    }
+
     class IOCMain(IOCBase):
         num_filters = len(filter_index_to_attribute)
         locals().update(**subgroups)
@@ -105,6 +119,7 @@ def create_ioc(prefix,
     ioc = IOCMain(prefix=prefix,
                   eV=eV_pv,
                   filter_index_to_attribute=filter_index_to_attribute,
+                  motors=motors,
                   pmps_run=pmps_run_pv,
                   pmps_tdes=pmps_tdes_pv,
                   **ioc_options)
