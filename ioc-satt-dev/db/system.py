@@ -1,4 +1,6 @@
+import enum
 import threading
+import time
 
 from caproto import AlarmSeverity, AlarmStatus, ChannelType
 from caproto.asyncio.server import AsyncioAsyncLayer
@@ -9,15 +11,24 @@ from .. import calculator
 from . import util
 from .util import monitor_pvs
 
+
+class State(enum.IntEnum):
+    Out = 0
+    In = 1
+
+    def __repr__(self):
+        return self.name
+
+
 STATE_FROM_MOTOR = {
-    0: 0,  # unknown -> out
-    1: 0,  # out
-    2: 1,  # in
+    0: State.Out,  # unknown -> out
+    1: State.Out,  # out
+    2: State.In,  # in
 }
 
 STATE_TO_MOTOR = {
-    0: 1,  # out
-    1: 2,  # in
+    State.Out: 1,
+    State.In: 2,
 }
 
 
@@ -73,13 +84,13 @@ class SystemGroup(PVGroup):
         precision=3,
     )
 
-    running = pvproperty(
+    moving = pvproperty(
         value='False',
-        name='Running',
+        name='Moving',
         record='bo',
         enum_strings=['False', 'True'],
         read_only=True,
-        doc='The system is running',
+        doc='Moving to a new configuration.',
         dtype=ChannelType.ENUM
     )
 
@@ -164,6 +175,15 @@ class SystemGroup(PVGroup):
         doc='Apply the calculated configuration.',
         dtype=ChannelType.ENUM,
         alarm_group='motors',
+    )
+
+    cancel_apply = pvproperty(
+        name='Cancel',
+        value='False',
+        record='bo',
+        enum_strings=['False', 'True'],
+        doc='Stop trying to apply the configuration.',
+        dtype=ChannelType.ENUM,
     )
 
     desired_transmission = autosaved(
@@ -328,9 +348,55 @@ class SystemGroup(PVGroup):
         if value == 'False':
             return
 
-        for set_pv, value in zip(self._set_pvs, self.best_config.value):
-            await self._pv_put_queue.async_put(
-                (set_pv, STATE_TO_MOTOR.get(value, value)))
+        timeout_threshold = 30.0
+        t0 = time.monotonic()
+
+        def check_done():
+            elapsed = time.monotonic() - t0
+            done = (tuple(self.active_config.value) ==
+                    tuple(self.best_config.value))
+            return any(
+                (done,
+                 self.cancel_apply.value == 'True',
+                 elapsed > timeout_threshold)
+            )
+
+        await self.moving.write(1)
+
+        requested = {}
+
+        while not check_done():
+            items = list(zip(self._set_pvs, self.active_config.value,
+                             self.best_config.value))
+            move_out = [pv for pv, active, best in items
+                        if active == State.In and best == State.Out]
+            move_in = [pv for pv, active, best in items
+                       if active == State.Out and best == State.In]
+            if move_in:
+                # Move blades IN first, to be safe
+                for pv in move_in:
+                    if requested.get(pv, None) == State.In:
+                        break
+                    requested[pv] = State.In
+                    self.log.debug('Moving in %s', pv)
+                    await self._pv_put_queue.async_put(
+                        (pv, STATE_TO_MOTOR[State.In]),
+                    )
+            elif move_out:
+                for pv in move_out:
+                    if requested.get(pv, None) == State.Out:
+                        break
+                    requested[pv] = State.Out
+                    self.log.debug('Moving out %s', pv)
+                    await self._pv_put_queue.async_put(
+                        (pv, STATE_TO_MOTOR[State.Out]),
+                    )
+            else:
+                break
+
+            await self.async_lib.library.sleep(0.1)
+
+        await self.moving.write(0)
 
     # apply_config.PROC -> apply_config = 1
     util.process_writes_value(apply_config, value=1)
