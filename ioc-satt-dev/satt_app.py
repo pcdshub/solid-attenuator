@@ -10,6 +10,7 @@ class IOCBase(PVGroup):
     """
 
     num_filters = None
+    first_filter = 2
 
     def __init__(self, prefix, *, eV, pmps_run, pmps_tdes,
                  filter_index_to_attribute,
@@ -76,7 +77,7 @@ class IOCBase(PVGroup):
         """
         T_arr = np.zeros(len(self.filters)) * np.nan
         for idx, filt in self.working_filters.items():
-            T_arr[idx - 1] = filt.transmission.value
+            T_arr[idx - self.first_filter] = filt.transmission.value
         return T_arr
 
 
@@ -102,9 +103,11 @@ def create_ioc(prefix,
         for index, suffix in filter_group.items()
     }
 
+    low_index = min(filter_index_to_attribute)
+    high_index = max(filter_index_to_attribute)
     motor_prefixes = {
         idx: f'{motor_prefix}{idx:02d}:STATE'
-        for idx in range(1, len(filter_group) + 1)
+        for idx in range(low_index, high_index + 1)
     }
 
     motors = {
@@ -115,6 +118,7 @@ def create_ioc(prefix,
 
     class IOCMain(IOCBase):
         num_filters = len(filter_index_to_attribute)
+        first_filter = min(filter_index_to_attribute)
         locals().update(**subgroups)
 
     ioc = IOCMain(prefix=prefix,

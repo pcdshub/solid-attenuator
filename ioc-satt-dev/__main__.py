@@ -6,7 +6,9 @@ from .db import util
 from .satt_app import create_ioc
 
 ################################################
+FIRST_FILTER = 2
 NUM_BLADES = 18
+
 if '--production' in sys.argv:
     prefix = "AT2L0:CALC"
     eV_name = "PMPS:LFE:PE:UND:CurrentPhotonEnergy_RBV"
@@ -30,7 +32,7 @@ else:
 ioc_args = {
     "filter_group": {
         N: f'{N:02d}'
-        for N in range(1, NUM_BLADES + 1)
+        for N in range(FIRST_FILTER, NUM_BLADES + FIRST_FILTER)
     },
     "eV_pv": eV_name,
     "pmps_run_pv": pmps_run_name,
