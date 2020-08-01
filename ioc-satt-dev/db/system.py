@@ -330,7 +330,7 @@ class SystemGroup(PVGroup):
             while True:
                 pv, value = self._pv_put_queue.get()
                 try:
-                    pv.write([value])
+                    pv.write([value], wait=False)
                 except Exception:
                     self.log.exception('Failed to put value: %s=%s', pv, value)
 
