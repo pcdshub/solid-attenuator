@@ -85,8 +85,8 @@ class SystemGroup(PVGroup):
     )
 
     moving = pvproperty(
+        name='Moving_RBV',
         value='False',
-        name='Moving',
         record='bo',
         enum_strings=['False', 'True'],
         read_only=True,
