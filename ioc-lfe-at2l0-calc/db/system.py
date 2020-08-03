@@ -221,13 +221,33 @@ class SystemGroup(PVGroup):
         precision=1,
     )
 
-    energy_calc = pvproperty(
+    last_energy = pvproperty(
         name='LastPhotonEnergy_RBV',
         value=0.0,
         read_only=True,
         units='eV',
         doc='Energy that was used for the calculation.',
         precision=1,
+    )
+
+    last_transmission = pvproperty(
+        name='LastTransmission_RBV',
+        value=0.0,
+        lower_ctrl_limit=0.0,
+        upper_ctrl_limit=1.0,
+        doc='Last desired transmission value',
+        precision=3,
+        read_only=True,
+    )
+
+    last_mode = pvproperty(
+        value='Floor',
+        name='LastCalcMode_RBV',
+        record='bo',
+        enum_strings=['Floor', 'Ceiling'],
+        read_only=True,
+        doc='Last calculation mode',
+        dtype=ChannelType.ENUM,
     )
 
     apply_config = pvproperty(
@@ -369,7 +389,12 @@ class SystemGroup(PVGroup):
             'Custom': self.energy_custom.value,
         }[self.energy_source.value]
 
-        await self.energy_calc.write(energy)
+        desired_transmission = self.desired_transmission.value
+        calc_mode = self.calc_mode.value
+
+        await self.last_energy.write(energy)
+        await self.last_mode.write(calc_mode)
+        await self.last_transmission.write(desired_transmission)
 
         # Update all of the filters first, to determine their transmission
         # at this energy
@@ -386,8 +411,8 @@ class SystemGroup(PVGroup):
         # Using the above-calculated transmissions, find the best configuration
         config = calculator.get_best_config(
             all_transmissions=self.parent.all_transmissions,
-            t_des=self.desired_transmission.value,
-            mode=self.calc_mode.value
+            t_des=desired_transmission,
+            mode=calc_mode,
         )
         await self.best_config.write(config.filter_states)
         await self.best_config_bitmask.write(
@@ -399,8 +424,8 @@ class SystemGroup(PVGroup):
             'Energy %s eV %s transmission desired %.2g estimated %.2g '
             '(delta %.3g) configuration: %s',
             energy,
-            self.calc_mode.value,
-            self.desired_transmission.value,
+            calc_mode,
+            desired_transmission,
             config.transmission,
             self.best_config_error.value,
             config.filter_states,
