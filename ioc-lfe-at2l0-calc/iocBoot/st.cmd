@@ -18,8 +18,15 @@ source /reg/g/pcds/pyps/conda/pcds_conda
 CONDA_ENV=/reg/g/pcds/epics-dev/klauer/hxr-attenuator-conda-env
 ##########################################
 
-cd ${TOP}
+run_ioc() {
+    conda activate $CONDA_ENV
+    echo ""
+    echo "* Running the IOC..."
+    set -ex
+    cd ${TOP}
+    python --version
+    python -m ioc-lfe-at2l0-calc --production --list-pvs
+}
 
-conda activate $CONDA_ENV
-python --version
-python -m ioc-lfe-at2l0-calc --production --list-pvs
+# script --flush --command ./startup.sh --append /reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/ioc.log
+(run_ioc 2>&1) | tee --append /reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/ioc.log
