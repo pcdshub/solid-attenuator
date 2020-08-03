@@ -22,4 +22,4 @@ cd ${TOP}
 
 conda activate $CONDA_ENV
 python --version
-python -m ioc-satt-dev --production --list-pvs
+python -m ioc-lfe-at2l0-calc --production --list-pvs
