@@ -33,6 +33,18 @@ STATE_TO_MOTOR = {
 }
 
 
+def int_array_to_bit_string(int_array: list) -> int:
+    """
+    Integer array such as [1, 0, 0, 0] to integer (8).
+
+    Returns 0 if non-binary values found in the list.
+    """
+    try:
+        return int(''.join(str(int(c)) for c in int_array), 2)
+    except ValueError:
+        return 0
+
+
 class SystemGroup(PVGroup):
     """
     PV group for attenuator system-spanning information.
@@ -42,7 +54,7 @@ class SystemGroup(PVGroup):
         super().__init__(*args, **kwargs)
 
         # TODO: this could be done by wrapping SystemGroup
-        for obj in (self.best_config, self.active_config):
+        for obj in (self.best_config, self.active_config, self.filter_moving):
             util.hack_max_length_of_channeldata(obj,
                                                 [0] * self.parent.num_filters)
 
@@ -129,7 +141,15 @@ class SystemGroup(PVGroup):
         name='BestConfiguration_RBV',
         value=0,
         max_length=1,
-        read_only=True
+        read_only=True,
+        doc='Best configuration as an array (1 if inserted)',
+    )
+
+    best_config_bitmask = pvproperty(
+        name='BestConfigurationBitmask_RBV',
+        value=0,
+        read_only=True,
+        doc='Best configuration as an integer',
     )
 
     active_config = pvproperty(
@@ -138,6 +158,32 @@ class SystemGroup(PVGroup):
         max_length=1,
         read_only=True,
         alarm_group='motors',
+        doc='Active configuration array',
+    )
+
+    active_config_bitmask = pvproperty(
+        name='ActiveConfigurationBitmask_RBV',
+        value=0,
+        read_only=True,
+        alarm_group='motors',
+        doc='Active configuration represented as an integer',
+    )
+
+    filter_moving = pvproperty(
+        name='FiltersMoving_RBV',
+        value=0,
+        max_length=1,
+        read_only=True,
+        alarm_group='motors',
+        doc='Filter motion status as an array (1 if moving)',
+    )
+
+    filter_moving_bitmask = pvproperty(
+        name='FiltersMovingBitmask_RBV',
+        value=0,
+        read_only=True,
+        alarm_group='motors',
+        doc='Filter motion status as an integer',
     )
 
     energy_actual = pvproperty(
@@ -248,14 +294,27 @@ class SystemGroup(PVGroup):
 
             value = data.data[0]
             pvname = context.pv.name
-            if pvname in motor_pvnames['get']:
-                idx = motor_pvnames['get'].index(pvname)
-                new_config = list(self.active_config.value)
-                new_config[idx] = STATE_FROM_MOTOR.get(value, value)
-                if tuple(new_config) != tuple(self.active_config.value):
-                    self.log.info('Active config changed: %s', new_config)
-                    await self.active_config.write(new_config)
-                    await self._update_active_transmission()
+            if pvname not in motor_pvnames['get']:
+                continue
+
+            idx = motor_pvnames['get'].index(pvname)
+            new_config = list(self.active_config.value)
+            new_config[idx] = STATE_FROM_MOTOR.get(value, value)
+            if tuple(new_config) != tuple(self.active_config.value):
+                self.log.info('Active config changed: %s', new_config)
+                await self.active_config.write(new_config)
+                await self.active_config_bitmask.write(
+                    int_array_to_bit_string(new_config)
+                )
+                await self._update_active_transmission()
+
+            moving = list(self.filter_moving.value)
+            # TODO: better handling of moving status
+            moving[idx] = 1 if value == 0 else 0
+            if tuple(moving) != tuple(self.filter_moving.value):
+                await self.filter_moving.write(moving)
+                await self.filter_moving_bitmask.write(
+                    int_array_to_bit_string(moving))
 
     async def _update_active_transmission(self):
         config = tuple(self.active_config.value)
@@ -331,6 +390,8 @@ class SystemGroup(PVGroup):
             mode=self.calc_mode.value
         )
         await self.best_config.write(config.filter_states)
+        await self.best_config_bitmask.write(
+            int_array_to_bit_string(config.filter_states))
         await self.best_config_error.write(
             config.transmission - self.desired_transmission.value
         )
@@ -389,10 +450,12 @@ class SystemGroup(PVGroup):
             elapsed = time.monotonic() - t0
             done = (tuple(self.active_config.value) ==
                     tuple(self.best_config.value))
+            moving = any(status for status in self.filter_moving.value)
             return any(
-                (done,
+                (done and not moving,
                  self.cancel_apply.value == 'True',
-                 elapsed > timeout_threshold)
+                 elapsed > timeout_threshold,
+                 )
             )
 
         await self.moving.write(1)

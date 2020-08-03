@@ -143,10 +143,13 @@ class FakeTwinCATStatePositioner(PVGroup):
     @state_set.startup
     async def state_set(self, instance, async_lib):
         self.async_lib = async_lib
+        # Start as "out" and not unknown
+        await self.state_get.write(1)
 
     @state_set.putter
     async def state_set(self, instance, value):
         await self.busy.write(1)
+        await self.state_get.write(0)
         await self.async_lib.library.sleep(self._delay)
         await self.state_get.write(value)
         await self.busy.write(0)
