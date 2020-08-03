@@ -16,7 +16,7 @@ if '--production' in sys.argv:
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"  # TODO
     motor_prefix = "AT2L0:XTES:MMS:"  # TODO
     log_level = 'INFO'
-    autosave_path = 'autosave.json'
+    autosave_path = '/reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/autosave.json'
     sys.argv.remove('--production')
 else:
     prefix = "AT2L0:SIM"
