@@ -25,8 +25,7 @@ run_ioc() {
     set -ex
     cd ${TOP}
     python --version
-    python -m ioc-lfe-at2l0-calc --production --list-pvs
+    stdbuf -i0 -o0 -e0 python -m ioc-lfe-at2l0-calc --production --list-pvs
 }
 
-# script --flush --command ./startup.sh --append /reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/ioc.log
 (run_ioc 2>&1) | tee --append /reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/ioc.log
