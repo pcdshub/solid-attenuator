@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,1,1">
    <property name="spacing">
-    <number>0</number>
+    <number>10</number>
    </property>
    <property name="leftMargin">
     <number>12</number>
@@ -453,32 +453,79 @@
         </property>
        </widget>
       </item>
-      <item alignment="Qt::AlignRight">
-       <widget class="PyDMPushButton" name="CalculateButton_2">
-        <property name="toolTip">
-         <string/>
+      <item>
+       <widget class="QFrame" name="frame_3">
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
         </property>
-        <property name="text">
-         <string>Apply Configuration</string>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
-        <property name="autoDefault">
-         <bool>true</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-        <property name="channel" stdset="0">
-         <string>ca://${prefix}:SYS:ApplyConfiguration</string>
-        </property>
-        <property name="showConfirmDialog" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="confirmMessage" stdset="0">
-         <string>Move the filters?</string>
-        </property>
-        <property name="pressValue" stdset="0">
-         <string>1</string>
-        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Estimated transmission error:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="PyDMLabel" name="ActualEnergy_5">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>(transmission error)</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <property name="showUnits" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="channel" stdset="0">
+            <string>ca://${prefix}:SYS:BestConfigError_RBV </string>
+           </property>
+           <property name="displayFormat" stdset="0">
+            <enum>PyDMLabel::Exponential</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="PyDMPushButton" name="CalculateButton_2">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>Apply Configuration</string>
+           </property>
+           <property name="autoDefault">
+            <bool>true</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="channel" stdset="0">
+            <string>ca://${prefix}:SYS:ApplyConfiguration</string>
+           </property>
+           <property name="showConfirmDialog" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="confirmMessage" stdset="0">
+            <string>Move the filters?</string>
+           </property>
+           <property name="pressValue" stdset="0">
+            <string>1</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
