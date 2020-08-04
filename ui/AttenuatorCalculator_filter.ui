@@ -51,7 +51,7 @@
       <string/>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:MMS:${FILTER}:STATE:GET_RBV</string>
+      <string>ca://${prefix}:MMS:${FILTER}:STATE:GET_RBV</string>
      </property>
      <property name="orientation" stdset="0">
       <enum>Qt::Horizontal</enum>
@@ -88,7 +88,7 @@
       <bool>false</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:FILTER:${FILTER}:Material</string>
+      <string>ca://${prefix}:FILTER:${FILTER}:Material</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::String</enum>
@@ -116,7 +116,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:FILTER:${FILTER}:Thickness</string>
+      <string>ca://${prefix}:FILTER:${FILTER}:Thickness</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Decimal</enum>
@@ -144,7 +144,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:FILTER:${FILTER}:IsStuck</string>
+      <string>ca://${prefix}:FILTER:${FILTER}:IsStuck</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::String</enum>
@@ -172,7 +172,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:FILTER:${FILTER}:Transmission_RBV</string>
+      <string>ca://${prefix}:FILTER:${FILTER}:Transmission_RBV</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Exponential</enum>
@@ -200,7 +200,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>${PREFIX}:FILTER:${FILTER}:Transmission3Omega_RBV</string>
+      <string>ca://${prefix}:FILTER:${FILTER}:Transmission3Omega_RBV</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Exponential</enum>
