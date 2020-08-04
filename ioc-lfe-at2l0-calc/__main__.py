@@ -1,3 +1,4 @@
+import os
 import sys
 
 from caproto.server import ioc_arg_parser, run
@@ -16,7 +17,9 @@ if '--production' in sys.argv:
     pmps_tdes_name = "PMPS:HXR:AT2L0:T_DES"  # TODO
     motor_prefix = "AT2L0:XTES:MMS:"  # TODO
     log_level = 'INFO'
-    autosave_path = '/reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/autosave.json'
+    # autosave_path = '/reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/autosave.json'
+    ioc_data = os.environ.get('IOC_DATA_AT2L0', '/reg/d/iocData/ioc-lfe-at2l0-calc/')
+    autosave_path = os.path.join(ioc_data, 'autosave.json')
     sys.argv.remove('--production')
 else:
     prefix = "AT2L0:SIM"
