@@ -130,7 +130,7 @@ def find_configs(
         T_bestLow = T_closest
     elif T_closest > t_des:
         idx = max((i - 1, 0))
-        config_bestHigh = closest.astype(np.int)
+        config_bestHigh = closest
         config_bestLow = config_table[int(T_config_table[idx, 1])]
         T_bestHigh = T_closest
         T_bestLow = np.nanprod(all_transmissions * config_bestLow)
