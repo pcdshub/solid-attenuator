@@ -191,7 +191,7 @@ def find_closest_energy(photon_energy: float,
     closest_idx = int(np.rint((photon_energy - min_energy) / energy_increment))
     if closest_idx < 0:
         closest_idx = 0
-    if closest_idx > table.shape[0]:
+    if closest_idx >= table.shape[0]:
         closest_idx = -1  # Use greatest tabulated value.
 
     closest_eV = table[closest_idx, 0]
