@@ -130,7 +130,7 @@ def find_configs(
         T_bestLow = T_closest
     elif T_closest > t_des:
         idx = max((i - 1, 0))
-        config_bestHigh = closest.astype(np.int)
+        config_bestHigh = closest
         config_bestLow = config_table[int(T_config_table[idx, 1])]
         T_bestHigh = T_closest
         T_bestLow = np.nanprod(all_transmissions * config_bestLow)
@@ -191,7 +191,7 @@ def find_closest_energy(photon_energy: float,
     closest_idx = int(np.rint((photon_energy - min_energy) / energy_increment))
     if closest_idx < 0:
         closest_idx = 0
-    if closest_idx > table.shape[0]:
+    if closest_idx >= table.shape[0]:
         closest_idx = -1  # Use greatest tabulated value.
 
     closest_eV = table[closest_idx, 0]
