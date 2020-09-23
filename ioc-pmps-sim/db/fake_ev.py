@@ -6,7 +6,7 @@ class FakeEVGroup(PVGroup):
     PV group for fake photon energy readback
     """
     fake_eV = pvproperty(value=9500,
-                         name='EV',
+                         name='CurrentPhotonEnergy_RBV',
                          record='ao',
                          upper_alarm_limit=25000,
                          lower_alarm_limit=1000,
