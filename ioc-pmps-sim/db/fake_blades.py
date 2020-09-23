@@ -1,3 +1,4 @@
+import caproto as ca
 from caproto.server import PVGroup, SubGroup, get_pv_pair_wrapper, pvproperty
 from caproto.server.records import MotorFields
 
@@ -115,7 +116,7 @@ class FakeTwinCATStateConfigAll(PVGroup):
     state03 = SubGroup(FakeTwinCATStateConfigOne, prefix='03:')
     state04 = SubGroup(FakeTwinCATStateConfigOne, prefix='04:')
     state05 = SubGroup(FakeTwinCATStateConfigOne, prefix='05:')
-    # state06 = SubGroup(FakeTwinCATStateConfigOne, prefix='06:')
+    state06 = SubGroup(FakeTwinCATStateConfigOne, prefix='06:')
     # state07 = SubGroup(FakeTwinCATStateConfigOne, prefix='07:')
     # state08 = SubGroup(FakeTwinCATStateConfigOne, prefix='08:')
     # state09 = SubGroup(FakeTwinCATStateConfigOne, prefix='09:')
@@ -130,8 +131,24 @@ class FakeTwinCATStateConfigAll(PVGroup):
 class FakeTwinCATStatePositioner(PVGroup):
     _delay = 0.2
 
-    state_get = pvproperty(value=0, name='GET_RBV')
-    state_set = pvproperty(value=0, name='SET')
+    state_enum_strings = ['UNKNOWN', 'OUT', 'IN']
+
+    state_get = pvproperty(
+        value=0,
+        name='GET_RBV',
+        record='bo',
+        enum_strings=state_enum_strings,
+        doc='State information enum',
+        dtype=ca.ChannelType.ENUM,
+    )
+
+    state_set = pvproperty(
+        value=0,
+        name='SET',
+        enum_strings=state_enum_strings,
+        dtype=ca.ChannelType.ENUM,
+    )
+
     error = pvproperty(value=0.0, name='ERR_RBV')
     error_id = pvproperty(value=0, name='ERRID_RBV')
     error_message = pvproperty(dtype=str, name='ERRMSG_RBV')
