@@ -5,3 +5,5 @@ satt.py
 pvNotepad/build/*
 *.pyc
 __pycache__
+docs/build
+docs/source/ioc
