@@ -23,9 +23,6 @@ import sphinx_rtd_theme
 module_path = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(module_path))
 
-# Hackity hack:
-sys.modules['ioc_lfe_at2l0_calc'] = __import__('ioc-lfe-at2l0-calc')
-
 
 # -- Project information -----------------------------------------------------
 project = 'hxr-attenuator'
@@ -179,23 +176,13 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
-# autoclass_content = 'init'  # otherwise duplicates will be generated
-# autosummary_context = caproto.docs.autosummary_context
-# autodoc_default_options = caproto.docs.autodoc_default_options
 
-# html_context = {
-#     **autosummary_context,
-#     'css_files': [
-#         '_static/theme_overrides.css',  # override wide tables in RTD theme
-#     ],
-# }
-
-# intersphinx_mapping = {
-#     # 'ophyd': ('https://blueskyproject.io/ophyd', None),
-#     'python': ('https://docs.python.org/3', None),
-#     # 'numpy': ('https://docs.scipy.org/doc/numpy', None),
-#     'caproto': ('https://caproto.github.io/caproto/master', None),
-# }
+intersphinx_mapping = {
+    # 'ophyd': ('https://blueskyproject.io/ophyd', None),
+    'python': ('https://docs.python.org/3', None),
+    # 'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'caproto': ('https://caproto.github.io/caproto/master', None),
+}
 
 # def setup(app):
 #     caproto.docs.setup(app)
@@ -205,14 +192,7 @@ def setup(app):
     caproto.docs.setup(app)
 
 
-autodoc_default_options = {
-    'members': '',
-    'member-order': 'bysource',
-    'special-members': '',
-    'undoc-members': False,
-    'exclude-members': ''
-}
-
+autodoc_default_options = caproto.docs.autodoc_default_options
 autosummary_generate = True
 autoclass_content = 'init'  # otherwise duplicates will be generated
 autosummary_context = {
