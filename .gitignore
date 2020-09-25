@@ -1,5 +1,8 @@
+.DS_Store
 HISTORY/*
 pvNotepad/build/*
+
+autosave*.json
 
 # Ignore the cache dir
 cache/*
