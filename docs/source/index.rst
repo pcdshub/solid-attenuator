@@ -1,4 +1,4 @@
-.. fluke_985 documentation master file, created by
+.. hxr-attenuator documentation master file, created by
    sphinx-quickstart on Tue May 22 13:13:05 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.

@@ -1,0 +1,11 @@
+[run]
+source =
+    hxr_attenuator
+[report]
+omit =
+    #versioning
+    .*version.*
+    *_version.py
+    #tests
+    *test*
+    hxr_attenuator/tests/*
