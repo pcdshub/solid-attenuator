@@ -18,4 +18,4 @@ export PYTHONPATH="${PYDEV}:${PYTHONPATH}"
 
 cd "$(dirname "$0")"/..
 python --version
-python -m ioc-pmps-sim --prefix ${PREFIX} --list-pvs
+python `which ioc-sim-at2l0` --prefix ${PREFIX} --list-pvs
