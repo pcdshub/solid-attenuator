@@ -10,6 +10,7 @@ from .satt_app import create_ioc
 FIRST_FILTER = 2
 NUM_BLADES = 18
 
+
 if '--production' in sys.argv:
     prefix = "AT2L0:CALC"
     eV_name = "PMPS:LFE:PE:UND:CurrentPhotonEnergy_RBV"
@@ -45,7 +46,7 @@ ioc_args = {
 }
 
 
-if __name__ == '__main__':
+def main():
     ioc_options, run_options = ioc_arg_parser(
         default_prefix=prefix,
         desc='Solid attenuator IOC')
@@ -53,3 +54,7 @@ if __name__ == '__main__':
     ioc = create_ioc(**ioc_args, **ioc_options)
     util.config_logging(ioc.log, level=log_level)
     run(ioc.pvdb, **run_options)
+
+
+if __name__ == '__main__':
+    main()

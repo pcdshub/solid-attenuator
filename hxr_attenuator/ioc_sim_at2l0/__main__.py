@@ -8,7 +8,8 @@ pmps_run_name = "PMPS:HXR:AT2L0:RUN"
 prefix = ""
 ################################################
 
-if __name__ == '__main__':
+
+def main():
     ioc_options, run_options = ioc_arg_parser(
         default_prefix=prefix,
         desc=IOCMain.__doc__)
@@ -17,3 +18,7 @@ if __name__ == '__main__':
         pmps_run_pv=pmps_run_name,
         **ioc_options)
     run(ioc.pvdb, **run_options)
+
+
+if __name__ == '__main__':
+    main()
