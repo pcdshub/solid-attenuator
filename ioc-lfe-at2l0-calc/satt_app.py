@@ -1,6 +1,7 @@
 import numpy as np
 from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper, RotatingFileManager
+from caproto.server.stats import StatusHelper
 
 from .db import FilterGroup, SystemGroup
 
@@ -28,6 +29,7 @@ class IOCBase(PVGroup):
         )
 
     autosave_helper = SubGroup(AutosaveHelper)
+    stats_helper = SubGroup(StatusHelper, prefix=':STATS:')
     sys = SubGroup(SystemGroup, prefix=':SYS:')
 
     @property

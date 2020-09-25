@@ -1,3 +1,4 @@
 caproto[standard]>=0.6.0
 scipy
 periodictable
+psutil
