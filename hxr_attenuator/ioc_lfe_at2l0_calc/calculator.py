@@ -11,6 +11,7 @@ Atomic Data and Nuclear Data Tables 54 no.2, 181-342 (July 1993).
 B.D. Cullity, Elements of X-Ray Diffraction (Second Edition), 11-20, (1978).
 """
 
+import copy
 import enum
 import functools
 import itertools
@@ -53,9 +54,9 @@ def in_out_combinations(num_blades: int):
 
 class Config:
     def __init__(self, all_transmissions, filter_states, transmission):
-        self.all_transmissions = all_transmissions
-        self.filter_states = filter_states.astype(np.int)
-        self.transmission = transmission
+        self.all_transmissions = copy.copy(all_transmissions)
+        self.filter_states = copy.copy(filter_states)
+        self.transmission = copy.copy(transmission)
 
     def __repr__(self):
         return (
@@ -69,7 +70,7 @@ class Config:
             "-" * width,
             f"Calculated transmission value: {self.transmission}",
             "-" * width,
-            str(self.filter_states.astype(np.int)),
+            str(self.filter_states),
             "=" * width,
         ))
 
