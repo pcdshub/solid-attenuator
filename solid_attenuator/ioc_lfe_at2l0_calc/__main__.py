@@ -19,7 +19,7 @@ if '--production' in sys.argv:
     motor_prefix = "AT2L0:XTES:MMS:"  # TODO
     log_level = 'INFO'
     # autosave_path = '/reg/d/iocData/ioc-lfe-at2l0-calc/iocInfo/autosave.json'
-    ioc_data = os.environ.get('IOC_DATA_AT2L0', '/reg/d/iocData/ioc-lfe-at2l0-calc/')
+    ioc_data = os.environ.get('IOC_DATA_AT2L0', '/reg/d/iocData/ioc-lfe-at2l0-calc/')  # noqa
     autosave_path = os.path.join(ioc_data, 'autosave.json')
     sys.argv.remove('--production')
 else:

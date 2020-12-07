@@ -7,7 +7,7 @@ PV Groups
 ---------
 
 
-.. currentmodule:: hxr_attenuator.ioc_lfe_at2l0_calc
+.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc
 
 
 .. autosummary::

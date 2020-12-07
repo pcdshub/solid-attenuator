@@ -1,2 +1,2 @@
 [flake8]
-exclude = satt.py,.git,__pycache__,build,dist,versioneer.py,hxr_attenuator/_version.py
+exclude = satt.py,.git,__pycache__,build,dist,versioneer.py,solid_attenuator/_version.py

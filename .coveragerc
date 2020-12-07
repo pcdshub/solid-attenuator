@@ -1,6 +1,6 @@
 [run]
 source =
-    hxr_attenuator
+    solid_attenuator
 [report]
 omit =
     #versioning
@@ -8,4 +8,4 @@ omit =
     *_version.py
     #tests
     *test*
-    hxr_attenuator/tests/*
+    solid_attenuator/tests/*

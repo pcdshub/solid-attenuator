@@ -25,7 +25,7 @@ sys.path.insert(0, str(module_path))
 
 
 # -- Project information -----------------------------------------------------
-project = 'hxr-attenuator'
+project = 'solid-attenuator'
 author = 'SLAC National Accelerator Laboratory'
 
 year = datetime.now().year
@@ -121,7 +121,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'hxr_attenuator'
+htmlhelp_basename = 'solid_attenuator'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -148,7 +148,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'hxr-attenuator.tex', 'hxr-attenuator Documentation',
+    (master_doc, 'solid-attenuator.tex', 'solid-attenuator Documentation',
      'SLAC National Accelerator Laboratory', 'manual'),
 ]
 
@@ -158,7 +158,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'hxr-attenuator', 'hxr-attenuator Documentation',
+    (master_doc, 'solid-attenuator', 'solid-attenuator Documentation',
      [author], 1)
 ]
 
@@ -169,8 +169,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'hxr-attenuator', 'hxr-attenuator Documentation',
-     author, 'hxr-attenuator', '',
+    (master_doc, 'solid-attenuator', 'solid-attenuator Documentation',
+     author, 'solid-attenuator', '',
      'Miscellaneous'),
 ]
 

@@ -13,7 +13,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/pcdshub/hxr-attenuator/issues.
+Report bugs at https://github.com/pcdshub/solid-attenuator/issues.
 
 If you are reporting a bug, please include:
 
@@ -35,14 +35,14 @@ is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-hxr-attenuator could always use more documentation, whether
-as part of the official hxr-attenuator docs, in docstrings,
+solid-attenuator could always use more documentation, whether
+as part of the official solid-attenuator docs, in docstrings,
 or even on the web in blog posts, articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/pcdshub/hxr-attenuator/issues.
+The best way to send feedback is to file an issue at https://github.com/pcdshub/solid-attenuator/issues.
 
 If you are proposing a feature:
 
@@ -54,17 +54,17 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `hxr-attenuator` for local development.
+Ready to contribute? Here's how to set up `solid-attenuator` for local development.
 
-1. Fork the `hxr-attenuator` repo on GitHub.
+1. Fork the `solid-attenuator` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/hxr-attenuator.git
+    $ git clone git@github.com:your_name_here/solid-attenuator.git
 
 3. Install your local copy into a new conda environment. Assuming you have conda installed, this is how you set up your fork for local development::
 
-    $ conda create -n hxr-attenuator python=3.7
-    $ cd hxr-attenuator/
+    $ conda create -n solid-attenuator python=3.7
+    $ cd solid-attenuator/
     $ pip install -e .
 
 4. Create a branch for local development::
@@ -75,7 +75,7 @@ Ready to contribute? Here's how to set up `hxr-attenuator` for local development
 
 5. When you're done making changes, check that your changes pass flake8::
 
-    $ flake8 hxr_attenuator
+    $ flake8 solid_attenuator
 
 6. Add new tests for any additional functionality or bugs you may have discovered.  And, of course, be sure that all previous tests still pass by running::
 
@@ -99,5 +99,5 @@ Before you submit a pull request, check that it meets these guidelines:
    new functionality into a function with a docstring, and add the feature to
    the list in README.rst.
 3. The pull request should work for Python 3.5 and up. Check
-   https://travis-ci.org/pcdshub/hxr-attenuator/pull_requests
+   https://travis-ci.org/pcdshub/solid-attenuator/pull_requests
    and make sure that the tests pass for all supported Python versions.

@@ -9,7 +9,7 @@ min_version = (3, 6)
 
 if sys.version_info < min_version:
     error = """
-hxr-attenuator does not support Python {0}.{1}.
+solid-attenuator does not support Python {0}.{1}.
 Python {2}.{3} and above is required. Check your Python version like so:
 
 python3 --version
@@ -42,7 +42,7 @@ if git_requirements:
 
 
 setup(
-    name='hxr_attenuator',
+    name='solid_attenuator',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     license='BSD',
@@ -50,16 +50,16 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
     description=' LCLS Hard X-Ray Solid Attenuator System',
     long_description=readme,
-    url='https://github.com/pcdshub/hxr-attenuator',
+    url='https://github.com/pcdshub/solid-attenuator',
     entry_points={
         'console_scripts': [
-            'ioc-lfe-at2l0-calc=hxr_attenuator.ioc_lfe_at2l0_calc.__main__:main',  # noqa
-            'ioc-sim-at2l0=hxr_attenuator.ioc_sim_at2l0.__main__:main',
+            'ioc-lfe-at2l0-calc=solid_attenuator.ioc_lfe_at2l0_calc.__main__:main',  # noqa
+            'ioc-sim-at2l0=solid_attenuator.ioc_sim_at2l0.__main__:main',
             ],
         },
     include_package_data=True,
     package_data={
-        'hxr_attenuator': [
+        'solid_attenuator': [
             # When adding files here, remember to update MANIFEST.in as well!
             'ioc_lfe_at2l0_calc/CXRO/*.nff'
             'ioc_lfe_at2l0_calc/iocBoot/*.cmd',
