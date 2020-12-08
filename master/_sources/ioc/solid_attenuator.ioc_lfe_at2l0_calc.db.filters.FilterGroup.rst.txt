@@ -1,0 +1,115 @@
+﻿solid\_attenuator.ioc\_lfe\_at2l0\_calc.db.filters.FilterGroup
+==============================================================
+
+
+.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc.db.filters
+
+.. autoclass:: FilterGroup
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+    .. list-table:: FilterGroup pvproperties
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Docs
+           - Type
+           - Notes
+           - Alarm Group
+    
+        *  - closest_energy
+           - ``ClosestEnergy_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - closest_index
+           - ``ClosestIndex_RBV``
+           - 
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - is_stuck
+           - ``IsStuck``
+           - Filter is stuck in place
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+           - 
+    
+        *  - material
+           - ``Material``
+           - Filter material
+           - STRING (:class:`stringin <caproto.server.records.StringinFields>`)
+           - 
+                 **Put**
+           - 
+    
+        *  - thickness
+           - ``Thickness``
+           - Filter thickness
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 **Put**
+           - 
+    
+        *  - transmission
+           - ``Transmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - transmission_3omega
+           - ``Transmission3Omega_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+    
+
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~FilterGroup.get_transmission
+       ~FilterGroup.group_read
+       ~FilterGroup.group_write
+       ~FilterGroup.load_data
+       ~FilterGroup.set_photon_energy
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~FilterGroup.default_values
+       ~FilterGroup.type_map
+       ~FilterGroup.type_map_read_only
+    
+
+    
+    .. rubric:: pvproperty methods

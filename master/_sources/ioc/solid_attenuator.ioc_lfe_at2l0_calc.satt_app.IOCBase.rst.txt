@@ -1,0 +1,85 @@
+﻿solid\_attenuator.ioc\_lfe\_at2l0\_calc.satt\_app.IOCBase
+=========================================================
+
+
+.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc.satt_app
+
+.. autoclass:: IOCBase
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+
+    
+    .. list-table:: Sub-groups
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Class
+           - Docs
+    
+        *  -  autosave_helper
+           -  ``autosave_helper:``
+           -  :class:`~caproto.server.autosave.AutosaveHelper`
+           -  
+    
+        *  -  stats_helper
+           -  ``:STATS:``
+           -  :class:`~caproto.server.stats.StatusHelper`
+           -  
+    
+        *  -  stats_helper.basic
+           -  
+           -  :class:`~caproto.server.stats.BasicStatusHelper`
+           -  
+    
+        *  -  stats_helper.periodic
+           -  
+           -  :class:`~caproto.server.stats.PeriodicStatusHelper`
+           -  
+    
+        *  -  sys
+           -  ``:SYS:``
+           -  :class:`~solid_attenuator.ioc_lfe_at2l0_calc.db.system.SystemGroup`
+           -  
+    
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~IOCBase.calculate_transmission
+       ~IOCBase.calculate_transmission_3omega
+       ~IOCBase.group_read
+       ~IOCBase.group_write
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~IOCBase.all_transmissions
+       ~IOCBase.default_values
+       ~IOCBase.first_filter
+       ~IOCBase.num_filters
+       ~IOCBase.type_map
+       ~IOCBase.type_map_read_only
+       ~IOCBase.working_filters
+    
+
+    
