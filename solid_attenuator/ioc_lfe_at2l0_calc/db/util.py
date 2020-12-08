@@ -20,6 +20,7 @@ def get_default_thread_context():
 def _monitor_pvs(*pv_names, context, queue, data_type='time'):
     """
     Monitor pv_names in the given threading context, putting events to `queue`.
+
     Parameters
     ----------
     *pv_names : str
@@ -30,6 +31,7 @@ def _monitor_pvs(*pv_names, context, queue, data_type='time'):
         Thread-safe queue for the current server async library.
     data_type : {'time', 'control', 'native'}
         The subscription type.
+
     Returns
     -------
     subscriptions : list

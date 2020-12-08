@@ -1,0 +1,51 @@
+version: ~> 1.0
+
+env:
+  global:
+    # Doctr deploy key for pcdshub/solid-attenuator
+    - secure: "alltgr9Z8DmOXLvs+aTaKIEhzzOBKlmYQzGXXQ39YB6xU6HdTR8qfEZfbSX+ucHYD7BvRzTtA1anYdVHqCN2lJdvV/b57NXk07+DVEhc5xBFVOw7IGlCF5kpyhd8MoLXftbhCN/uzfh0/zYyAJGrZ+3EWCxdOlQ9uK/Nc8ObgEBFrqaOZiTdS07+mA6Hs5G7P28I7iJcHoHGtFO7JC+kTTe/7d5fg510Hc+QxsFRdBq1JZ6ymsyNeIpKrrpP6KDVV3EtPBi3utvH4mbUraa6H9ZITu6dnYGoixCdVZYibwLJHQ3YNh6BWWSNv9Sik9dASV68T46bXrGYutgRW8gCM0rJjUVqOroPyEBy1chyGoc9AiO5KZ9hEXI1BEQUPDwB+CpHmpaLbkLkV12gy89mx7EG42UK07UZISfh8tEIYSghkni5Xm9H/P85tKdRmBqysGRj/AUL//3QrlV44pmQxYo7MjuXfNYBGnqk8bb3vDc0uXYa60OO23l4+UrwYZaGZbZIP+UdJqmh0Ja893FHK+N6VXjzVm1OhfXmewC/4Ymfr93SP80SNBpCqWihVsOChD2H+4gbz3+ft6PAvwxmLRaYXukBVaYiLw0vLTbtNX98DF22YqR3HpHjO8Qx83zO7uaswrmD8AXPVzEK6qv5rr9m54K/jGuJyMMW8N2p+J0="
+
+    # enable the usage of versions menu which allow versioning of the docs
+    # pages and not only the master branch
+    - DOCTR_VERSIONS_MENU="1"
+    # Dependency files used to build the documentation (space separated)
+    - DOCS_REQUIREMENTS="dev-requirements.txt requirements.txt"
+    # Options to be passed to flake8 for package linting. Usually this is just
+    # the package name but you can enable other flake8 options via this config
+    - PYTHON_LINT_OPTIONS="solid_attenuator"
+
+    # The name of the conda package
+    - CONDA_PACKAGE="solid_attenuator"
+    # The folder containing the conda recipe (meta.yaml)
+    - CONDA_RECIPE_FOLDER="conda-recipe"
+    # Extra dependencies needed to run the tests which are not included
+    # in the recipe or CONDA_REQUIREMENTS. E.g. PyQt
+    - CONDA_EXTRAS=""
+    # Requirements file with contents for tests dependencies
+    - CONDA_REQUIREMENTS="dev-requirements.txt"
+
+    # Extra dependencies needed to run the test with Pip (similar to
+    # CONDA_EXTRAS) but for pip
+    - PIP_EXTRAS=""
+
+# jobs:
+#   allow_failures:
+#     # This makes the PIP based Python 3.6 optional for passing.
+#     # Remove this block if passing tests with PIP is mandatory for your
+#     # package
+#     - name: "Python 3.6 - PIP"
+
+import:
+  # This import enables a set of standard python jobs including:
+  # - Build
+  #   - Anaconda Package Build
+  # - Tests
+  #   - Linter
+  #   - Documentation
+  #   - Python 3.6 - PIP based
+  #   - Python 3.6, 3.7 & 3.8 - Conda base
+  # - Deploy
+  #   - Documentation using doctr
+  #   - Conda Package - uploaded to pcds-dev and pcds-tag
+  #   - PyPI
+  - pcdshub/pcds-ci-helpers:travis/shared_configs/standard-python-conda.yml

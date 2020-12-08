@@ -1,0 +1,36 @@
+{% set data = load_setup_py_data() %}
+
+package:
+    name    : solid_attenuator
+    version : {{ data.get('version') }}
+
+source:
+    path: ..
+
+build:
+    number: 0
+    noarch: python
+
+requirements:
+    build:
+      - python >=3.6
+      - setuptools
+      - versioneer
+    run:
+      - python >=3.6
+      - caproto
+      - scipy
+      - periodictable
+      - psutil
+
+test:
+    imports:
+      - solid_attenuator
+      - solid_attenuator.ioc_lfe_at2l0_calc
+    requires:
+      - pytest
+
+about:
+  home: https://github.com/pcdshub/solid-attenuator
+  license: SLAC Open License
+  summary: LCLS Hard X-Ray Solid Attenuator System

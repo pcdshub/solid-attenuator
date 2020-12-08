@@ -59,7 +59,9 @@ class Config:
         self.transmission = copy.copy(transmission)
 
     def __repr__(self):
-        return f'<Config {self.filter_states} transmission={self.transmission}>'
+        return (
+            f'<Config {self.filter_states} transmission={self.transmission}>'
+        )
 
     def __str__(self):
         """Format and print this configuration."""

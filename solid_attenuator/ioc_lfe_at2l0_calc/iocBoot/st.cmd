@@ -28,7 +28,7 @@ run_ioc() {
     set -ex
     cd ${TOP}
     python --version
-    python -m ioc-lfe-at2l0-calc --production --list-pvs
+    python `which ioc-lfe-at2l0-calc` --production --list-pvs
 }
 
 (run_ioc 2>&1) | tee --append $LOG_FILE_PATH

@@ -1,3 +1,5 @@
-caproto[standard]>=0.6.0
+caproto[standard]>=0.7.0
 scipy
 periodictable
+psutil
+versioneer

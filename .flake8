@@ -1,5 +1,2 @@
 [flake8]
-exclude =
-    ./satt.py
-
-max-line-length = 80
+exclude = satt.py,.git,__pycache__,build,dist,versioneer.py,solid_attenuator/_version.py

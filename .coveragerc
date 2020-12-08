@@ -1,0 +1,11 @@
+[run]
+source =
+    solid_attenuator
+[report]
+omit =
+    #versioning
+    .*version.*
+    *_version.py
+    #tests
+    *test*
+    solid_attenuator/tests/*
