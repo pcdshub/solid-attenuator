@@ -17,6 +17,7 @@ import functools
 import itertools
 import pathlib
 import typing
+from typing import Tuple
 
 import numpy as np
 import periodictable
@@ -77,7 +78,8 @@ class Config:
 
 def find_configs(
         all_transmissions: typing.List[float],
-        t_des: float
+        t_des: float,
+        t_base: float = 1.0,
         ) -> typing.List[Config]:
     """
     Find the optimal configurations for attaining desired transmission
@@ -94,57 +96,61 @@ def find_configs(
 
     t_des : float
         Desired transmission value.
+
+    t_base : float, optional
+        The base transmission - 1.0 if no external filters are applied.
     """
 
     config_table = in_out_combinations(len(all_transmissions))
 
     # Table of transmissions for all configurations is obtained by multiplying
     # basis by configurations in/out state matrix.
-    T_table = np.nanprod(all_transmissions * config_table,
+    t_table = np.nanprod(all_transmissions * config_table * t_base,
                          axis=1)
 
     # Create a table of configurations and their associated beam transmission
     # values, sorted by transmission value.
-    configs = np.asarray([T_table, np.arange(len(config_table))])
+    configs = np.asarray([t_table, np.arange(len(config_table))])
 
     # Sort based on transmission value, retaining index order:
     sort_indices = configs[0, :].argsort()
-    T_config_table = configs.T[sort_indices]
+    t_config_table = configs.T[sort_indices]
 
     # Find the index of the filter configuration which minimizes the
     # differences between the desired and closest achievable transmissions.
-    i = np.argmin(np.abs(T_config_table[:, 0]-t_des))
+    idx_closest = np.argmin(np.abs(t_config_table[:, 0] - t_des))
+
+    def get_config_and_transmission(idx: int) -> Tuple[np.ndarray, float]:
+        conf = config_table[int(t_config_table[idx, 1])]
+        transmission = np.nanprod(all_transmissions * conf * t_base)
+        return conf, transmission
 
     # Obtain the optimal filter configuration and its transmission.
-    closest = config_table[int(T_config_table[i, 1])]
-    T_closest = np.nanprod(all_transmissions * closest)
+    closest, t_closest = get_config_and_transmission(idx_closest)
 
     # Determine the optimal configurations for "best highest" and "best lowest"
     # achievable transmissions.
-    if T_closest == t_des:
+    if t_closest == t_des:
         # The optimal configuration achieves the desired transmission exactly.
-        config_bestHigh = config_bestLow = closest
-        T_bestHigh = T_bestLow = T_closest
-    elif T_closest < t_des:
-        idx = min((i + 1, len(T_config_table) - 1))
-        config_bestHigh = config_table[int(T_config_table[idx, 1])]
-        config_bestLow = closest
-        T_bestHigh = np.nanprod(all_transmissions * config_bestHigh)
-        T_bestLow = T_closest
-    elif T_closest > t_des:
-        idx = max((i - 1, 0))
-        config_bestHigh = closest
-        config_bestLow = config_table[int(T_config_table[idx, 1])]
-        T_bestHigh = T_closest
-        T_bestLow = np.nanprod(all_transmissions * config_bestLow)
+        idx_low = idx_closest
+        idx_high = idx_closest
+    elif t_closest < t_des:
+        idx_low = idx_closest
+        idx_high = min((idx_closest + 1, len(t_config_table) - 1))
+    elif t_closest > t_des:
+        idx_low = max((idx_closest - 1, 0))
+        idx_high = idx_closest
+
+    config_low, t_best_low = get_config_and_transmission(idx_low)
+    config_high, t_best_high = get_config_and_transmission(idx_high)
 
     return [
         Config(all_transmissions=list(all_transmissions),
-               filter_states=np.nan_to_num(config_bestLow).astype(np.int),
-               transmission=T_bestLow),
+               filter_states=np.nan_to_num(config_low).astype(np.int),
+               transmission=t_best_low),
         Config(all_transmissions=list(all_transmissions),
-               filter_states=np.nan_to_num(config_bestHigh).astype(np.int),
-               transmission=T_bestHigh)
+               filter_states=np.nan_to_num(config_high).astype(np.int),
+               transmission=t_best_high)
     ]
 
 
