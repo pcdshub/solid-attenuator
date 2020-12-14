@@ -96,16 +96,13 @@ def find_configs(
 
     t_des : float
         Desired transmission value.
-
-    t_base : float, optional
-        The base transmission - 1.0 if no external filters are applied.
     """
 
     config_table = in_out_combinations(len(all_transmissions))
 
     # Table of transmissions for all configurations is obtained by multiplying
     # basis by configurations in/out state matrix.
-    t_table = np.nanprod(all_transmissions * config_table * t_base,
+    t_table = np.nanprod(all_transmissions * config_table,
                          axis=1)
 
     # Create a table of configurations and their associated beam transmission
@@ -122,7 +119,7 @@ def find_configs(
 
     def get_config_and_transmission(idx: int) -> Tuple[np.ndarray, float]:
         conf = config_table[int(t_config_table[idx, 1])]
-        transmission = np.nanprod(all_transmissions * conf * t_base)
+        transmission = np.nanprod(all_transmissions * conf)
         return conf, transmission
 
     # Obtain the optimal filter configuration and its transmission.
