@@ -170,6 +170,58 @@ def get_best_config(all_transmissions: typing.List[float],
     return floor_config if mode == ConfigMode.Floor else ceil_config
 
 
+def get_best_config_with_material_priority(
+        material_and_transmission: typing.List[Tuple[str, float]],
+        material_order: typing.List[str],
+        t_des: float,
+        ) -> Config:
+    """
+    Inserting filters based on the material order provided, get the best
+    possible filter configuration.
+
+    Parameters
+    ----------
+    material_and_transmission : [(material, transmission), ...]
+        List of (material, transmission) tuples.
+
+    material_order : list of str
+        List of materials, in order of priority (first listed will be first to
+        be inserted).
+
+    t_des : float
+        Desired transmission value.
+
+    Returns
+    -------
+    Config
+        The best configuration given the settings.
+    """
+    final_config = Config(
+        all_transmissions=[transm for _, transm in material_and_transmission],
+        transmission=1.0,
+        filter_states=np.zeros(len(material_and_transmission), dtype=np.int),
+    )
+
+    for material in material_order:
+        idx_to_transmission = {
+            idx: transm
+            for idx, (mat, transm) in enumerate(material_and_transmission)
+            if mat == material
+        }
+
+        _, partial_config = find_configs(
+            list(idx_to_transmission.values()),
+            t_des=t_des / final_config.transmission,
+        )
+
+        final_config.transmission *= partial_config.transmission
+        for idx, inserted in zip(idx_to_transmission,
+                                 partial_config.filter_states):
+            final_config.filter_states[idx] = inserted
+
+    return final_config
+
+
 def find_closest_energy(photon_energy: float,
                         table: np.ndarray) -> typing.Tuple[float, int]:
     """
