@@ -188,7 +188,8 @@ def get_best_config(all_transmissions: typing.List[float],
 
 
 def get_best_config_with_material_priority(
-        material_and_transmission: typing.List[Tuple[str, float]],
+        materials: typing.List[str],
+        transmissions: typing.List[float],
         material_order: typing.List[str],
         t_des: float,
         ) -> Config:
@@ -198,8 +199,11 @@ def get_best_config_with_material_priority(
 
     Parameters
     ----------
-    material_and_transmission : [(material, transmission), ...]
-        List of (material, transmission) tuples.
+    materials : str
+        List of materials, matched with `transmissions`.
+
+    transmissions : str
+        List of transmission values, matched with `materials`.
 
     material_order : list of str
         List of materials, in order of priority (first listed will be first to
@@ -213,25 +217,36 @@ def get_best_config_with_material_priority(
     Config
         The best configuration given the settings.
     """
+    if len(transmissions) != len(materials):
+        raise ValueError(
+            'transmissions and materials must be of the same length'
+        )
+
+    # This configuration is assembled based on the material priorities:
     final_config = Config(
-        all_transmissions=[transm for _, transm in material_and_transmission],
+        all_transmissions=transmissions,
         transmission=1.0,
-        filter_states=np.zeros(len(material_and_transmission), dtype=np.int),
+        filter_states=np.zeros(len(transmissions), dtype=np.int),
     )
 
     for material in material_order:
+        # Assemble {idx: transmission} for only the given material
         idx_to_transmission = {
             idx: transm
-            for idx, (mat, transm) in enumerate(material_and_transmission)
+            for idx, (mat, transm) in enumerate(zip(materials, transmissions))
             if mat == material
         }
 
+        # Find the configurations just for this material, picking the ceiling:
         _, partial_config = find_configs(
             list(idx_to_transmission.values()),
             t_des=t_des / final_config.transmission,
         )
 
+        # Update the final, aggregated configuration - transmission:
         final_config.transmission *= partial_config.transmission
+
+        # And individual filter states:
         for idx, inserted in zip(idx_to_transmission,
                                  partial_config.filter_states):
             final_config.filter_states[idx] = inserted

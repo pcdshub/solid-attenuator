@@ -82,8 +82,8 @@ test_cases = [
 @pytest.mark.parametrize('t_des, states', test_cases)
 def test_material_prioritization(t_des, states):
     conf = get_best_config_with_material_priority(
-        material_and_transmission=[(flt.material, flt.transmission)
-                                   for flt in filters],
+        materials=[flt.material for flt in filters],
+        transmissions=[flt.transmission for flt in filters],
         material_order=['C', 'Si'],
         t_des=t_des,
     )
