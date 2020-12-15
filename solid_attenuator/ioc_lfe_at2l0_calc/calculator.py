@@ -79,7 +79,6 @@ class Config:
 def find_configs(
         all_transmissions: typing.List[float],
         t_des: float,
-        t_base: float = 1.0,
         ) -> typing.List[Config]:
     """
     Find the optimal configurations for attaining desired transmission
