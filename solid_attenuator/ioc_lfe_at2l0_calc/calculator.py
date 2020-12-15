@@ -159,6 +159,24 @@ def get_best_config(all_transmissions: typing.List[float],
     Return the optimal floor (lower than desired transmission) or ceiling
     (higher than desired transmission) configuration based on the current mode
     setting.
+
+    This does not take into account material priority.
+
+    Parameters
+    ----------
+    all_transmissions : list of (float or nan)
+        Basis vector of all filter transmission values.
+        Note: Stuck filters should have transmission of `NaN`.
+
+    t_des : float
+        Desired transmission value.
+
+    mode : ConfigMode
+        The configuration mode (floor or ceiling).
+
+    See Also
+    --------
+    `get_best_config_with_material_priority`
     """
 
     if isinstance(mode, str):
