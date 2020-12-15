@@ -197,6 +197,13 @@ def get_best_config_with_material_priority(
     Inserting filters based on the material order provided, get the best
     possible filter configuration.
 
+    Materials with lower priority (later in the list) will not be used until
+    the materials with higher priority are all inserted.
+
+    For example, this can be used in AT2L0 to protect the silicon filters from
+    damage by the beam, using the diamond filters first.  The material order
+    list in this example would then be ``C``, ``Si``.
+
     Parameters
     ----------
     materials : str
