@@ -126,15 +126,15 @@ def find_configs(
 
     # Determine the optimal configurations for "best highest" and "best lowest"
     # achievable transmissions.
-    if t_closest == t_des:
-        # The optimal configuration achieves the desired transmission exactly.
-        idx_low = idx_closest
-        idx_high = idx_closest
-    elif t_closest < t_des:
+    if t_closest < t_des:
         idx_low = idx_closest
         idx_high = min((idx_closest + 1, len(t_config_table) - 1))
     elif t_closest > t_des:
         idx_low = max((idx_closest - 1, 0))
+        idx_high = idx_closest
+    else:
+        # The optimal configuration achieves the desired transmission exactly.
+        idx_low = idx_closest
         idx_high = idx_closest
 
     config_low, t_best_low = get_config_and_transmission(idx_low)
@@ -245,7 +245,7 @@ def get_best_config_with_material_priority(
         }
 
         # Find the configurations just for this material, picking the ceiling:
-        _, partial_config = find_configs(
+        partial_config, _ = find_configs(
             list(idx_to_transmission.values()),
             t_des=t_des / final_config.transmission,
         )

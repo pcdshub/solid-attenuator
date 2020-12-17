@@ -48,7 +48,11 @@ For AT2L0, with a desired transmission of ``t_des``,
 
     a. For desired transmission within
        ``t_all_diamond_inserted <= t_des <= 1.0``, the algorithm will have
-       pretty much gotten the requested transmission as close as needed.
+       pretty much gotten the requested transmission as close as needed. The
+       algorithm will have chosen the "floor" configuration, favoring going
+       under the desired transmission. This is important for a possible future
+       scenario where any diamond filters are out of commission (stuck in the
+       out position due to hardware failure, damaged, etc).
     b. For desired transmission ``0 <= t_des < t_all_diamond_inserted``, the
        algorithm will have already selected all diamond filters. There's more
        left to do in the second round as we can still get closer to ``t_des``,
