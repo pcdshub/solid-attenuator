@@ -48,15 +48,14 @@ For AT2L0, with a desired transmission of ``t_des``,
 
     a. For desired transmission within
        ``t_all_diamond_inserted <= t_des <= 1.0``, the algorithm will have
-       pretty much gotten the requested transmission as close as needed. The
-       algorithm will have chosen the "floor" configuration, favoring going
-       under the desired transmission. This is important for a possible future
-       scenario where any diamond filters are out of commission (stuck in the
-       out position due to hardware failure, damaged, etc).
+       pretty much gotten the requested transmission as close as needed.
     b. For desired transmission ``0 <= t_des < t_all_diamond_inserted``, the
        algorithm will have already selected all diamond filters. There's more
        left to do in the second round as we can still get closer to ``t_des``,
        when calculating which silicon filters to insert.
+
+    In either case, if all diamond filters have not been marked for insertion
+    at this point, the silicon filters will remain out.
 
 3. As normalized transmission values are multiplicative (50% of 50%
    transmission would be 25%), our second round tries to find the right
@@ -67,7 +66,8 @@ For AT2L0, with a desired transmission of ``t_des``,
    b. For values in the range noted by (2b), ``t_des / transmission1`` will
       likely be something actionable.
 
-4. Assembling the two configurations from (1) and (3) gives a final configuration, specifying all filter states.
+4. Assembling the two configurations from (1) and (3) gives a final
+   configuration, specifying all filter states.
 
 
 Ladder-style algorithm
