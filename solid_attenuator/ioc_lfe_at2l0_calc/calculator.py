@@ -192,6 +192,7 @@ def get_best_config_with_material_priority(
         transmissions: typing.List[float],
         material_order: typing.List[str],
         t_des: float,
+        mode: ConfigMode,
         ) -> Config:
     """
     Inserting filters based on the material order provided, get the best
@@ -236,7 +237,7 @@ def get_best_config_with_material_priority(
         filter_states=np.zeros(len(transmissions), dtype=np.int),
     )
 
-    for material in material_order:
+    for mat_idx, material in enumerate(material_order):
         # Assemble {idx: transmission} for only the given material
         idx_to_transmission = {
             idx: transm
@@ -245,9 +246,10 @@ def get_best_config_with_material_priority(
         }
 
         # Find the configurations just for this material, picking the ceiling:
-        partial_config, _ = find_configs(
+        partial_config = get_best_config(
             list(idx_to_transmission.values()),
             t_des=t_des / final_config.transmission,
+            mode=mode,
         )
 
         # Update the final, aggregated configuration - transmission:
@@ -257,6 +259,11 @@ def get_best_config_with_material_priority(
         for idx, inserted in zip(idx_to_transmission,
                                  partial_config.filter_states):
             final_config.filter_states[idx] = inserted
+
+        if not all(partial_config.filter_states):
+            # Doubly-ensure that all filters are inserted before going to
+            # the next material.
+            break
 
     return final_config
 

@@ -20,8 +20,14 @@ class Filter:
 
 
 @pytest.fixture(params=range(2_000, 3_0000, 2_000))
-def photon_energy(request):
+def photon_energy(request) -> float:
     return float(request.param)
+
+
+@pytest.fixture(params=[calculator.ConfigMode.Floor,
+                        calculator.ConfigMode.Ceiling])
+def mode(request) -> calculator.ConfigMode:
+    return request.param
 
 
 absorption_tables = {}
@@ -63,6 +69,7 @@ def get_transmission(material: str,
     ]
 )
 def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
+                                 mode,
                                  photon_energy):
     diamond_filters = [
         Filter('C', thickness, get_transmission('C', thickness, photon_energy))
@@ -93,6 +100,7 @@ def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
             transmissions=transmissions,
             material_order=['C', 'Si'],
             t_des=t_des,
+            mode=mode,
         )
 
         inserted_materials = [
@@ -116,6 +124,7 @@ def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
     # I'm sure there's a better way to do this:
     param_id = request.node.name.rsplit('-', 1)[1].strip(']')
     # -> param_id = 'all_working'
+    param_id = f'{param_id}_{mode.name}'
 
     try:
         subplot = _subplots[param_id]
