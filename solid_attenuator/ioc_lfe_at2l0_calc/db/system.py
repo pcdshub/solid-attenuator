@@ -431,6 +431,7 @@ class SystemGroup(PVGroup):
             transmissions=list(primary.all_transmissions),
             material_order=primary.material_order,
             t_des=desired_transmission,
+            mode=calc_mode,
         )
         await self.best_config.write(config.filter_states)
         await self.best_config_bitmask.write(
