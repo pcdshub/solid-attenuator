@@ -73,7 +73,23 @@ For AT2L0, with a desired transmission of ``t_des``,
 Ladder-style algorithm
 ======================
 
-This is not yet implemented.
+The "Best Configuration Algorithm" noted above was designed for AT2L0 and does
+not support ladder-style attenuators such as AT1K3, AT1K4, AT1K2, or AT2K2.
+"Ladder" in this context means that each attenuator blade may have more than
+one filter to choose from, depending on its actuator position.
+
+The generic ladder algorithm ``get_ladder_config`` does its best to
+choose the right filters to target the requested transmission by exhaustively
+listing all possible filter configurations and their resulting transmission
+values.
+
+Similar to the original algorithm's usage of ``argmin``, we use ``argsort``
+determine the 2 closest possible configurations.  The primary difference here
+is slightly more complicated array manipulation.
+
+An additional benefit of the ``argsort`` method is that we can pick the top
+two configurations, and easily figure out which is the floor or ceiling
+configuration.
 
 ESD reference
 =============
