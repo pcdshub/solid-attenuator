@@ -268,6 +268,115 @@ def get_best_config_with_material_priority(
     return final_config
 
 
+def get_ladder_configs(
+        blade_transmissions: typing.List[Tuple[float, ...]],
+        t_des: float,
+        ) -> typing.List[Config]:
+    """
+    Get ladder configurations, given per-blade transmissions in a list.
+
+    Parameters
+    ----------
+    blade_transmissions : list of list of float
+        Normalized transmission values ordered as follows::
+
+            [[blade0_filter0, blade0_filter1, ...],
+             [blade1_filter0, blade1_filter1, ...],
+             ...
+             ]
+
+    t_des : float
+        Normalized desired transmission.
+
+    Returns
+    -------
+    low_config : Config
+        Best configuration as close to t_des as possible but not over.
+
+    high_config : Config
+        Best configuration as close to t_des as possible but not under.
+    """
+
+    # Build (idx, transmission) for each blade
+    index_and_transmission = [
+        ([(np.nan, 1.0)] + list(enumerate(transmission)))
+        for transmission in blade_transmissions
+    ]
+
+    # Take the product to give all possibilities
+    options = np.asarray(
+        list(itertools.product(*index_and_transmission))
+    )
+    # options[configuration of blades,
+    #         blade index,
+    #         0=filter index/1=transmission]
+
+    # Multiply out the transmission per configuration, resulting in a single
+    # array of transmission values
+    config_transmission = np.product(options[:, :, 1], axis=1)
+
+    def to_config(idx):
+        states = np.nan_to_num(options[idx, :, 0], nan=-1)
+        return Config(
+            all_transmissions=list(options[idx, :, 1]),
+            filter_states=[state if state >= 0 else None
+                           for state in states.astype(int).tolist()],
+            transmission=config_transmission[idx],
+        )
+
+    # Find the two indices of filter configuration which minimizes the
+    # differences between the desired and closest achievable transmissions.
+    idx1, idx2 = np.argsort(
+        np.abs(config_transmission - t_des)
+    )[:2]
+
+    config1 = to_config(idx1)
+    config2 = to_config(idx2)
+
+    if config1.transmission < config2.transmission:
+        return [config1, config2]
+    return [config2, config1]
+
+
+def get_ladder_config(
+        blade_transmissions: typing.List[Tuple[float, ...]],
+        t_des: float,
+        *,
+        mode: typing.Union[str, ConfigMode],
+        ) -> typing.List[Config]:
+    """
+    Get ladder configuration, given per-blade transmissions in a list.
+
+    Parameters
+    ----------
+    blade_transmissions : list of list of float
+        Normalized transmission values ordered as follows::
+
+            [[blade0_filter0, blade0_filter1, ...],
+             [blade1_filter0, blade1_filter1, ...],
+             ...
+             ]
+
+    t_des : float
+        Normalized desired transmission.
+
+    mode : ConfigMode
+        The configuration mode (floor or ceiling).
+
+    Returns
+    -------
+    config : Config
+        Best configuration as close to t_des, respecting ``mode``.
+    """
+
+    if isinstance(mode, str):
+        mode = ConfigMode[mode]
+
+    floor_config, ceil_config = get_ladder_configs(
+        blade_transmissions, t_des=t_des)
+    return floor_config if mode == ConfigMode.Floor else ceil_config
+
+
 def find_closest_energy(photon_energy: float,
                         table: np.ndarray) -> typing.Tuple[float, int]:
     """
