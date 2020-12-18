@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import numpy as np
 from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper, RotatingFileManager
@@ -9,6 +11,10 @@ from .db import FilterGroup, SystemGroup
 class IOCBase(PVGroup):
     """
     """
+    filters: Dict[int, FilterGroup]
+
+    prefix: str
+    monitor_pvnames: Dict[str, str]
 
     num_filters = None
     first_filter = 2
@@ -81,6 +87,29 @@ class IOCBase(PVGroup):
         for idx, filt in self.working_filters.items():
             T_arr[idx - self.first_filter] = filt.transmission.value
         return T_arr
+
+    @property
+    def all_filter_materials(self) -> List[str]:
+        """All filter materials in a list."""
+        return [flt.material.value for flt in self.filters.values()]
+
+    @property
+    def material_order(self) -> List[str]:
+        """Material prioritization."""
+        # Hard-coded for now.
+        return ['C', 'Si']
+
+    def check_materials(self) -> bool:
+        """Ensure the materials specified are OK according to the order."""
+        bad_materials = set(self.material_order).symmetric_difference(
+            set(self.all_filter_materials)
+        )
+        if bad_materials:
+            self.log.error(
+                'Materials not set properly! May not calculate correctly. '
+                'Potentially bad materials: %s', bad_materials
+            )
+        return not bool(bad_materials)
 
 
 def create_ioc(prefix,

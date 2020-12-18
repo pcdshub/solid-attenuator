@@ -392,25 +392,44 @@ class SystemGroup(PVGroup):
         desired_transmission = self.desired_transmission.value
         calc_mode = self.calc_mode.value
 
+        # This is a bit backwards - we reach up to the parent (IOCBase) for
+        # transmission calculations and such.
+        primary = self.parent
+
+        material_check = primary.check_materials()
+        if material_check:
+            status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
+        else:
+            status, severity = AlarmStatus.CALC, AlarmSeverity.MAJOR_ALARM
+
+        await self.desired_transmission.alarm.write(status=status,
+                                                    severity=severity)
+        if not material_check:
+            # Don't proceed with calculations if the material check fails.
+            return
+
         await self.last_energy.write(energy)
         await self.last_mode.write(calc_mode)
         await self.last_transmission.write(desired_transmission)
 
         # Update all of the filters first, to determine their transmission
         # at this energy
-        for filter in self.parent.filters.values():
+        for filter in primary.filters.values():
             await filter.set_photon_energy(energy)
 
         await self.calculated_transmission.write(
-            self.parent.calculate_transmission()
+            primary.calculate_transmission()
         )
         await self.calculated_transmission_3omega.write(
-            self.parent.calculate_transmission_3omega()
+            primary.calculate_transmission_3omega()
         )
 
         # Using the above-calculated transmissions, find the best configuration
-        config = calculator.get_best_config(
-            all_transmissions=self.parent.all_transmissions,
+
+        config = calculator.get_best_config_with_material_priority(
+            materials=primary.all_filter_materials,
+            transmissions=list(primary.all_transmissions),
+            material_order=primary.material_order,
             t_des=desired_transmission,
             mode=calc_mode,
         )
@@ -421,10 +440,9 @@ class SystemGroup(PVGroup):
             config.transmission - self.desired_transmission.value
         )
         self.log.info(
-            'Energy %s eV %s transmission desired %.2g estimated %.2g '
+            'Energy %s eV with desired transmission %.2g estimated %.2g '
             '(delta %.3g) configuration: %s',
             energy,
-            calc_mode,
             desired_transmission,
             config.transmission,
             self.best_config_error.value,

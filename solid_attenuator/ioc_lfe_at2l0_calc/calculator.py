@@ -17,6 +17,7 @@ import functools
 import itertools
 import pathlib
 import typing
+from typing import Tuple
 
 import numpy as np
 import periodictable
@@ -77,7 +78,7 @@ class Config:
 
 def find_configs(
         all_transmissions: typing.List[float],
-        t_des: float
+        t_des: float,
         ) -> typing.List[Config]:
     """
     Find the optimal configurations for attaining desired transmission
@@ -100,51 +101,52 @@ def find_configs(
 
     # Table of transmissions for all configurations is obtained by multiplying
     # basis by configurations in/out state matrix.
-    T_table = np.nanprod(all_transmissions * config_table,
+    t_table = np.nanprod(all_transmissions * config_table,
                          axis=1)
 
     # Create a table of configurations and their associated beam transmission
     # values, sorted by transmission value.
-    configs = np.asarray([T_table, np.arange(len(config_table))])
+    configs = np.asarray([t_table, np.arange(len(config_table))])
 
     # Sort based on transmission value, retaining index order:
     sort_indices = configs[0, :].argsort()
-    T_config_table = configs.T[sort_indices]
+    t_config_table = configs.T[sort_indices]
 
     # Find the index of the filter configuration which minimizes the
     # differences between the desired and closest achievable transmissions.
-    i = np.argmin(np.abs(T_config_table[:, 0]-t_des))
+    idx_closest = np.argmin(np.abs(t_config_table[:, 0] - t_des))
+
+    def get_config_and_transmission(idx: int) -> Tuple[np.ndarray, float]:
+        conf = config_table[int(t_config_table[idx, 1])]
+        transmission = np.nanprod(all_transmissions * conf)
+        return conf, transmission
 
     # Obtain the optimal filter configuration and its transmission.
-    closest = config_table[int(T_config_table[i, 1])]
-    T_closest = np.nanprod(all_transmissions * closest)
+    closest, t_closest = get_config_and_transmission(idx_closest)
 
     # Determine the optimal configurations for "best highest" and "best lowest"
     # achievable transmissions.
-    if T_closest == t_des:
+    if t_closest < t_des:
+        idx_low = idx_closest
+        idx_high = min((idx_closest + 1, len(t_config_table) - 1))
+    elif t_closest > t_des:
+        idx_low = max((idx_closest - 1, 0))
+        idx_high = idx_closest
+    else:
         # The optimal configuration achieves the desired transmission exactly.
-        config_bestHigh = config_bestLow = closest
-        T_bestHigh = T_bestLow = T_closest
-    elif T_closest < t_des:
-        idx = min((i + 1, len(T_config_table) - 1))
-        config_bestHigh = config_table[int(T_config_table[idx, 1])]
-        config_bestLow = closest
-        T_bestHigh = np.nanprod(all_transmissions * config_bestHigh)
-        T_bestLow = T_closest
-    elif T_closest > t_des:
-        idx = max((i - 1, 0))
-        config_bestHigh = closest
-        config_bestLow = config_table[int(T_config_table[idx, 1])]
-        T_bestHigh = T_closest
-        T_bestLow = np.nanprod(all_transmissions * config_bestLow)
+        idx_low = idx_closest
+        idx_high = idx_closest
+
+    config_low, t_best_low = get_config_and_transmission(idx_low)
+    config_high, t_best_high = get_config_and_transmission(idx_high)
 
     return [
         Config(all_transmissions=list(all_transmissions),
-               filter_states=np.nan_to_num(config_bestLow).astype(np.int),
-               transmission=T_bestLow),
+               filter_states=np.nan_to_num(config_low).astype(np.int),
+               transmission=t_best_low),
         Config(all_transmissions=list(all_transmissions),
-               filter_states=np.nan_to_num(config_bestHigh).astype(np.int),
-               transmission=T_bestHigh)
+               filter_states=np.nan_to_num(config_high).astype(np.int),
+               transmission=t_best_high)
     ]
 
 
@@ -157,6 +159,24 @@ def get_best_config(all_transmissions: typing.List[float],
     Return the optimal floor (lower than desired transmission) or ceiling
     (higher than desired transmission) configuration based on the current mode
     setting.
+
+    This does not take into account material priority.
+
+    Parameters
+    ----------
+    all_transmissions : list of (float or nan)
+        Basis vector of all filter transmission values.
+        Note: Stuck filters should have transmission of `NaN`.
+
+    t_des : float
+        Desired transmission value.
+
+    mode : ConfigMode
+        The configuration mode (floor or ceiling).
+
+    See Also
+    --------
+    `get_best_config_with_material_priority`
     """
 
     if isinstance(mode, str):
@@ -165,6 +185,87 @@ def get_best_config(all_transmissions: typing.List[float],
     floor_config, ceil_config = find_configs(
         all_transmissions=all_transmissions, t_des=t_des)
     return floor_config if mode == ConfigMode.Floor else ceil_config
+
+
+def get_best_config_with_material_priority(
+        materials: typing.List[str],
+        transmissions: typing.List[float],
+        material_order: typing.List[str],
+        t_des: float,
+        mode: ConfigMode,
+        ) -> Config:
+    """
+    Inserting filters based on the material order provided, get the best
+    possible filter configuration.
+
+    Materials with lower priority (later in the list) will not be used until
+    the materials with higher priority are all inserted.
+
+    For example, this can be used in AT2L0 to protect the silicon filters from
+    damage by the beam, using the diamond filters first.  The material order
+    list in this example would then be ``C``, ``Si``.
+
+    Parameters
+    ----------
+    materials : str
+        List of materials, matched with `transmissions`.
+
+    transmissions : str
+        List of transmission values, matched with `materials`.
+
+    material_order : list of str
+        List of materials, in order of priority (first listed will be first to
+        be inserted).
+
+    t_des : float
+        Desired transmission value.
+
+    Returns
+    -------
+    Config
+        The best configuration given the settings.
+    """
+    if len(transmissions) != len(materials):
+        raise ValueError(
+            'transmissions and materials must be of the same length'
+        )
+
+    # This configuration is assembled based on the material priorities:
+    final_config = Config(
+        all_transmissions=transmissions,
+        transmission=1.0,
+        filter_states=np.zeros(len(transmissions), dtype=np.int),
+    )
+
+    for mat_idx, material in enumerate(material_order):
+        # Assemble {idx: transmission} for only the given material
+        idx_to_transmission = {
+            idx: transm
+            for idx, (mat, transm) in enumerate(zip(materials, transmissions))
+            if mat == material
+        }
+
+        # Find the configurations just for this material, picking the ceiling:
+        partial_config = get_best_config(
+            list(idx_to_transmission.values()),
+            t_des=t_des / final_config.transmission,
+            mode=mode,
+        )
+
+        # Update the final, aggregated configuration - transmission:
+        final_config.transmission *= partial_config.transmission
+
+        # And individual filter states:
+        for idx, inserted in zip(idx_to_transmission,
+                                 partial_config.filter_states):
+            final_config.filter_states[idx] = inserted
+
+        if not all(partial_config.filter_states):
+            # Doubly-ensure that all filters are inserted before going to
+            # the next material.
+            break
+
+    return final_config
 
 
 def find_closest_energy(photon_energy: float,
