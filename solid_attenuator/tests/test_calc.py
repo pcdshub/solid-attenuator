@@ -1,4 +1,5 @@
 import dataclasses
+from typing import List
 
 import numpy as np
 import pytest
@@ -16,11 +17,21 @@ import matplotlib.pyplot as plt  # isort: skip  # noqa
 class Filter:
     material: str
     thickness: float
-    transmission: float
+    transmission: float = 0.0
+
+
+@dataclasses.dataclass
+class Blade:
+    filters: List[Filter]
 
 
 @pytest.fixture(params=range(2_000, 3_0000, 2_000))
 def photon_energy(request) -> float:
+    return float(request.param)
+
+
+@pytest.fixture(params=range(500, 5_000, 500))
+def soft_photon_energy(request) -> float:
     return float(request.param)
 
 
@@ -152,6 +163,106 @@ def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
         (t_all_diamond - 0.2, t_all_diamond),
         color=line.get_color(),
     )
+    subplot[0].legend(loc='best')
+
+    subplot[1].plot(t_des_checks,
+                    np.asarray(actual) - np.asarray(t_des_checks),
+                    label=f'{photon_energy} eV',
+                    alpha=0.5, lw=1, color=line.get_color())
+    subplot[0].figure.savefig(f'{param_id}.pdf')
+
+
+@pytest.mark.parametrize(
+    'blades',
+    [
+        pytest.param(
+            [
+                Blade([
+                    Filter('C', 25),
+                    Filter('C', 50),
+                    Filter('C', 100),
+                    Filter('Si', 320),
+                    Filter('Si', 160),
+                    Filter('Si', 80),
+                    Filter('Si', 40),
+                    Filter('Si', 20),
+                ]),
+                Blade([
+                    Filter('C', 50),
+                    Filter('C', 25),
+                    Filter('C', 12),
+                    Filter('C', 10),
+                ]),
+                Blade([
+                    Filter('C', 25),
+                    Filter('C', 12),
+                    Filter('C', 6),
+                ]),
+                Blade([
+                    Filter('C', 12),
+                    Filter('C', 6),
+                    Filter('C', 3),
+                    Filter('C', 3),  # according to traveler
+                    Filter('Al', 0.2),
+                ]),
+            ],
+            id='at1k4'
+        ),
+    ]
+)
+def test_ladder(request, blades, mode, soft_photon_energy):
+    photon_energy = soft_photon_energy
+
+    # Update our test fixture here with the correct transmission
+    for blade in blades:
+        for flt in blade.filters:
+            flt.transmission = get_transmission(
+                flt.material, flt.thickness,
+                soft_photon_energy
+            )
+
+    t_des_checks = np.linspace(0.0, 1.0, 2000)
+
+    compared = []
+    actual = []
+    for t_des in t_des_checks:
+        conf = calculator.get_ladder_config(
+            [[flt.transmission for flt in blade.filters] for blade in blades],
+            t_des=t_des,
+            mode=mode,
+        )
+
+        # print(t_des, conf.transmission, conf.filter_states)
+        actual.append(conf.transmission)
+        if t_des > 0.0:
+            compared.append(abs(t_des - conf.transmission) / t_des)
+        else:
+            compared.append(0.0)
+
+    print()
+    print('(t_des - t_act) / t_des:')
+    print('    Standard deviation:', np.std(compared))
+    print('    Average:', np.average(compared))
+
+    # I'm sure there's a better way to do this:
+    param_id = request.node.name.rsplit('-', 1)[1].strip(']')
+    # -> param_id = 'all_working'
+    param_id = f'{param_id}_{mode.name}'
+
+    try:
+        subplot = _subplots[param_id]
+    except KeyError:
+        fig = plt.figure(figsize=(10, 6), dpi=120)
+        _subplots[param_id] = subplot = fig.subplots(1, 2)
+
+        subplot[0].set_title(f'{param_id} - Transmission Actual vs Desired')
+        subplot[1].set_title('Error vs Desired')
+        fig.tight_layout()
+
+    line, = subplot[0].plot(t_des_checks, actual,
+                            alpha=0.5,
+                            lw=1,
+                            label=f'{photon_energy} eV')
     subplot[0].legend(loc='best')
 
     subplot[1].plot(t_des_checks,
