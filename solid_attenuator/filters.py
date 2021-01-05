@@ -2,12 +2,22 @@ from caproto import ChannelType
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
 
-from .. import calculator
+from . import calculator
+
+__all__ = ['InOutFilterGroup']
 
 
-class FilterGroup(PVGroup):
+class InOutFilterGroup(PVGroup):
     """
-    PV group for filter metadata.
+    PVGroup for a single in-out filter blade.
+
+    Parameters
+    ----------
+    prefix : str
+        PV prefix.
+
+    index : int
+        Index of the filter in the system.
     """
     def __init__(self, prefix, *, index, **kwargs):
         super().__init__(prefix, **kwargs)

@@ -5,13 +5,14 @@ from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper, RotatingFileManager
 from caproto.server.stats import StatusHelper
 
-from .db import FilterGroup, SystemGroup
+from ..filters import InOutFilterGroup
+from .db import SystemGroup
 
 
 class IOCBase(PVGroup):
     """
     """
-    filters: Dict[int, FilterGroup]
+    filters: Dict[int, InOutFilterGroup]
 
     prefix: str
     monitor_pvnames: Dict[str, str]
@@ -130,7 +131,7 @@ def create_ioc(prefix,
 
     subgroups = {
         filter_index_to_attribute[index]: SubGroup(
-            FilterGroup, prefix=f':FILTER:{suffix}:', index=index)
+            InOutFilterGroup, prefix=f':FILTER:{suffix}:', index=index)
         for index, suffix in filter_group.items()
     }
 

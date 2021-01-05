@@ -3,7 +3,7 @@ import sys
 
 from caproto.server import ioc_arg_parser, run
 
-from .db import util
+from .. import util
 from .satt_app import create_ioc
 
 ################################################
