@@ -4,7 +4,7 @@ import sys
 from caproto.server import ioc_arg_parser, run
 
 from .. import util
-from .satt_app import create_ioc
+from .at2l0 import create_ioc
 
 ################################################
 FIRST_FILTER = 2

@@ -225,3 +225,24 @@ def block_on_reentry(token=None):
         return wrapped
 
     return inner
+
+
+def int_array_to_bit_string(int_array: list) -> int:
+    """
+    Integer array such as [1, 0, 0, 0] to integer (8).
+
+    Returns 0 if non-binary values found in the list.
+
+    Parameters
+    ----------
+    int_array : list of int
+        Integer array.
+
+    Returns
+    -------
+    value : int
+    """
+    try:
+        return int(''.join(str(int(c)) for c in int_array), 2)
+    except ValueError:
+        return 0

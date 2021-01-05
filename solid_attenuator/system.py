@@ -1,3 +1,4 @@
+import threading
 import time
 
 from caproto import AlarmSeverity, AlarmStatus, ChannelType
@@ -323,6 +324,25 @@ class SystemGroupBase(PVGroup):
     # apply_config.PROC -> apply_config = 1
     util.process_writes_value(apply_config, value=1)
 
+    @apply_config.startup
+    async def apply_config(self, instance, async_lib):
+        def put_thread():
+            while True:
+                pv, value = self._pv_put_queue.get()
+                try:
+                    pv.write([value], wait=False)
+                except Exception:
+                    self.log.exception('Failed to put value: %s=%s', pv, value)
+
+        ctx = util.get_default_thread_context()
+
+        self._set_pvs = ctx.get_pvs(
+            *self.parent.monitor_pvnames['motors']['set'], timeout=None)
+
+        self._pv_put_queue = self.async_lib.ThreadsafeQueue()
+        self._put_thread = threading.Thread(target=put_thread, daemon=True)
+        self._put_thread.start()
+
     async def move_blades(self, *, timeout_threshold=30.0):
         """Move to the calculated configuration."""
         t0 = time.monotonic()
@@ -349,3 +369,16 @@ class SystemGroupBase(PVGroup):
             await self.async_lib.library.sleep(0.1)
 
         await self.moving.write(0)
+
+    @run.putter
+    async def run(self, instance, value):
+        if value == 'False':
+            return
+
+        try:
+            await self.run_calculation()
+        except Exception:
+            self.log.exception('update_config failed?')
+
+    # RUN.PROC -> run = 1
+    util.process_writes_value(run, value=1)
