@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 import pytest
 
-from ..ioc_lfe_at2l0_calc import calculator
+from .. import calculator
 
 import matplotlib  # isort: skip  # noqa
 
