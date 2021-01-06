@@ -246,3 +246,38 @@ def int_array_to_bit_string(int_array: list) -> int:
         return int(''.join(str(int(c)) for c in int_array), 2)
     except ValueError:
         return 0
+
+
+async def alarm_if(
+        data: caproto.ChannelData,
+        condition: bool,
+        status: caproto.AlarmStatus,
+        severity: caproto.AlarmSeverity = caproto.AlarmSeverity.MAJOR_ALARM
+        ):
+    """
+    Set an alarm if the condition is met - otherwise NO_ALARM.
+
+    Parameters
+    ----------
+    data : caproto.ChannelData
+        The data instance to set the alarm.
+
+    condition : bool
+        Condition to choose alarm status and severity.
+
+    status : caproto.AlarmStatus
+        Status to set if condition is met.
+
+    severity : caproto.AlarmSeverity
+        Severity to set if condition is met.  Defaults to MAJOR_STATUS.
+    """
+    if condition:
+        # Raise the alarm - use passed-in alarm settings.
+        status = caproto.AlarmStatus(status)
+        severity = caproto.AlarmSeverity(severity)
+    else:
+        status = caproto.AlarmStatus.NO_ALARM
+        severity = caproto.AlarmSeverity.NO_ALARM
+
+    if data.alarm.status != status or data.alarm.severity != severity:
+        await data.alarm.write(status=status, severity=severity)

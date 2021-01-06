@@ -1,7 +1,7 @@
 import threading
 import time
 
-from caproto import AlarmSeverity, AlarmStatus, ChannelType
+from caproto import AlarmStatus, ChannelType
 from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
@@ -263,13 +263,8 @@ class SystemGroupBase(PVGroup):
 
         async def update_connection_status(pv, status):
             all_status[pv] = (status == 'connected')
-            if all(all_status.values()):
-                status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
-            else:
-                status, severity = AlarmStatus.LINK, AlarmSeverity.MAJOR_ALARM
-
-            if instance.alarm.status != status:
-                await instance.alarm.write(status=status, severity=severity)
+            await util.alarm_if(instance, not all(all_status.values()),
+                                AlarmStatus.LINK)
 
         async for event, context, data in monitor_pvs(*monitor_list,
                                                       async_lib=async_lib):
@@ -288,11 +283,9 @@ class SystemGroupBase(PVGroup):
     async def energy_actual(self, instance, async_lib):
         """Update beam energy and calculated values."""
         async def update_connection_status(status):
-            if status == 'connected':
-                status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
-            else:
-                status, severity = AlarmStatus.LINK, AlarmSeverity.MAJOR_ALARM
-            await instance.alarm.write(status=status, severity=severity)
+            await util.alarm_if(
+                instance, status != 'connected', AlarmStatus.LINK
+            )
 
         await update_connection_status('disconnected')
         pvname = self.parent.monitor_pvnames['ev']

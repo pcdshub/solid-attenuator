@@ -2,7 +2,7 @@ import enum
 from typing import Dict, List
 
 import numpy as np
-from caproto import AlarmSeverity, AlarmStatus
+from caproto import AlarmStatus
 from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper, RotatingFileManager
 from caproto.server.stats import StatusHelper
@@ -103,13 +103,8 @@ class SystemGroup(SystemGroupBase):
         primary = self.parent
 
         material_check = primary.check_materials()
-        if material_check:
-            status, severity = AlarmStatus.NO_ALARM, AlarmSeverity.NO_ALARM
-        else:
-            status, severity = AlarmStatus.CALC, AlarmSeverity.MAJOR_ALARM
-
-        await self.desired_transmission.alarm.write(status=status,
-                                                    severity=severity)
+        await util.alarm_if(self.desired_transmission, not material_check,
+                            AlarmStatus.CALC)
         if not material_check:
             # Don't proceed with calculations if the material check fails.
             return

@@ -233,8 +233,10 @@ class EightFilterGroup(FilterGroup):
             idx: getattr(self, f'filter{idx:02d}')
             for idx in range(1, self.N_FILTERS + 1)
         }
-        self.material.read_only = True
-        self.thickness.read_only = True
+
+        # TODO: caproto pvproperty doesn't really work this way, sadly:
+        # self.material.read_only = True
+        # self.thickness.read_only = True
 
     filter01 = SubGroup(FilterGroup, prefix='Filter:01:', index=1)
     filter02 = SubGroup(FilterGroup, prefix='Filter:02:', index=2)
