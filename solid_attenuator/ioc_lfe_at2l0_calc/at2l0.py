@@ -241,7 +241,7 @@ class IOCBase(PVGroup):
         """
         return {
             idx: filt for idx, filt in self.filters.items()
-            if filt.is_stuck.value != "True"
+            if filt.is_stuck.value != "True" and filt.active.value == "True"
         }
 
     def calculate_transmission(self):
