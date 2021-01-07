@@ -55,6 +55,7 @@ setup(
         'console_scripts': [
             'ioc-lfe-at2l0-calc=solid_attenuator.ioc_lfe_at2l0_calc.__main__:main',  # noqa
             'ioc-sim-at2l0=solid_attenuator.ioc_sim_at2l0.__main__:main',
+            'ioc-sim-sxr-satt=solid_attenuator.ioc_sim_sxr.__main__:main',
             ],
         },
     include_package_data=True,
