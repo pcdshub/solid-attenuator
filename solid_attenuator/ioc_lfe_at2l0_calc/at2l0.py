@@ -1,3 +1,6 @@
+"""
+This is the IOC source code for the unique AT2L0, with its 18 in-out filters.
+"""
 import enum
 from typing import Dict, List
 
@@ -20,6 +23,9 @@ class State(enum.IntEnum):
         return self.name
 
 
+# NOTE: There is a bit of a disconnect from internal representation
+# where out=0 in=1 and the motor. This mapping takes care of that,
+# but this should be refactored out down the line:
 STATE_FROM_MOTOR = {
     0: State.Out,  # unknown -> out
     1: State.Out,  # out
@@ -199,6 +205,8 @@ class SystemGroup(SystemGroupBase):
 
 class IOCBase(PVGroup):
     """
+    Base for AT2L0 IOC.  This is extended dynamically with SubGroups in
+    `create_ioc`.
     """
     filters: Dict[int, InOutFilterGroup]
 
@@ -230,9 +238,9 @@ class IOCBase(PVGroup):
     @property
     def working_filters(self):
         """
-        Returns a dictionary of all filters that are in working order
+        A dictionary of all filters that are in working order.
 
-        That is to say, filters that are not stuck.
+        That is to say, filters that are marked as active and not stuck.
         """
         return {
             idx: filt for idx, filt in self.filters.items()
@@ -266,8 +274,8 @@ class IOCBase(PVGroup):
     @property
     def all_transmissions(self):
         """
-        Return an array of the transmission values for each filter at the
-        current photon energy.
+        List of the transmission values for working filters at the current
+        energy.
 
         Stuck filters get a transmission of NaN, which omits them from
         calculations/considerations.
