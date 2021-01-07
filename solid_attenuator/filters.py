@@ -253,6 +253,17 @@ class EightFilterGroup(FilterGroup):
         read_only=True,
     )
 
+    # TODO: intention is to say it's stuck in/out/etc depending on the state
+    # better name would be "StuckAtState"
+    is_stuck = autosaved(
+        pvproperty(
+            value=0,
+            name='IsStuck',
+            record='longout',
+            doc='Stuck at indicated state',
+        )
+    )
+
     def load_data(self, formula):
         # Stub load_data, as `self.table` is not used here, instead relying
         # on the inserted filter's information.

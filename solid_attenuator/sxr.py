@@ -20,7 +20,7 @@ from caproto.server.autosave import AutosaveHelper, RotatingFileManager
 from caproto.server.stats import StatusHelper
 
 from . import calculator, util
-from .filters import InOutFilterGroup
+from .filters import EightFilterGroup
 from .system import SystemGroupBase
 
 
@@ -243,7 +243,7 @@ class IOCBase(PVGroup):
     Base for SXR attenuator IOCs.  This is extended dynamically with SubGroups
     in `create_ioc`.
     """
-    filters: Dict[int, InOutFilterGroup]
+    filters: Dict[int, EightFilterGroup]
     prefix: str
     monitor_pvnames: Dict[str, str]
 
@@ -343,7 +343,7 @@ def create_ioc(prefix,
 
     subgroups = {
         filter_index_to_attribute[index]: SubGroup(
-            InOutFilterGroup, prefix=f':FILTER:{suffix}:', index=index)
+            EightFilterGroup, prefix=f':AXIS:{suffix}:', index=index)
         for index, suffix in filter_group.items()
     }
 
