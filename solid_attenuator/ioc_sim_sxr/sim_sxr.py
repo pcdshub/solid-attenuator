@@ -42,6 +42,6 @@ class IOCMain(PVGroup):
     """
     Main simulation group for SXR solid attenuators like AT1K4.
     """
-    beam = SubGroup(FakeEVGroup, prefix='PMPS:LFE:PE:UND:')
+    beam = SubGroup(FakeEVGroup, prefix='PMPS:KFE:PE:UND:')
     pmps = SubGroup(FakePMPSGroup, prefix='PMPS:{{system}}:')
     attenuator = SubGroup(FakeBladeGroup, prefix='{{system}}:L2SI:')
