@@ -45,7 +45,7 @@ class SystemGroup(SystemGroupBase):
     This system group implementation is specific to AT2L0.
     """
 
-    async def motor_has_moved(self, idx, value):
+    async def motor_has_moved(self, filter_idx, value):
         """
         Callback indicating a motor has moved.
 
@@ -53,14 +53,16 @@ class SystemGroup(SystemGroupBase):
 
         Parameters
         ----------
-        idx : int
-            Motor index.
+        filter_idx : int
+            Filter index (not zero-based).
 
         value : int
             Raw state value from control system.
         """
+        array_idx = filter_idx - self.parent.first_filter
+
         new_config = list(self.active_config.value)
-        new_config[idx] = STATE_FROM_MOTOR.get(value, value)
+        new_config[array_idx] = STATE_FROM_MOTOR.get(value, value)
         if tuple(new_config) != tuple(self.active_config.value):
             self.log.info('Active config changed: %s', new_config)
             await self.active_config.write(new_config)
@@ -71,7 +73,7 @@ class SystemGroup(SystemGroupBase):
 
         moving = list(self.filter_moving.value)
         # TODO: better handling of moving status
-        moving[idx] = 1 if value == 0 else 0
+        moving[array_idx] = 1 if value == 0 else 0
         if tuple(moving) != tuple(self.filter_moving.value):
             await self.filter_moving.write(moving)
             await self.filter_moving_bitmask.write(

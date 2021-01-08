@@ -277,7 +277,8 @@ class SystemGroupBase(PVGroup):
                 continue
 
             idx = self.parent.monitor_pvnames['motors']['get'].index(pvname)
-            await self.motor_has_moved(idx, data.data[0])
+            await self.motor_has_moved(self.parent.first_filter + idx,
+                                       data.data[0])
 
     @energy_actual.startup
     async def energy_actual(self, instance, async_lib):

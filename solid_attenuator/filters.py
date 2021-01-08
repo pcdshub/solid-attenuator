@@ -117,6 +117,16 @@ class FilterGroup(PVGroup):
         )
     )
 
+    # May be overridden by the subclass. Not applicable for multiple
+    # filter-per-blade variant (e.g., AT1K4) but retained here
+    # for PV API compatibility.
+    is_stuck = pvproperty(
+        value=0,
+        name='IsStuck',
+        record='longout',
+        doc='Stuck at indicated state',
+    )
+
     async def set_photon_energy(self, energy_ev):
         """
         Set the current photon energy to determine transmission.
@@ -238,14 +248,14 @@ class EightFilterGroup(FilterGroup):
         # self.material.read_only = True
         # self.thickness.read_only = True
 
-    filter01 = SubGroup(FilterGroup, prefix='Filter:01:', index=1)
-    filter02 = SubGroup(FilterGroup, prefix='Filter:02:', index=2)
-    filter03 = SubGroup(FilterGroup, prefix='Filter:03:', index=3)
-    filter04 = SubGroup(FilterGroup, prefix='Filter:04:', index=4)
-    filter05 = SubGroup(FilterGroup, prefix='Filter:05:', index=5)
-    filter06 = SubGroup(FilterGroup, prefix='Filter:06:', index=6)
-    filter07 = SubGroup(FilterGroup, prefix='Filter:07:', index=7)
-    filter08 = SubGroup(FilterGroup, prefix='Filter:08:', index=8)
+    filter01 = SubGroup(FilterGroup, prefix='FILTER:01:', index=1)
+    filter02 = SubGroup(FilterGroup, prefix='FILTER:02:', index=2)
+    filter03 = SubGroup(FilterGroup, prefix='FILTER:03:', index=3)
+    filter04 = SubGroup(FilterGroup, prefix='FILTER:04:', index=4)
+    filter05 = SubGroup(FilterGroup, prefix='FILTER:05:', index=5)
+    filter06 = SubGroup(FilterGroup, prefix='FILTER:06:', index=6)
+    filter07 = SubGroup(FilterGroup, prefix='FILTER:07:', index=7)
+    filter08 = SubGroup(FilterGroup, prefix='FILTER:08:', index=8)
 
     inserted_filter_index = pvproperty(
         name='InsertedFilter_RBV',
