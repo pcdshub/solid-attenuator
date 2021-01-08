@@ -62,6 +62,23 @@ class State(enum.IntEnum):
         """Is the blade moving?"""
         return self == State.Moving
 
+    @classmethod
+    def from_filter_index(self, idx: Optional[int]) -> 'State':
+        """Get a State from a filter index (where filter 1 is 1)."""
+        return {
+            None: State.Out,
+            0: State.Out,
+            1: State.In_01,
+            2: State.In_02,
+            3: State.In_03,
+            4: State.In_04,
+            5: State.In_05,
+            6: State.In_06,
+            7: State.In_07,
+            8: State.In_08,
+            9: State.In_09,
+        }[idx]
+
     def __repr__(self):
         return self.name
 
@@ -73,7 +90,7 @@ class SystemGroup(SystemGroupBase):
     This system group implementation is specific to AT2L0.
     """
 
-    async def motor_has_moved(self, filter_idx, value):
+    async def motor_has_moved(self, blade_index, raw_state):
         """
         Callback indicating a motor has moved.
 
@@ -81,14 +98,14 @@ class SystemGroup(SystemGroupBase):
 
         Parameters
         ----------
-        filter_idx : int
-            Filter index (not zero-based).
+        blade_index : int
+            Blade index (not zero-based).
 
-        value : int
+        raw_state : int
             Raw state value from control system.
         """
-        array_idx = filter_idx - self.parent.first_filter
-        state = State(int(value))
+        array_idx = blade_index - self.parent.first_filter
+        state = State(int(raw_state))
 
         new_config = list(self.active_config.value)
         new_config[array_idx] = int(state)
@@ -110,7 +127,9 @@ class SystemGroup(SystemGroupBase):
                 util.int_array_to_bit_string(moving)
             )
 
-        await self.parent.filters[filter_idx].set_inserted_filter(state)
+        await self.parent.filters[blade_index].set_inserted_filter(
+            int(state)
+        )
 
     async def _update_active_transmission(self):
         config = tuple(self.active_config.value)
@@ -166,18 +185,19 @@ class SystemGroup(SystemGroupBase):
         )
 
         # Using the above-calculated transmissions, find the best configuration
+        # Get only the *active* filter transmissions:
         blade_transmissions = [
             [flt.transmission.value
-             for idx, flt in blade.active_filters.items()]
+             for flt in blade.active_filters.values()]
             for blade in primary.filters.values()
         ]
 
-        # blade_transmission_idx_to_filter_idx = [
-        #     {array_idx: idx for
-        #      array_idx, idx in enumerate(blade.active_filters)
-        #      }
-        #     for blade in primary.filters.values()
-        # ]
+        # Map per-blade array index -> filter index
+        # Having removed non-active filters, these may not match 1-1 any more.
+        blade_transmission_idx_to_filter_idx = [
+            dict(enumerate(blade.active_filters))
+            for blade in primary.filters.values()
+        ]
 
         config = calculator.get_ladder_config(
             blade_transmissions=blade_transmissions,
@@ -185,12 +205,19 @@ class SystemGroup(SystemGroupBase):
             mode=calc_mode,
         )
 
-        # TODO config.filter_states map index
-        # TODO off by 1 with filter1 -> state 2
-        await self.best_config.write(config.filter_states)
-        # TODO
-        # await self.best_config_bitmask.write(
-        #     util.int_array_to_bit_string(config.filter_states))
+        # Use the transmission array indices to get back a State:
+        best_config = [
+            State.from_filter_index(idx_map.get(transmission_idx))
+            for transmission_idx, idx_map
+            in zip(config.filter_states, blade_transmission_idx_to_filter_idx)
+        ]
+
+        await self.best_config.write(best_config)
+        await self.best_config_bitmask.write(
+            util.int_array_to_bit_string(
+                [state.is_inserted for state in best_config]
+            )
+        )
         await self.best_config_error.write(
             config.transmission - self.desired_transmission.value
         )
@@ -223,21 +250,21 @@ class SystemGroup(SystemGroupBase):
             Returns `True` if there are more blades to move.
         """
         items = [
-            (pv, State(active), State(best))
-            for pv, active, best in
-            zip(self._set_pvs, self.active_config.value,
-                self.best_config.value)
+            (pv, State(active), State(best)) for pv, active, best in
+            zip(
+                self._set_pvs, self.active_config.value, self.best_config.value
+            )
         ]
 
         move_out = {
             pv: best
             for pv, active, best in items
-            if active.is_inserted and best == State.Out
+            if not best.is_inserted and active != best
         }
         move_in = {
             pv: best
             for pv, active, best in items
-            if active == State.Out and best.is_inserted
+            if best.is_inserted and active != best
         }
 
         if move_in:
