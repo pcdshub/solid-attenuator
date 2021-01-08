@@ -166,17 +166,31 @@ class SystemGroup(SystemGroupBase):
         )
 
         # Using the above-calculated transmissions, find the best configuration
+        blade_transmissions = [
+            [flt.transmission.value
+             for idx, flt in blade.active_filters.items()]
+            for blade in primary.filters.values()
+        ]
 
-        config = calculator.get_best_config_with_material_priority(
-            materials=primary.all_filter_materials,
-            transmissions=list(primary.all_transmissions),
-            material_order=primary.material_order,
+        # blade_transmission_idx_to_filter_idx = [
+        #     {array_idx: idx for
+        #      array_idx, idx in enumerate(blade.active_filters)
+        #      }
+        #     for blade in primary.filters.values()
+        # ]
+
+        config = calculator.get_ladder_config(
+            blade_transmissions=blade_transmissions,
             t_des=desired_transmission,
             mode=calc_mode,
         )
+
+        # TODO config.filter_states map index
+        # TODO off by 1 with filter1 -> state 2
         await self.best_config.write(config.filter_states)
-        await self.best_config_bitmask.write(
-            util.int_array_to_bit_string(config.filter_states))
+        # TODO
+        # await self.best_config_bitmask.write(
+        #     util.int_array_to_bit_string(config.filter_states))
         await self.best_config_error.write(
             config.transmission - self.desired_transmission.value
         )

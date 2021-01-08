@@ -18,8 +18,10 @@ if '--production' in sys.argv:
     motor_prefix = "{system}:L2SI:MMS:"  # TODO
     log_level = 'INFO'
     # autosave_path = '/reg/d/iocData/ioc-lfe-at1k4-calc/iocInfo/autosave.json'
+    # TODO: wrong env var here; this method is not great:
     ioc_data = os.environ.get('IOC_DATA_{system}', '/reg/d/iocData/ioc-lfe-at1k4-calc/')  # noqa
-    autosave_path = os.path.join(ioc_data, 'autosave.json')
+    # autosave_path = os.path.join(ioc_data, 'autosave.json')
+    autosave_path = 'autosave_development.json'
     sys.argv.remove('--production')
 else:
     subsystem = 'SIM'
@@ -42,7 +44,6 @@ def main():
     )
 
     macros = ioc_options['macros']
-    print(motor_prefix, expand_macros(motor_prefix, macros),)
     ioc = create_ioc(
         **ioc_options,
         filter_group={

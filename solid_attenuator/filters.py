@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from caproto import ChannelType
 from caproto.server import PVGroup, SubGroup, pvproperty
@@ -284,7 +284,10 @@ class EightFilterGroup(FilterGroup):
         """
         The currently inserted filter.
         """
-        return self.filters.get(self.inserted_filter_index.value, None)
+        idx = self.inserted_filter_index.value
+        if self.is_stuck.value > 0:
+            idx = self.is_stuck.value
+        return self.filters.get(idx, None)
 
     def get_transmission(self, photon_energy_ev):
         flt = self.inserted_filter
@@ -293,6 +296,12 @@ class EightFilterGroup(FilterGroup):
         return flt.get_transmission(photon_energy_ev)
 
     async def set_inserted_filter(self, idx: int):
+        if self.is_stuck.value > 0:
+            idx = self.is_stuck.value
+            self.log.warning(
+                "Stuck filter configured, but axis appears to be moving?",
+            )
+
         await self.inserted_filter_index.write(idx)
         await self._update()
 
@@ -335,3 +344,11 @@ class EightFilterGroup(FilterGroup):
         for flt in self.filters.values():
             await flt.set_photon_energy(energy_ev)
         await self._update()
+
+    @property
+    def active_filters(self) -> Dict[int, FilterGroup]:
+        """A dictionary of all filters that are in active, working order."""
+        return {
+            idx: filt for idx, filt in self.filters.items()
+            if filt.active.value == "True"
+        }
