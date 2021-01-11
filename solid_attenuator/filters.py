@@ -5,6 +5,7 @@ from caproto.server import PVGroup, SubGroup, pvproperty
 from caproto.server.autosave import autosaved
 
 from . import calculator
+from .util import State
 
 __all__ = ['InOutFilterGroup', 'EightFilterGroup']
 
@@ -280,32 +281,45 @@ class EightFilterGroup(FilterGroup):
         ...
 
     @property
-    def inserted_filter(self) -> Optional[FilterGroup]:
-        """
-        The currently inserted filter.
-        """
-        idx = self.inserted_filter_index.value
+    def inserted_filter_state(self) -> State:
+        """The current filter state, according to inserted_filter_index."""
         if self.is_stuck.value > 0:
-            idx = self.is_stuck.value
-        return self.filters.get(idx, None)
+            state_value = self.is_stuck.value
+        else:
+            state_value = self.inserted_filter_index.value
+        return State(state_value)
+
+    @property
+    def inserted_filter(self) -> Optional[FilterGroup]:
+        """The currently inserted filter."""
+        return self.filters.get(self.inserted_filter_state.filter_index, None)
 
     def get_transmission(self, photon_energy_ev):
+        """
+        Get the transmission for the given photon energy based on the material
+        and thickness configured.
+
+        Parameters
+        ----------
+        energy_ev : float
+            The photon energy [eV].
+
+        Returns
+        -------
+        transmission : float
+            Normalized transmission value.
+        """
         flt = self.inserted_filter
         if flt is None:
             return 1.0
         return flt.get_transmission(photon_energy_ev)
 
-    async def set_inserted_filter(self, idx: int):
-        if self.is_stuck.value > 0:
-            idx = self.is_stuck.value
-            self.log.warning(
-                "Stuck filter configured, but axis appears to be moving?",
-            )
-
-        await self.inserted_filter_index.write(idx)
+    async def set_inserted_filter_state(self, state: State):
+        await self.inserted_filter_index.write(int(state))
         await self._update()
 
     async def _update(self):
+        """Proxy the inserted filter's information to transmission, etc."""
         flt = self.inserted_filter
 
         if flt is None:

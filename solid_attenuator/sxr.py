@@ -10,8 +10,7 @@ This is intended to be used for the following attenuators:
 | AT2K2-SOLID | NEH 2.2    | H2.2 | 788.8 |
 | AT1K3-SOLID | TXI        | H1.1 | ~763  |
 """
-import enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 # from caproto import AlarmStatus
@@ -22,65 +21,7 @@ from caproto.server.stats import StatusHelper
 from . import calculator, util
 from .filters import EightFilterGroup
 from .system import SystemGroupBase
-
-
-class State(enum.IntEnum):
-    """
-    State which matches that of the motion IOC.
-    """
-    # 'Moving' is also: "unknown" or "between states"
-    Moving = 0
-
-    # 'Out' is fixed at 1:
-    Out = 1
-
-    # And any "in" states follow:
-    In_01 = 2
-    In_02 = 3
-    In_03 = 4
-    In_04 = 5
-    In_05 = 6
-    In_06 = 7
-    In_07 = 8
-    In_08 = 9
-    In_09 = 10
-
-    @property
-    def filter_index(self) -> Optional[int]:
-        """The one-based filter index, if inserted."""
-        if not self.is_inserted:
-            return None
-        return self.value - 1
-
-    @property
-    def is_inserted(self) -> bool:
-        """Is a filter inserted?"""
-        return self not in {State.Moving, State.Out}
-
-    @property
-    def is_moving(self) -> bool:
-        """Is the blade moving?"""
-        return self == State.Moving
-
-    @classmethod
-    def from_filter_index(self, idx: Optional[int]) -> 'State':
-        """Get a State from a filter index (where filter 1 is 1)."""
-        return {
-            None: State.Out,
-            0: State.Out,
-            1: State.In_01,
-            2: State.In_02,
-            3: State.In_03,
-            4: State.In_04,
-            5: State.In_05,
-            6: State.In_06,
-            7: State.In_07,
-            8: State.In_08,
-            9: State.In_09,
-        }[idx]
-
-    def __repr__(self):
-        return self.name
+from .util import State
 
 
 class SystemGroup(SystemGroupBase):
@@ -127,9 +68,8 @@ class SystemGroup(SystemGroupBase):
                 util.int_array_to_bit_string(moving)
             )
 
-        await self.parent.filters[blade_index].set_inserted_filter(
-            int(state)
-        )
+        flt = self.parent.filters[blade_index]
+        await flt.set_inserted_filter_state(state)
 
     async def _update_active_transmission(self):
         config = tuple(self.active_config.value)
@@ -223,11 +163,12 @@ class SystemGroup(SystemGroupBase):
         )
         self.log.info(
             'Energy %s eV with desired transmission %.2g estimated %.2g '
-            '(delta %.3g) configuration: %s',
+            '(delta %.3g) mode: %s configuration: %s',
             energy,
             desired_transmission,
             config.transmission,
             self.best_config_error.value,
+            calc_mode,
             config.filter_states,
         )
 
