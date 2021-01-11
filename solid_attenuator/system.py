@@ -372,9 +372,24 @@ class SystemGroupBase(PVGroup):
             return
 
         try:
-            await self.run_calculation()
+            energy = {
+                'Actual': self.energy_actual.value,
+                'Custom': self.energy_custom.value,
+            }[self.energy_source.value]
+
+            desired_transmission = self.desired_transmission.value
+            calc_mode = self.calc_mode.value
+            await self.run_calculation(
+                energy,
+                desired_transmission=self.desired_transmission.value,
+                calc_mode=calc_mode,
+            )
         except Exception:
-            self.log.exception('update_config failed?')
+            self.log.exception('Calculation run failed?')
+        else:
+            await self.last_energy.write(energy)
+            await self.last_mode.write(calc_mode)
+            await self.last_transmission.write(desired_transmission)
 
     # RUN.PROC -> run = 1
     util.process_writes_value(run, value=1)

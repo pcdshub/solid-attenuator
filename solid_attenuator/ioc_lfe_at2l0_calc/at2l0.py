@@ -39,25 +39,15 @@ class SystemGroup(SystemGroupBase):
         return not bool(bad_materials)
 
     @util.block_on_reentry()
-    async def run_calculation(self):
-        energy = {
-            'Actual': self.energy_actual.value,
-            'Custom': self.energy_custom.value,
-        }[self.energy_source.value]
-
-        desired_transmission = self.desired_transmission.value
-        calc_mode = self.calc_mode.value
-
+    async def run_calculation(self, energy: float, desired_transmission: float,
+                              calc_mode: str
+                              ) -> calculator.Config:
         material_check = self.check_materials()
         await util.alarm_if(self.desired_transmission, not material_check,
                             AlarmStatus.CALC)
         if not material_check:
             # Don't proceed with calculations if the material check fails.
             return
-
-        await self.last_energy.write(energy)
-        await self.last_mode.write(calc_mode)
-        await self.last_transmission.write(desired_transmission)
 
         # Update all of the filters first, to determine their transmission
         # at this energy
@@ -97,6 +87,7 @@ class SystemGroup(SystemGroupBase):
             self.best_config_error.value,
             config.filter_states,
         )
+        return config
 
 
 class IOCBase(PVGroup):
