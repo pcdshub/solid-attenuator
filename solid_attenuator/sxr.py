@@ -26,20 +26,14 @@ class SystemGroup(SystemGroupBase):
     """
     PV group for attenuator system-spanning information.
 
-    This system group implementation is specific to AT2L0.
+    This system group implementation applies to SXR solid attenuators, such as
+    AT1K4.
     """
 
     @util.block_on_reentry()
     async def run_calculation(self, energy: float, desired_transmission: float,
                               calc_mode: str
                               ) -> calculator.Config:
-        # material_check = self.check_materials()
-        # await util.alarm_if(self.desired_transmission, not material_check,
-        #                     AlarmStatus.CALC)
-        # if not material_check:
-        #     # Don't proceed with calculations if the material check fails.
-        #     return
-
         # Update all of the filters first, to determine their transmission
         # at this energy
         for filter in self.filters.values():
