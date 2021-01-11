@@ -1,13 +1,15 @@
 import threading
 import time
+from typing import Dict, List
 
+import numpy as np
 from caproto import AlarmStatus, ChannelType
 from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
 
 from . import util
-from .util import monitor_pvs
+from .util import State, monitor_pvs
 
 
 class SystemGroupBase(PVGroup):
@@ -376,3 +378,176 @@ class SystemGroupBase(PVGroup):
 
     # RUN.PROC -> run = 1
     util.process_writes_value(run, value=1)
+
+    async def _update_active_transmission(self):
+        """Re-calculate transmission_actual based on working filters."""
+        config = tuple(self.active_config.value)
+        offset = self.parent.first_filter
+
+        transm = np.zeros_like(config) * np.nan
+        transm3 = np.zeros_like(config) * np.nan
+        for idx, filt in self.working_filters.items():
+            zero_index = idx - offset
+            if State(config[zero_index]).is_inserted:
+                transm[zero_index] = filt.transmission.value
+                transm3[zero_index] = filt.transmission_3omega.value
+
+        await self.transmission_actual.write(np.nanprod(transm))
+        await self.transmission_3omega_actual.write(np.nanprod(transm3))
+
+    async def move_blade_step(self, state: Dict[int, State]):
+        """
+        Caller is requesting to move blades in or out.
+
+        The caller is expected to handle timeout scenarios and provide a
+        dictionary with which we can record this implementation's state.
+
+        Parameters
+        ----------
+        state : dict
+            State dictionary, which we use here to mark each time we request
+            a motion.  This will be passed in on subsequent calls.
+
+        Returns
+        -------
+        continue_ : bool
+            Returns `True` if there are more blades to move.
+        """
+        items = [
+            (pv, State(active), State(best)) for pv, active, best in
+            zip(
+                self._set_pvs, self.active_config.value, self.best_config.value
+            )
+        ]
+
+        move_out = {
+            pv: best
+            for pv, active, best in items
+            if not best.is_inserted and active != best
+        }
+        move_in = {
+            pv: best
+            for pv, active, best in items
+            if best.is_inserted and active != best
+        }
+
+        if move_in:
+            to_move = move_in
+            # Move blades IN first, to be safe
+        else:
+            to_move = move_out
+
+        for pv, target in to_move.items():
+            if state.get(pv, None) != target:
+                state[pv] = target
+                self.log.debug('Moving %s to %s', pv, target)
+                await self._pv_put_queue.async_put((pv, target))
+
+        return bool(move_in or move_out)
+
+    def calculate_transmission(self):
+        """
+        Total transmission through all filter blades.
+
+        Stuck blades are assumed to be 'OUT' and thus the total transmission
+        will be overestimated (in the case any blades are actually stuck 'IN').
+        """
+        t = 1.
+        for filt in self.working_filters.values():
+            t *= filt.transmission.value
+        return t
+
+    def calculate_transmission_3omega(self):
+        """
+        Total 3rd harmonic transmission through all filter blades.
+
+        Stuck blades are assumed to be 'OUT' and thus the total transmission
+        will be overestimated (in the case any blades are actually stuck 'IN').
+        """
+        t = 1.
+        for filt in self.working_filters.values():
+            t *= filt.transmission_3omega.value
+        return t
+
+    @property
+    def all_transmissions(self):
+        """
+        List of the transmission values for working filters at the current
+        energy.
+
+        Stuck filters get a transmission of NaN, which omits them from
+        calculations/considerations.
+        """
+        T_arr = np.zeros(len(self.filters)) * np.nan
+        for idx, filt in self.working_filters.items():
+            T_arr[idx - self.first_filter] = filt.transmission.value
+        return T_arr
+
+    @property
+    def first_filter(self):
+        """The first filter index in the system."""
+        # Indirection for where it's actually stored - in the parent.
+        return self.parent.first_filter
+
+    @property
+    def filters(self):
+        """All filters in the system."""
+        # Indirection for where they're actually stored - in the parent.
+        return self.parent.filters
+
+    @property
+    def working_filters(self):
+        """
+        A dictionary of all filters that are in working order.
+
+        That is to say, filters that are marked as active and not stuck.
+        """
+        return {
+            idx: filt for idx, filt in self.filters.items()
+            if filt.is_stuck.value != "True" and filt.active.value == "True"
+        }
+
+    @property
+    def all_filter_materials(self) -> List[str]:
+        """All filter materials in a list."""
+        return [flt.material.value for flt in self.filters.values()]
+
+    async def motor_has_moved(self, blade_index, raw_state):
+        """
+        Callback indicating a motor has moved.
+
+        Update the current configuration, if necessary.
+
+        Parameters
+        ----------
+        blade_index : int
+            Blade index (not zero-based).
+
+        raw_state : int
+            Raw state value from control system.
+        """
+        array_idx = blade_index - self.parent.first_filter
+        state = State(int(raw_state))
+
+        new_config = list(self.active_config.value)
+        new_config[array_idx] = int(state)
+        if tuple(new_config) != tuple(self.active_config.value):
+            self.log.info('Active config changed: %s', new_config)
+            await self.active_config.write(new_config)
+            await self.active_config_bitmask.write(
+                util.int_array_to_bit_string(
+                    [State(blade).is_inserted for blade in new_config]
+                )
+            )
+            await self._update_active_transmission()
+
+        moving = list(self.filter_moving.value)
+        moving[array_idx] = state.is_moving
+        if tuple(moving) != tuple(self.filter_moving.value):
+            await self.filter_moving.write(moving)
+            await self.filter_moving_bitmask.write(
+                util.int_array_to_bit_string(moving)
+            )
+
+        flt = self.parent.filters[blade_index]
+        await flt.set_inserted_filter_state(state)

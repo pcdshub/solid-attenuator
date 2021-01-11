@@ -6,6 +6,7 @@ import typing
 import caproto
 import caproto._log as caproto_log
 import caproto.threading
+import numpy as np
 
 _default_thread_context = None
 
@@ -53,6 +54,7 @@ class State(enum.IntEnum):
         """Get a State from a filter index (where filter 1 is 1)."""
         return {
             None: State.Out,
+            np.nan: State.Out,
             0: State.Out,
             1: State.In_01,
             2: State.In_02,

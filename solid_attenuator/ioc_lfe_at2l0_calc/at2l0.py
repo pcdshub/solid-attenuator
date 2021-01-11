@@ -1,10 +1,8 @@
 """
 This is the IOC source code for the unique AT2L0, with its 18 in-out filters.
 """
-import enum
 from typing import Dict, List
 
-import numpy as np
 from caproto import AlarmStatus
 from caproto.server import PVGroup, SubGroup
 from caproto.server.autosave import AutosaveHelper, RotatingFileManager
@@ -13,29 +11,7 @@ from caproto.server.stats import StatusHelper
 from .. import calculator, util
 from ..filters import InOutFilterGroup
 from ..system import SystemGroupBase
-
-
-class State(enum.IntEnum):
-    Out = 0
-    In = 1
-
-    def __repr__(self):
-        return self.name
-
-
-# NOTE: There is a bit of a disconnect from internal representation
-# where out=0 in=1 and the motor. This mapping takes care of that,
-# but this should be refactored out down the line:
-STATE_FROM_MOTOR = {
-    0: State.Out,  # unknown -> out
-    1: State.Out,  # out
-    2: State.In,  # in
-}
-
-STATE_TO_MOTOR = {
-    State.Out: 1,
-    State.In: 2,
-}
+from ..util import State
 
 
 class SystemGroup(SystemGroupBase):
@@ -44,57 +20,23 @@ class SystemGroup(SystemGroupBase):
 
     This system group implementation is specific to AT2L0.
     """
+    @property
+    def material_order(self) -> List[str]:
+        """Material prioritization."""
+        # Hard-coded for now.
+        return ['C', 'Si']
 
-    async def motor_has_moved(self, filter_idx, value):
-        """
-        Callback indicating a motor has moved.
-
-        Update the current configuration, if necessary.
-
-        Parameters
-        ----------
-        filter_idx : int
-            Filter index (not zero-based).
-
-        value : int
-            Raw state value from control system.
-        """
-        array_idx = filter_idx - self.parent.first_filter
-
-        new_config = list(self.active_config.value)
-        new_config[array_idx] = STATE_FROM_MOTOR.get(value, value)
-        if tuple(new_config) != tuple(self.active_config.value):
-            self.log.info('Active config changed: %s', new_config)
-            await self.active_config.write(new_config)
-            await self.active_config_bitmask.write(
-                util.int_array_to_bit_string(new_config)
+    def check_materials(self) -> bool:
+        """Ensure the materials specified are OK according to the order."""
+        bad_materials = set(self.material_order).symmetric_difference(
+            set(self.all_filter_materials)
+        )
+        if bad_materials:
+            self.log.error(
+                'Materials not set properly! May not calculate correctly. '
+                'Potentially bad materials: %s', bad_materials
             )
-            await self._update_active_transmission()
-
-        moving = list(self.filter_moving.value)
-        # TODO: better handling of moving status
-        moving[array_idx] = 1 if value == 0 else 0
-        if tuple(moving) != tuple(self.filter_moving.value):
-            await self.filter_moving.write(moving)
-            await self.filter_moving_bitmask.write(
-                util.int_array_to_bit_string(moving)
-            )
-
-    async def _update_active_transmission(self):
-        config = tuple(self.active_config.value)
-        offset = self.parent.first_filter
-        working_filters = self.parent.working_filters
-
-        transm = np.zeros_like(config) * np.nan
-        transm3 = np.zeros_like(config) * np.nan
-        for idx, filt in working_filters.items():
-            zero_index = idx - offset
-            if config[zero_index] == State.In:
-                transm[zero_index] = filt.transmission.value
-                transm3[zero_index] = filt.transmission_3omega.value
-
-        await self.transmission_actual.write(np.nanprod(transm))
-        await self.transmission_3omega_actual.write(np.nanprod(transm3))
+        return not bool(bad_materials)
 
     @util.block_on_reentry()
     async def run_calculation(self):
@@ -106,11 +48,7 @@ class SystemGroup(SystemGroupBase):
         desired_transmission = self.desired_transmission.value
         calc_mode = self.calc_mode.value
 
-        # This is a bit backwards - we reach up to the parent (IOCBase) for
-        # transmission calculations and such.
-        primary = self.parent
-
-        material_check = primary.check_materials()
+        material_check = self.check_materials()
         await util.alarm_if(self.desired_transmission, not material_check,
                             AlarmStatus.CALC)
         if not material_check:
@@ -123,26 +61,28 @@ class SystemGroup(SystemGroupBase):
 
         # Update all of the filters first, to determine their transmission
         # at this energy
-        for filter in primary.filters.values():
+        for filter in self.filters.values():
             await filter.set_photon_energy(energy)
 
         await self.calculated_transmission.write(
-            primary.calculate_transmission()
+            self.calculate_transmission()
         )
         await self.calculated_transmission_3omega.write(
-            primary.calculate_transmission_3omega()
+            self.calculate_transmission_3omega()
         )
 
         # Using the above-calculated transmissions, find the best configuration
 
         config = calculator.get_best_config_with_material_priority(
-            materials=primary.all_filter_materials,
-            transmissions=list(primary.all_transmissions),
-            material_order=primary.material_order,
+            materials=self.all_filter_materials,
+            transmissions=list(self.all_transmissions),
+            material_order=self.material_order,
             t_des=desired_transmission,
             mode=calc_mode,
         )
-        await self.best_config.write(config.filter_states)
+        await self.best_config.write(
+            [State.from_filter_index(idx) for idx in config.filter_states]
+        )
         await self.best_config_bitmask.write(
             util.int_array_to_bit_string(config.filter_states))
         await self.best_config_error.write(
@@ -157,52 +97,6 @@ class SystemGroup(SystemGroupBase):
             self.best_config_error.value,
             config.filter_states,
         )
-
-    async def move_blade_step(self, state: Dict[int, State]):
-        """
-        Caller is requesting to move blades in or out.
-
-        The caller is expected to handle timeout scenarios and provide a
-        dictionary with which we can record this implementation's state.
-
-        Parameters
-        ----------
-        state : dict
-            State dictionary, which we use here to mark each time we request
-            a motion.  This will be passed in on subsequent calls.
-
-        Returns
-        -------
-        continue_ : bool
-            Returns `True` if there are more blades to move.
-        """
-        items = list(zip(self._set_pvs, self.active_config.value,
-                         self.best_config.value))
-        move_out = [pv for pv, active, best in items
-                    if active == State.In and best == State.Out]
-        move_in = [pv for pv, active, best in items
-                   if active == State.Out and best == State.In]
-        if move_in:
-            # Move blades IN first, to be safe
-            for pv in move_in:
-                if state.get(pv, None) == State.In:
-                    break
-                state[pv] = State.In
-                self.log.debug('Moving in %s', pv)
-                await self._pv_put_queue.async_put(
-                    (pv, STATE_TO_MOTOR[State.In]),
-                )
-        elif move_out:
-            for pv in move_out:
-                if state.get(pv, None) == State.Out:
-                    break
-                state[pv] = State.Out
-                self.log.debug('Moving out %s', pv)
-                await self._pv_put_queue.async_put(
-                    (pv, STATE_TO_MOTOR[State.Out]),
-                )
-
-        return bool(move_in or move_out)
 
 
 class IOCBase(PVGroup):
@@ -236,79 +130,6 @@ class IOCBase(PVGroup):
     autosave_helper = SubGroup(AutosaveHelper)
     stats_helper = SubGroup(StatusHelper, prefix=':STATS:')
     sys = SubGroup(SystemGroup, prefix=':SYS:')
-
-    @property
-    def working_filters(self):
-        """
-        A dictionary of all filters that are in working order.
-
-        That is to say, filters that are marked as active and not stuck.
-        """
-        return {
-            idx: filt for idx, filt in self.filters.items()
-            if filt.is_stuck.value != "True" and filt.active.value == "True"
-        }
-
-    def calculate_transmission(self):
-        """
-        Total transmission through all filter blades.
-
-        Stuck blades are assumed to be 'OUT' and thus the total transmission
-        will be overestimated (in the case any blades are actually stuck 'IN').
-        """
-        t = 1.
-        for filt in self.working_filters.values():
-            t *= filt.transmission.value
-        return t
-
-    def calculate_transmission_3omega(self):
-        """
-        Total 3rd harmonic transmission through all filter blades.
-
-        Stuck blades are assumed to be 'OUT' and thus the total transmission
-        will be overestimated (in the case any blades are actually stuck 'IN').
-        """
-        t = 1.
-        for filt in self.working_filters.values():
-            t *= filt.transmission_3omega.value
-        return t
-
-    @property
-    def all_transmissions(self):
-        """
-        List of the transmission values for working filters at the current
-        energy.
-
-        Stuck filters get a transmission of NaN, which omits them from
-        calculations/considerations.
-        """
-        T_arr = np.zeros(len(self.filters)) * np.nan
-        for idx, filt in self.working_filters.items():
-            T_arr[idx - self.first_filter] = filt.transmission.value
-        return T_arr
-
-    @property
-    def all_filter_materials(self) -> List[str]:
-        """All filter materials in a list."""
-        return [flt.material.value for flt in self.filters.values()]
-
-    @property
-    def material_order(self) -> List[str]:
-        """Material prioritization."""
-        # Hard-coded for now.
-        return ['C', 'Si']
-
-    def check_materials(self) -> bool:
-        """Ensure the materials specified are OK according to the order."""
-        bad_materials = set(self.material_order).symmetric_difference(
-            set(self.all_filter_materials)
-        )
-        if bad_materials:
-            self.log.error(
-                'Materials not set properly! May not calculate correctly. '
-                'Potentially bad materials: %s', bad_materials
-            )
-        return not bool(bad_materials)
 
 
 def create_ioc(prefix,

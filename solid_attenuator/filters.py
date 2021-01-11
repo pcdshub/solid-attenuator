@@ -211,6 +211,9 @@ class InOutFilterGroup(FilterGroup):
         )
     )
 
+    async def set_inserted_filter_state(self, state: State):
+        ...
+
 
 class EightFilterGroup(FilterGroup):
     """
