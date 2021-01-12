@@ -38,18 +38,21 @@ ioc_args = {
         N: f'{N:02d}'
         for N in range(FIRST_FILTER, NUM_BLADES + FIRST_FILTER)
     },
-    "eV_pv": eV_name,
-    "pmps_run_pv": pmps_run_name,
-    "pmps_tdes_pv": pmps_tdes_name,
-    "motor_prefix": motor_prefix,
-    "autosave_path": autosave_path,
 }
 
 
 def main():
     ioc_options, run_options = ioc_arg_parser(
         default_prefix=prefix,
-        desc='Solid attenuator IOC')
+        desc='Solid attenuator IOC',
+        macros={
+            'ev_pv': eV_name,
+            'pmps_run_pv': pmps_run_name,
+            'pmps_tdes_pv': pmps_tdes_name,
+            'motor_prefix': motor_prefix,
+            'autosave_path': autosave_path,
+        }
+    )
 
     ioc = create_ioc(**ioc_args, **ioc_options)
     util.config_logging(ioc.log, level=log_level)

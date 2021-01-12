@@ -1,7 +1,7 @@
 import os
 import sys
 
-from caproto.server import expand_macros, ioc_arg_parser, run
+from caproto.server import ioc_arg_parser, run
 
 from .. import util
 from ..sxr import create_ioc
@@ -40,21 +40,20 @@ def main():
         macros={
             'system': 'AT1K4',
             'subsystem': subsystem,
+            'ev_pv': eV_name,
+            'pmps_run_pv': pmps_run_name,
+            'pmps_tdes_pv': pmps_tdes_name,
+            'motor_prefix': motor_prefix,
+            'autosave_path': autosave_path,
         },
     )
 
-    macros = ioc_options['macros']
     ioc = create_ioc(
         **ioc_options,
         filter_group={
             N: f'{N:02d}'
             for N in range(FIRST_FILTER, NUM_BLADES + FIRST_FILTER)
         },
-        eV_pv=expand_macros(eV_name, macros),
-        pmps_run_pv=expand_macros(pmps_run_name, macros),
-        pmps_tdes_pv=expand_macros(pmps_tdes_name, macros),
-        motor_prefix=expand_macros(motor_prefix, macros),
-        autosave_path=expand_macros(autosave_path, macros),
     )
 
     util.config_logging(ioc.log, level=log_level)

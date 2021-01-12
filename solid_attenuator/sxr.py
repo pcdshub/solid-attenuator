@@ -10,7 +10,7 @@ This is intended to be used for the following attenuators:
 | AT2K2-SOLID | NEH 2.2    | H2.2 | 788.8 |
 | AT1K3-SOLID | TXI        | H1.1 | ~763  |
 """
-from caproto.server import SubGroup
+from caproto.server import SubGroup, expand_macros
 from caproto.server.autosave import RotatingFileManager
 
 from . import calculator, util
@@ -94,15 +94,7 @@ class SystemGroup(SystemGroupBase):
         return config
 
 
-def create_ioc(prefix,
-               *,
-               eV_pv,
-               motor_prefix,
-               pmps_run_pv,
-               pmps_tdes_pv,
-               filter_group,
-               autosave_path,
-               **ioc_options):
+def create_ioc(prefix, filter_group, macros, **ioc_options):
     """IOC Setup."""
 
     filter_index_to_attribute = {
@@ -119,6 +111,7 @@ def create_ioc(prefix,
 
     low_index = min(filter_index_to_attribute)
     high_index = max(filter_index_to_attribute)
+    motor_prefix = expand_macros(macros["motor_prefix"], macros)
     motor_prefixes = {
         idx: f'{motor_prefix}{idx:02d}:STATE'
         for idx in range(low_index, high_index + 1)
@@ -126,9 +119,9 @@ def create_ioc(prefix,
 
     IOCMain = IOCBase.create_ioc_class(filter_index_to_attribute, subgroups,
                                        motor_prefixes)
-    ioc = IOCMain(prefix=prefix, eV=eV_pv, pmps_run=pmps_run_pv,
-                  pmps_tdes=pmps_tdes_pv, **ioc_options)
+    ioc = IOCMain(prefix=prefix, macros=macros, **ioc_options)
 
+    autosave_path = expand_macros(macros['autosave_path'], macros)
     ioc.autosave_helper.filename = autosave_path
     ioc.autosave_helper.file_manager = RotatingFileManager(autosave_path)
     return ioc

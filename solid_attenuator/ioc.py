@@ -3,7 +3,7 @@ Shared IOC source.
 """
 from typing import Dict, List, Type
 
-from caproto.server import PVGroup, SubGroup
+from caproto.server import PVGroup, SubGroup, expand_macros
 from caproto.server.autosave import AutosaveHelper
 from caproto.server.stats import StatusHelper
 
@@ -22,7 +22,7 @@ class IOCBase(PVGroup):
     first_filter: int
     num_filters: int
 
-    def __init__(self, prefix, *, eV, pmps_run, pmps_tdes, **kwargs):
+    def __init__(self, prefix, **kwargs):
         self.num_filters = len(self.filter_index_to_attribute)
         self.first_filter = min(self.filter_index_to_attribute)
         super().__init__(prefix, **kwargs)
@@ -32,9 +32,9 @@ class IOCBase(PVGroup):
             for idx, attr in self.filter_index_to_attribute.items()
         }
         self.monitor_pvnames = dict(
-            ev=eV,
-            pmps_run=pmps_run,
-            pmps_tdes=pmps_tdes,
+            ev=expand_macros(self.macros['ev_pv'], self.macros),
+            pmps_run=expand_macros(self.macros['pmps_run_pv'], self.macros),
+            pmps_tdes=expand_macros(self.macros['pmps_tdes_pv'], self.macros),
             motors=self.motors,
         )
 
