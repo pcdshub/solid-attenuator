@@ -10,14 +10,12 @@ This is intended to be used for the following attenuators:
 | AT2K2-SOLID | NEH 2.2    | H2.2 | 788.8 |
 | AT1K3-SOLID | TXI        | H1.1 | ~763  |
 """
-from typing import Dict
-
-from caproto.server import PVGroup, SubGroup
-from caproto.server.autosave import AutosaveHelper, RotatingFileManager
-from caproto.server.stats import StatusHelper
+from caproto.server import SubGroup
+from caproto.server.autosave import RotatingFileManager
 
 from . import calculator, util
 from .filters import EightFilterGroup
+from .ioc import IOCBase
 from .system import SystemGroupBase
 from .util import State
 
@@ -96,38 +94,6 @@ class SystemGroup(SystemGroupBase):
         return config
 
 
-class IOCBase(PVGroup):
-    """
-    Base for SXR attenuator IOCs.  This is extended dynamically with SubGroups
-    in `create_ioc`.
-    """
-    filters: Dict[int, EightFilterGroup]
-    prefix: str
-    monitor_pvnames: Dict[str, str]
-
-    num_filters = None
-    first_filter = 1
-
-    def __init__(self, prefix, *, eV, pmps_run, pmps_tdes,
-                 filter_index_to_attribute,
-                 motors,
-                 **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.prefix = prefix
-        self.filters = {idx: getattr(self, attr)
-                        for idx, attr in filter_index_to_attribute.items()}
-        self.monitor_pvnames = dict(
-            ev=eV,
-            pmps_run=pmps_run,
-            pmps_tdes=pmps_tdes,
-            motors=motors,
-        )
-
-    autosave_helper = SubGroup(AutosaveHelper)
-    stats_helper = SubGroup(StatusHelper, prefix=':STATS:')
-    sys = SubGroup(SystemGroup, prefix=':SYS:')
-
-
 def create_ioc(prefix,
                *,
                eV_pv,
@@ -149,6 +115,7 @@ def create_ioc(prefix,
             EightFilterGroup, prefix=f':AXIS:{suffix}:', index=index)
         for index, suffix in filter_group.items()
     }
+    subgroups['sys'] = SubGroup(SystemGroup, prefix=':SYS:')
 
     low_index = min(filter_index_to_attribute)
     high_index = max(filter_index_to_attribute)
@@ -157,24 +124,10 @@ def create_ioc(prefix,
         for idx in range(low_index, high_index + 1)
     }
 
-    motors = {
-        'get': [f'{motor}:GET_RBV' for idx, motor in motor_prefixes.items()],
-        'set': [f'{motor}:SET' for idx, motor in motor_prefixes.items()],
-        'error': [f'{motor}:ERR_RBV' for idx, motor in motor_prefixes.items()],
-    }
-
-    class IOCMain(IOCBase):
-        num_filters = len(filter_index_to_attribute)
-        first_filter = min(filter_index_to_attribute)
-        locals().update(**subgroups)
-
-    ioc = IOCMain(prefix=prefix,
-                  eV=eV_pv,
-                  filter_index_to_attribute=filter_index_to_attribute,
-                  motors=motors,
-                  pmps_run=pmps_run_pv,
-                  pmps_tdes=pmps_tdes_pv,
-                  **ioc_options)
+    IOCMain = IOCBase.create_ioc_class(filter_index_to_attribute, subgroups,
+                                       motor_prefixes)
+    ioc = IOCMain(prefix=prefix, eV=eV_pv, pmps_run=pmps_run_pv,
+                  pmps_tdes=pmps_tdes_pv, **ioc_options)
 
     ioc.autosave_helper.filename = autosave_path
     ioc.autosave_helper.file_manager = RotatingFileManager(autosave_path)
