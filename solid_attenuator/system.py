@@ -527,7 +527,8 @@ class SystemGroupBase(PVGroup):
         """
         return {
             idx: filt for idx, filt in self.filters.items()
-            if filt.is_stuck.value != "True" and filt.active.value == "True"
+            if filt.is_stuck.value == 'Not stuck' and
+            filt.active.value == "True"
         }
 
     @property

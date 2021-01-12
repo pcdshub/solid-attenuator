@@ -62,7 +62,6 @@ class SystemGroup(SystemGroupBase):
         )
 
         # Using the above-calculated transmissions, find the best configuration
-
         config = calculator.get_best_config_with_material_priority(
             materials=self.all_filter_materials,
             transmissions=list(self.all_transmissions),

@@ -118,14 +118,21 @@ class FilterGroup(PVGroup):
         )
     )
 
-    # May be overridden by the subclass. Not applicable for multiple
-    # filter-per-blade variant (e.g., AT1K4) but retained here
-    # for PV API compatibility.
-    is_stuck = pvproperty(
-        value=0,
-        name='IsStuck',
-        record='longout',
-        doc='Stuck at indicated state',
+    # TODO: intention is to say it's stuck in/out/etc depending on the state
+    # better name would be "StuckAtState"
+    # NOTE: this is a PV API change for AT2L0, but it's not currently necessary
+    # as of the time of writing, fortunately.
+    is_stuck = autosaved(
+        pvproperty(
+            value='Not stuck',
+            name='IsStuck',
+            record='mbbo',
+            doc='Stuck at indicated state',
+            enum_strings=['Not stuck', 'Out', 'In_01', 'In_02', 'In_03',
+                          'In_04', 'In_05', 'In_06', 'In_07', 'In_08',
+                          'In_09'],
+            dtype=ChannelType.ENUM,
+        )
     )
 
     async def set_photon_energy(self, energy_ev):
@@ -200,16 +207,6 @@ class InOutFilterGroup(FilterGroup):
     index : int
         Index of the filter in the system.
     """
-    is_stuck = autosaved(
-        pvproperty(
-            value='False',
-            name='IsStuck',
-            record='bo',
-            enum_strings=['False', 'True'],
-            doc='Filter is stuck in place',
-            dtype=ChannelType.ENUM
-        )
-    )
 
     async def set_inserted_filter_state(self, state: State):
         ...
@@ -267,17 +264,6 @@ class EightFilterGroup(FilterGroup):
         read_only=True,
     )
 
-    # TODO: intention is to say it's stuck in/out/etc depending on the state
-    # better name would be "StuckAtState"
-    is_stuck = autosaved(
-        pvproperty(
-            value=0,
-            name='IsStuck',
-            record='longout',
-            doc='Stuck at indicated state',
-        )
-    )
-
     def load_data(self, formula):
         # Stub load_data, as `self.table` is not used here, instead relying
         # on the inserted filter's information.
@@ -286,8 +272,8 @@ class EightFilterGroup(FilterGroup):
     @property
     def inserted_filter_state(self) -> State:
         """The current filter state, according to inserted_filter_index."""
-        if self.is_stuck.value > 0:
-            state_value = self.is_stuck.value
+        if self.is_stuck.value != 'Not stuck':
+            state_value = self.is_stuck.enum_strings.index(self.is_stuck.value)
         else:
             state_value = self.inserted_filter_index.value
         return State(state_value)
