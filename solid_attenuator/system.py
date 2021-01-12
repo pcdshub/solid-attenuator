@@ -3,7 +3,7 @@ import time
 from typing import Dict, List
 
 import numpy as np
-from caproto import AlarmStatus, ChannelType
+from caproto import AlarmSeverity, AlarmStatus, ChannelType
 from caproto.asyncio.server import AsyncioAsyncLayer
 from caproto.server import PVGroup, pvproperty
 from caproto.server.autosave import autosaved
@@ -384,8 +384,16 @@ class SystemGroupBase(PVGroup):
                 desired_transmission=self.desired_transmission.value,
                 calc_mode=calc_mode,
             )
+        except util.MisconfigurationError as ex:
+            self.log.warning('Misconfiguration blocks calculation: %s', ex)
+            await self.desired_transmission.alarm.write(
+                status=AlarmStatus.CALC, severity=AlarmSeverity.MAJOR_ALARM,
+            )
         except Exception:
-            self.log.exception('Calculation run failed?')
+            self.log.exception('Calculation failed unexpectedly')
+            await self.desired_transmission.alarm.write(
+                status=AlarmStatus.CALC, severity=AlarmSeverity.MAJOR_ALARM,
+            )
         else:
             await self.last_energy.write(energy)
             await self.last_mode.write(calc_mode)

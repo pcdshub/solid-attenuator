@@ -11,6 +11,11 @@ import numpy as np
 _default_thread_context = None
 
 
+class MisconfigurationError(Exception):
+    """Misconfiguration blocks the calculation from continuing."""
+    ...
+
+
 class State(enum.IntEnum):
     """
     State which matches that of the motion IOC.

@@ -3,7 +3,6 @@ This is the IOC source code for the unique AT2L0, with its 18 in-out filters.
 """
 from typing import List
 
-from caproto import AlarmStatus
 from caproto.server import SubGroup
 from caproto.server.autosave import RotatingFileManager
 
@@ -42,12 +41,13 @@ class SystemGroup(SystemGroupBase):
     async def run_calculation(self, energy: float, desired_transmission: float,
                               calc_mode: str
                               ) -> calculator.Config:
-        material_check = self.check_materials()
-        await util.alarm_if(self.desired_transmission, not material_check,
-                            AlarmStatus.CALC)
-        if not material_check:
-            # Don't proceed with calculations if the material check fails.
-            return
+        if not self.check_materials():
+            raise util.MisconfigurationError(
+                f"Materials specified outside of supported ones.  AT2L0 "
+                f"requires that diamond filters be inserted prior to silicon "
+                f"filters, but the following were found:"
+                f"{self.all_filter_materials}"
+            )
 
         # Update all of the filters first, to determine their transmission
         # at this energy
