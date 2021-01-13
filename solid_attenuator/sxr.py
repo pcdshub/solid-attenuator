@@ -37,12 +37,7 @@ class SystemGroup(SystemGroupBase):
         for filter in self.filters.values():
             await filter.set_photon_energy(energy)
 
-        await self.calculated_transmission.write(
-            self.calculate_transmission()
-        )
-        await self.calculated_transmission_3omega.write(
-            self.calculate_transmission_3omega()
-        )
+        # TODO: handling for stuck filters? active is below...
 
         # Using the above-calculated transmissions, find the best configuration
         # Get only the *active* filter transmissions:

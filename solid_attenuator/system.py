@@ -498,42 +498,55 @@ class SystemGroupBase(PVGroup):
         return bool(move_in or move_out)
 
     def calculate_transmission(self):
-        """
-        Total transmission through all filter blades.
-
-        Stuck blades are assumed to be 'OUT' and thus the total transmission
-        will be overestimated (in the case any blades are actually stuck 'IN').
-        """
-        t = 1.
-        for filt in self.working_filters.values():
+        """Total transmission through all filter blades."""
+        t = 1.0
+        for filt in self.active_filters.values():
             t *= filt.transmission.value
         return t
 
     def calculate_transmission_3omega(self):
-        """
-        Total 3rd harmonic transmission through all filter blades.
-
-        Stuck blades are assumed to be 'OUT' and thus the total transmission
-        will be overestimated (in the case any blades are actually stuck 'IN').
-        """
-        t = 1.
-        for filt in self.working_filters.values():
+        """Total 3rd harmonic transmission through all filter blades."""
+        t = 1.0
+        for filt in self.active_filters.values():
             t *= filt.transmission_3omega.value
         return t
 
-    @property
-    def all_transmissions(self):
+    def get_filters(self, stuck=False, inactive=False, normal=True):
         """
-        List of the transmission values for working filters at the current
-        energy.
+        Get filters matching the specified criteria, sorted by index.
 
-        Stuck filters get a transmission of NaN, which omits them from
-        calculations/considerations.
+        Parameters
+        ----------
+        stuck : bool, optional
+            Include stuck filters.  Defaults to False.
+
+        inactive : bool, optional
+            Include inactive filters.  Defaults to False.
+
+        normal : bool, optional
+            Include non-stuck, active filters.  Defaults to True.
+
+        Yields
+        ------
+        filter : PVGroup
+            A matching filter.
         """
-        T_arr = np.zeros(len(self.filters)) * np.nan
-        for idx, filt in self.working_filters.items():
-            T_arr[idx - self.first_filter] = filt.transmission.value
-        return T_arr
+
+        def matches(idx, filt):
+            if filt.active.value == "False":
+                # Include inactive filters, if requested
+                return inactive
+            if filt.is_stuck.value != 'Not stuck':
+                # Include stuck filters, if requested
+                return stuck
+            # Include normal filters, if requested
+            return normal
+
+        return [
+            filt
+            for idx, filt in self.filters.items()
+            if matches(idx, filt)
+        ]
 
     @property
     def first_filter(self):
