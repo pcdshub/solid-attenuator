@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Filter Selection Information &mdash; solid-attenuator  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Welcome to solid-attenuator’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> solid-attenuator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Filter Selection Information</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#best-configuration-algorithm">Best Configuration Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#material-prioritizing-algorithm">Material-prioritizing Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ladder-style-algorithm">Ladder-style algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#esd-reference">ESD reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pcdshub/solid-attenuator">Github Repository</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">solid-attenuator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Filter Selection Information</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/algorithm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="filter-selection-information">
+<h1>Filter Selection Information<a class="headerlink" href="#filter-selection-information" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="best-configuration-algorithm">
+<h2>Best Configuration Algorithm<a class="headerlink" href="#best-configuration-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>The generic “best configuration” algorithm <code class="docutils literal notranslate"><span class="pre">get_best_config</span></code> does its best to
+choose the right filters to target the requested transmission.</p>
+<p>It does this by enumerating all possible filter configurations, doing a matrix
+multiplication to determine the transmission values for all of those
+configurations. Figuring out the best configuration is then a matter of
+matching the closest transmission value (i.e., <cite>argmin(abs(all_transmissions -
+target_transmission))</cite>.  This makes no assumptions as to how the filters are
+laid out and is as generic as possible.</p>
+<p>Now, if all filters of every material type are used with the above algorithm,
+some silicon filters may be inserted prior to diamond filters. This is not
+good, as the silicon filters may be damaged. We need a new algorithm to get
+around that.</p>
+</div>
+<div class="section" id="material-prioritizing-algorithm">
+<h2>Material-prioritizing Algorithm<a class="headerlink" href="#material-prioritizing-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>This section uses AT2L0 as an example, with 8 diamond filters and 10 silicon
+filters.  The desire here is to have all diamond filters inserted prior to
+inserting any silicon filters.</p>
+<p>The algorithm behind <code class="docutils literal notranslate"><span class="pre">get_best_config_with_material_priority</span></code> breaks up
+the problem into 2 calls to the original algorithm, once per material.</p>
+<p>For AT2L0, with a desired transmission of <code class="docutils literal notranslate"><span class="pre">t_des</span></code>,</p>
+<ol class="arabic">
+<li><p>Apply the original algorithm _only_ for the diamond filters. Due to how the
+filters are physically configured, the diamond filters can get very close to
+the required transmission up to a certain value (<cite>t_all_diamond_inserted</cite> to
+<cite>1.0</cite>). This works because the filter thicknesses were carefully specified:
+each filter is 2x the previous filter in thickness.</p>
+<blockquote>
+<div><p>As an aside, this means you could treat each filter as binary value,
+spanning the range  <code class="docutils literal notranslate"><span class="pre">t_all_diamond_inserted</span> <span class="pre">&lt;=</span> <span class="pre">t_des</span> <span class="pre">&lt;=</span> <span class="pre">1.0</span></code> in
+2^num_filters = 2^8 steps (i.e., <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">-</span> <span class="pre">t_all_diamond_inserted)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">**</span> <span class="pre">8</span></code>,
+which is <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">0.4%</span></code> per step)</p>
+<p>Let’s call the result from step (1) a transmission value of <code class="docutils literal notranslate"><span class="pre">transmission_1</span></code>.</p>
+</div></blockquote>
+</li>
+<li><p>Now,</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>For desired transmission within
+<code class="docutils literal notranslate"><span class="pre">t_all_diamond_inserted</span> <span class="pre">&lt;=</span> <span class="pre">t_des</span> <span class="pre">&lt;=</span> <span class="pre">1.0</span></code>, the algorithm will have
+pretty much gotten the requested transmission as close as needed.</p></li>
+<li><p>For desired transmission <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">t_des</span> <span class="pre">&lt;</span> <span class="pre">t_all_diamond_inserted</span></code>, the
+algorithm will have already selected all diamond filters. There’s more
+left to do in the second round as we can still get closer to <code class="docutils literal notranslate"><span class="pre">t_des</span></code>,
+when calculating which silicon filters to insert.</p></li>
+</ol>
+<p>In either case, if all diamond filters have not been marked for insertion
+at this point, the silicon filters will remain out.</p>
+</div></blockquote>
+</li>
+<li><p>As normalized transmission values are multiplicative (50% of 50%
+transmission would be 25%), our second round tries to find the right
+configuration of silicon filters for <code class="docutils literal notranslate"><span class="pre">t_des</span> <span class="pre">/</span> <span class="pre">transmission_1</span></code>.</p>
+<ol class="loweralpha simple">
+<li><p>For values in the range noted by (2a), <code class="docutils literal notranslate"><span class="pre">t_des</span> <span class="pre">/</span> <span class="pre">transmission1</span></code> will be
+close to 1 - so no filters will be inserted.</p></li>
+<li><p>For values in the range noted by (2b), <code class="docutils literal notranslate"><span class="pre">t_des</span> <span class="pre">/</span> <span class="pre">transmission1</span></code> will
+likely be something actionable.</p></li>
+</ol>
+</li>
+<li><p>Assembling the two configurations from (1) and (3) gives a final
+configuration, specifying all filter states.</p></li>
+</ol>
+</div>
+<div class="section" id="ladder-style-algorithm">
+<h2>Ladder-style algorithm<a class="headerlink" href="#ladder-style-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>The “Best Configuration Algorithm” noted above was designed for AT2L0 and does
+not support ladder-style attenuators such as AT1K3, AT1K4, AT1K2, or AT2K2.
+“Ladder” in this context means that each attenuator blade may have more than
+one filter to choose from, depending on its actuator position.</p>
+<p>The generic ladder algorithm <code class="docutils literal notranslate"><span class="pre">get_ladder_config</span></code> does its best to
+choose the right filters to target the requested transmission by exhaustively
+listing all possible filter configurations and their resulting transmission
+values.</p>
+<p>Similar to the original algorithm’s usage of <code class="docutils literal notranslate"><span class="pre">argmin</span></code>, we use <code class="docutils literal notranslate"><span class="pre">argsort</span></code>
+determine the 2 closest possible configurations.  The primary difference here
+is slightly more complicated array manipulation.</p>
+<p>An additional benefit of the <code class="docutils literal notranslate"><span class="pre">argsort</span></code> method is that we can pick the top
+two configurations, and easily figure out which is the floor or ceiling
+configuration.</p>
+</div>
+<div class="section" id="esd-reference">
+<h2>ESD reference<a class="headerlink" href="#esd-reference" title="Permalink to this headline">¶</a></h2>
+<p>According to the ESD (LCLSII-3.5-ES-0267-R1, page 8):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Diamond</span> <span class="n">filters</span> <span class="n">shall</span> <span class="n">always</span> <span class="n">be</span> <span class="n">used</span> <span class="n">when</span> <span class="n">the</span> <span class="n">silicon</span> <span class="n">filters</span> <span class="n">are</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">beam</span>
+<span class="p">(</span><span class="n">pre</span><span class="o">-</span><span class="n">filtering</span><span class="p">)</span> <span class="n">per</span> <span class="n">Figure</span> <span class="mf">4.</span>
+</pre></div>
+</div>
+<p>Page 11:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Diamond filter(s) shall always be used to provide attenuation
+(pre-filtering) when silicon filters are used. The required attenuation and
+diamond filter thicknesses for pre-filtering the silicon filters in the 6 –
+25 keV range is shown in Figure 4.
+</pre></div>
+</div>
+<p>Page 15:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">When</span> <span class="n">operating</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">Cu</span><span class="o">-</span><span class="n">HXR</span> <span class="n">mode</span><span class="p">,</span> <span class="n">the</span> <span class="n">MPS</span> <span class="n">shall</span> <span class="n">ensure</span> <span class="n">that</span><span class="p">:</span>
+<span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="o">*</span> <span class="n">The</span> <span class="n">appropriate</span> <span class="n">diamond</span> <span class="n">pre</span><span class="o">-</span><span class="nb">filter</span> <span class="ow">is</span> <span class="n">inserted</span> <span class="n">prior</span> <span class="n">to</span> <span class="n">inserting</span> <span class="n">a</span> <span class="n">silicon</span> <span class="nb">filter</span><span class="p">,</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to solid-attenuator’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, SLAC National Accelerator Laboratory.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

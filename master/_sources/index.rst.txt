@@ -7,17 +7,18 @@ Welcome to solid-attenuator's documentation!
 ===========================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+    :caption: Contents:
 
-   api
+    algorithm
+    api
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Links
-   :hidden:
+    :maxdepth: 1
+    :caption: Links
+    :hidden:
 
-   Github Repository <https://github.com/pcdshub/solid-attenuator>
+    Github Repository <https://github.com/pcdshub/solid-attenuator>
 
 
 

@@ -1,0 +1,75 @@
+﻿solid\_attenuator.ioc\_lfe\_at2l0\_calc.at2l0.IOCBase
+=====================================================
+
+
+.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc.at2l0
+
+.. autoclass:: IOCBase
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+
+    
+    .. list-table:: Sub-groups
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Class
+           - Docs
+    
+        *  -  autosave_helper
+           -  ``autosave_helper:``
+           -  :class:`~caproto.server.autosave.AutosaveHelper`
+           -  
+    
+        *  -  stats_helper
+           -  ``:STATS:``
+           -  :class:`~caproto.server.stats.StatusHelper`
+           -  
+    
+        *  -  stats_helper.basic
+           -  
+           -  :class:`~caproto.server.stats.BasicStatusHelper`
+           -  
+    
+        *  -  stats_helper.periodic
+           -  
+           -  :class:`~caproto.server.stats.PeriodicStatusHelper`
+           -  
+    
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~IOCBase.create_ioc_class
+       ~IOCBase.group_read
+       ~IOCBase.group_write
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~IOCBase.default_values
+       ~IOCBase.type_map
+       ~IOCBase.type_map_read_only
+    
+
+    

@@ -1,0 +1,842 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>solid_attenuator.system &mdash; solid-attenuator  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> solid-attenuator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm.html">Filter Selection Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pcdshub/solid-attenuator">Github Repository</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">solid-attenuator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>solid_attenuator.system</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for solid_attenuator.system</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">caproto</span> <span class="kn">import</span> <span class="n">AlarmSeverity</span><span class="p">,</span> <span class="n">AlarmStatus</span><span class="p">,</span> <span class="n">ChannelType</span>
+<span class="kn">from</span> <span class="nn">caproto.asyncio.server</span> <span class="kn">import</span> <span class="n">AsyncioAsyncLayer</span>
+<span class="kn">from</span> <span class="nn">caproto.server</span> <span class="kn">import</span> <span class="n">PVGroup</span><span class="p">,</span> <span class="n">pvproperty</span>
+<span class="kn">from</span> <span class="nn">caproto.server.autosave</span> <span class="kn">import</span> <span class="n">autosaved</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">State</span><span class="p">,</span> <span class="n">monitor_pvs</span>
+
+
+<div class="viewcode-block" id="SystemGroupBase"><a class="viewcode-back" href="../../ioc/solid_attenuator.system.SystemGroupBase.html#solid_attenuator.system.SystemGroupBase">[docs]</a><span class="k">class</span> <span class="nc">SystemGroupBase</span><span class="p">(</span><span class="n">PVGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PV group for attenuator system-spanning information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># TODO: this could be done by wrapping SystemGroup</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_moving</span><span class="p">):</span>
+            <span class="n">util</span><span class="o">.</span><span class="n">hack_max_length_of_channeldata</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">num_filters</span><span class="p">)</span>
+
+        <span class="c1"># TODO: caproto does not make this easy. We explicitly will be using</span>
+        <span class="c1"># asyncio here.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">async_lib</span> <span class="o">=</span> <span class="n">AsyncioAsyncLayer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">calculated_transmission</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;T_CALC&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;ao&#39;</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Calculated transmission (all blades)&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">calculated_transmission_3omega</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;T_3OMEGA&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Calculated 3omega transmission (all blades)&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">best_config_error</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BestConfigError_RBV&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;ao&#39;</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Calculated transmission error&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">moving</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Moving_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Moving to a new configuration.&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span>
+    <span class="p">)</span>
+
+    <span class="n">mirror_in</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;MIRROR_IN&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;The inspection mirror is in&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span>
+    <span class="p">)</span>
+
+    <span class="n">calc_mode</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Floor&#39;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;CalcMode&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Floor&#39;</span><span class="p">,</span> <span class="s1">&#39;Ceiling&#39;</span><span class="p">],</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Mode for selecting floor or ceiling transmission estimation&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span>
+    <span class="p">)</span>
+
+    <span class="n">energy_source</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Actual&#39;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;EnergySource&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Actual&#39;</span><span class="p">,</span> <span class="s1">&#39;Custom&#39;</span><span class="p">],</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Choose the source of photon energy&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">best_config</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BestConfiguration_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Best configuration as an array (1 if inserted)&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">best_config_bitmask</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BestConfigurationBitmask_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Best configuration as an integer&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">active_config</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ActiveConfiguration_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Active configuration array&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">active_config_bitmask</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ActiveConfigurationBitmask_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Active configuration represented as an integer&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">filter_moving</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;FiltersMoving_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Filter motion status as an array (1 if moving)&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">filter_moving_bitmask</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;FiltersMovingBitmask_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Filter motion status as an integer&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">energy_actual</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ActualPhotonEnergy_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;eV&#39;</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;valid_photon_energy&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">transmission_actual</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ActualTransmission_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">transmission_3omega_actual</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Actual3OmegaTransmission_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">energy_custom</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;CustomPhotonEnergy&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;eV&#39;</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">30000.0</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">last_energy</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;LastPhotonEnergy_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;eV&#39;</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Energy that was used for the calculation.&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">last_transmission</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;LastTransmission_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Last desired transmission value&#39;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">last_mode</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Floor&#39;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;LastCalcMode_RBV&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Floor&#39;</span><span class="p">,</span> <span class="s1">&#39;Ceiling&#39;</span><span class="p">],</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Last calculation mode&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">apply_config</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ApplyConfiguration&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Apply the calculated configuration.&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+        <span class="n">alarm_group</span><span class="o">=</span><span class="s1">&#39;motors&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">cancel_apply</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cancel&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Stop trying to apply the configuration.&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">desired_transmission</span> <span class="o">=</span> <span class="n">autosaved</span><span class="p">(</span>
+        <span class="n">pvproperty</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;DesiredTransmission&#39;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Desired transmission value&#39;</span><span class="p">,</span>
+            <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">run</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Run&#39;</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+        <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Run calculation&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span>
+    <span class="p">)</span>
+
+    <span class="nd">@active_config</span><span class="o">.</span><span class="n">startup</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">active_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+        <span class="n">motor_pvnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">]</span>
+        <span class="n">monitor_list</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">pvlist</span> <span class="k">for</span> <span class="n">pvlist</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                           <span class="p">[])</span>
+        <span class="n">all_status</span> <span class="o">=</span> <span class="p">{</span><span class="n">pv</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">pv</span> <span class="ow">in</span> <span class="n">monitor_list</span><span class="p">}</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+            <span class="n">all_status</span><span class="p">[</span><span class="n">pv</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;connected&#39;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">all_status</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                                <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span><span class="p">)</span>
+
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="o">*</span><span class="n">monitor_list</span><span class="p">,</span>
+                                                      <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">pvname</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">pvname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;get&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pvname</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">motor_has_moved</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span> <span class="o">+</span> <span class="n">idx</span><span class="p">,</span>
+                                       <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@energy_actual</span><span class="o">.</span><span class="n">startup</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">energy_actual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update beam energy and calculated values.&quot;&quot;&quot;</span>
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">status</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span>
+                <span class="n">instance</span><span class="p">,</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;connected&#39;</span><span class="p">,</span> <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span>
+            <span class="p">)</span>
+
+        <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="s1">&#39;disconnected&#39;</span><span class="p">)</span>
+        <span class="n">pvname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;ev&#39;</span><span class="p">]</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="n">pvname</span><span class="p">,</span>
+                                                      <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">eV</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Photon energy changed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">eV</span><span class="p">:</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">eV</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Photon energy changed to </span><span class="si">%s</span><span class="s2"> eV.&quot;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">instance</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">eV</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">eV</span>
+
+    <span class="nd">@apply_config</span><span class="o">.</span><span class="n">putter</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">apply_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_blades</span><span class="p">()</span>
+
+    <span class="c1"># apply_config.PROC -&gt; apply_config = 1</span>
+    <span class="n">util</span><span class="o">.</span><span class="n">process_writes_value</span><span class="p">(</span><span class="n">apply_config</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@apply_config</span><span class="o">.</span><span class="n">startup</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">apply_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">put_thread</span><span class="p">():</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">pv</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">pv</span><span class="o">.</span><span class="n">write</span><span class="p">([</span><span class="n">value</span><span class="p">],</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Failed to put value: </span><span class="si">%s</span><span class="s1">=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">pv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_default_thread_context</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_pvs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get_pvs</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;set&#39;</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_lib</span><span class="o">.</span><span class="n">ThreadsafeQueue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">put_thread</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">move_blades</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout_threshold</span><span class="o">=</span><span class="mf">30.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Move to the calculated configuration.&quot;&quot;&quot;</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">check_done</span><span class="p">():</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span>
+                    <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">moving</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">status</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_moving</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">done</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">moving</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">cancel_apply</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">,</span>
+                 <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="n">timeout_threshold</span><span class="p">,</span>
+                 <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">check_done</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_blade_step</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+                <span class="k">break</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_lib</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_run_calculation_outer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup calculation based on current settings, call run_calculation,</span>
+<span class="sd">        and then update results based on that.</span>
+
+<span class="sd">        Any exception raised here will be caught in the &#39;run&#39; put handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;Actual&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_actual</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s1">&#39;Custom&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_custom</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">}[</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_source</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+
+        <span class="n">desired_transmission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desired_transmission</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">calc_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_mode</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_calculation</span><span class="p">(</span>
+            <span class="n">energy</span><span class="p">,</span>
+            <span class="n">desired_transmission</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">desired_transmission</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">calc_mode</span><span class="o">=</span><span class="n">calc_mode</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_energy</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_mode</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">calc_mode</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_transmission</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">desired_transmission</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">filter_states</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_config_bitmask</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">util</span><span class="o">.</span><span class="n">int_array_to_bit_string</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">is_inserted</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">filter_states</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_config_error</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">transmission</span> <span class="o">-</span> <span class="n">desired_transmission</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculated_transmission</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">transmission</span>
+        <span class="p">)</span>
+        <span class="c1"># TODO</span>
+        <span class="c1"># await self.calculated_transmission_3omega.write(</span>
+        <span class="c1">#     self.calculate_transmission_3omega()</span>
+        <span class="c1"># )</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;Energy </span><span class="si">%s</span><span class="s1"> eV with desired transmission </span><span class="si">%.2g</span><span class="s1"> estimated </span><span class="si">%.2g</span><span class="s1"> &#39;</span>
+            <span class="s1">&#39;(delta </span><span class="si">%.3g</span><span class="s1">) configuration: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">energy</span><span class="p">,</span>
+            <span class="n">desired_transmission</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">transmission</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_config_error</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@run</span><span class="o">.</span><span class="n">putter</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_calculation_outer</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">util</span><span class="o">.</span><span class="n">MisconfigurationError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Misconfiguration blocks calculation: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">ex</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">desired_transmission</span><span class="o">.</span><span class="n">alarm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">AlarmStatus</span><span class="o">.</span><span class="n">CALC</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="n">AlarmSeverity</span><span class="o">.</span><span class="n">MAJOR_ALARM</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Calculation failed unexpectedly&#39;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">desired_transmission</span><span class="o">.</span><span class="n">alarm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">AlarmStatus</span><span class="o">.</span><span class="n">CALC</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="n">AlarmSeverity</span><span class="o">.</span><span class="n">MAJOR_ALARM</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># RUN.PROC -&gt; run = 1</span>
+    <span class="n">util</span><span class="o">.</span><span class="n">process_writes_value</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_update_active_transmission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Re-calculate transmission_actual based on working filters.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span>
+
+        <span class="n">transm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">transm3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_filters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">zero_index</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">offset</span>
+            <span class="k">if</span> <span class="n">State</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">zero_index</span><span class="p">])</span><span class="o">.</span><span class="n">is_inserted</span><span class="p">:</span>
+                <span class="n">transm</span><span class="p">[</span><span class="n">zero_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">transm3</span><span class="p">[</span><span class="n">zero_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">filt</span><span class="o">.</span><span class="n">transmission_3omega</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_actual</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanprod</span><span class="p">(</span><span class="n">transm</span><span class="p">))</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_3omega_actual</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanprod</span><span class="p">(</span><span class="n">transm3</span><span class="p">))</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">move_blade_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">State</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Caller is requesting to move blades in or out.</span>
+
+<span class="sd">        The caller is expected to handle timeout scenarios and provide a</span>
+<span class="sd">        dictionary with which we can record this implementation&#39;s state.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : dict</span>
+<span class="sd">            State dictionary, which we use here to mark each time we request</span>
+<span class="sd">            a motion.  This will be passed in on subsequent calls.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        continue_ : bool</span>
+<span class="sd">            Returns `True` if there are more blades to move.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="n">State</span><span class="p">(</span><span class="n">active</span><span class="p">),</span> <span class="n">State</span><span class="p">(</span><span class="n">best</span><span class="p">))</span> <span class="k">for</span> <span class="n">pv</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">best</span> <span class="ow">in</span>
+            <span class="nb">zip</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_pvs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="n">move_out</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">pv</span><span class="p">:</span> <span class="n">best</span>
+            <span class="k">for</span> <span class="n">pv</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">best</span> <span class="ow">in</span> <span class="n">items</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">best</span><span class="o">.</span><span class="n">is_inserted</span> <span class="ow">and</span> <span class="n">active</span> <span class="o">!=</span> <span class="n">best</span>
+        <span class="p">}</span>
+        <span class="n">move_in</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">pv</span><span class="p">:</span> <span class="n">best</span>
+            <span class="k">for</span> <span class="n">pv</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">best</span> <span class="ow">in</span> <span class="n">items</span>
+            <span class="k">if</span> <span class="n">best</span><span class="o">.</span><span class="n">is_inserted</span> <span class="ow">and</span> <span class="n">active</span> <span class="o">!=</span> <span class="n">best</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">move_in</span><span class="p">:</span>
+            <span class="n">to_move</span> <span class="o">=</span> <span class="n">move_in</span>
+            <span class="c1"># Move blades IN first, to be safe</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">to_move</span> <span class="o">=</span> <span class="n">move_out</span>
+
+        <span class="k">for</span> <span class="n">pv</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">to_move</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="n">target</span><span class="p">:</span>
+                <span class="n">state</span><span class="p">[</span><span class="n">pv</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Moving </span><span class="si">%s</span><span class="s1"> to </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">pv</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span><span class="o">.</span><span class="n">async_put</span><span class="p">((</span><span class="n">pv</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">move_in</span> <span class="ow">or</span> <span class="n">move_out</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calculate_transmission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total transmission through all filter blades.&quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">for</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_filters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">t</span> <span class="o">*=</span> <span class="n">filt</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="k">def</span> <span class="nf">calculate_transmission_3omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total 3rd harmonic transmission through all filter blades.&quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">for</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_filters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">t</span> <span class="o">*=</span> <span class="n">filt</span><span class="o">.</span><span class="n">transmission_3omega</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="k">def</span> <span class="nf">get_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stuck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get filters matching the specified criteria, sorted by index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stuck : bool, optional</span>
+<span class="sd">            Include stuck filters.  Defaults to False.</span>
+
+<span class="sd">        inactive : bool, optional</span>
+<span class="sd">            Include inactive filters.  Defaults to False.</span>
+
+<span class="sd">        normal : bool, optional</span>
+<span class="sd">            Include non-stuck, active filters.  Defaults to True.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        filter : PVGroup</span>
+<span class="sd">            A matching filter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">filt</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">filt</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;False&quot;</span><span class="p">:</span>
+                <span class="c1"># Include inactive filters, if requested</span>
+                <span class="k">return</span> <span class="n">inactive</span>
+            <span class="k">if</span> <span class="n">filt</span><span class="o">.</span><span class="n">is_stuck</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;Not stuck&#39;</span><span class="p">:</span>
+                <span class="c1"># Include stuck filters, if requested</span>
+                <span class="k">return</span> <span class="n">stuck</span>
+            <span class="c1"># Include normal filters, if requested</span>
+            <span class="k">return</span> <span class="n">normal</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">filt</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">matches</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">filt</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The first filter index in the system.&quot;&quot;&quot;</span>
+        <span class="c1"># Indirection for where it&#39;s actually stored - in the parent.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All filters in the system.&quot;&quot;&quot;</span>
+        <span class="c1"># Indirection for where they&#39;re actually stored - in the parent.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">filters</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stuck_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">PVGroup</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary of all filters that are stuck in a particular state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">idx</span><span class="p">:</span> <span class="n">filt</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_filters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">filt</span><span class="o">.</span><span class="n">is_stuck</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;Not stuck&#39;</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">PVGroup</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary of all filters that are marked as inactive.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">idx</span><span class="p">:</span> <span class="n">filt</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">filt</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">calculate_stuck_transmission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The effective normalized transmission of all stuck filters.&quot;&quot;&quot;</span>
+        <span class="n">transmission</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">for</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_filters</span><span class="p">(</span><span class="n">stuck</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">transmission</span> <span class="o">*=</span> <span class="n">filt</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="n">transmission</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_filter_materials</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;All filter materials in a list.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">flt</span><span class="o">.</span><span class="n">material</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">flt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_filters</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">motor_has_moved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blade_index</span><span class="p">,</span> <span class="n">raw_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback indicating a motor has moved.</span>
+
+<span class="sd">        Update the current configuration, if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        blade_index : int</span>
+<span class="sd">            Blade index (not zero-based).</span>
+
+<span class="sd">        raw_state : int</span>
+<span class="sd">            Raw state value from control system.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">array_idx</span> <span class="o">=</span> <span class="n">blade_index</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">State</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">raw_state</span><span class="p">))</span>
+
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="n">blade_index</span><span class="p">]</span>
+        <span class="k">await</span> <span class="n">flt</span><span class="o">.</span><span class="n">set_inserted_filter_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="n">new_config</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">new_config</span><span class="p">[</span><span class="n">array_idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_config</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Active config changed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">new_config</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_config</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_config_bitmask</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">util</span><span class="o">.</span><span class="n">int_array_to_bit_string</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">State</span><span class="p">(</span><span class="n">blade</span><span class="p">)</span><span class="o">.</span><span class="n">is_inserted</span> <span class="k">for</span> <span class="n">blade</span> <span class="ow">in</span> <span class="n">new_config</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_active_transmission</span><span class="p">()</span>
+
+        <span class="n">moving</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_moving</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">moving</span><span class="p">[</span><span class="n">array_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">is_moving</span>
+        <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">moving</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_moving</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_moving</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">moving</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_moving_bitmask</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">util</span><span class="o">.</span><span class="n">int_array_to_bit_string</span><span class="p">(</span><span class="n">moving</span><span class="p">)</span>
+            <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, SLAC National Accelerator Laboratory.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,357 @@
+﻿solid\_attenuator.ioc\_lfe\_at2l0\_calc.at2l0.SystemGroup
+=========================================================
+
+
+.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc.at2l0
+
+.. autoclass:: SystemGroup
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+    .. list-table:: SystemGroup pvproperties
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Docs
+           - Type
+           - Notes
+           - Alarm Group
+    
+        *  - active_config
+           - ``ActiveConfiguration_RBV``
+           - Active configuration array
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+                 **Startup**
+           - 
+    
+        *  - active_config_bitmask
+           - ``ActiveConfigurationBitmask_RBV``
+           - Active configuration represented as an integer
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - apply_config
+           - ``ApplyConfiguration``
+           - Apply the calculated configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+                 **Startup**
+                 **Put**
+           - 
+    
+        *  - best_config
+           - ``BestConfiguration_RBV``
+           - Best configuration as an array (1 if inserted)
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - best_config_bitmask
+           - ``BestConfigurationBitmask_RBV``
+           - Best configuration as an integer
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - best_config_error
+           - ``BestConfigError_RBV``
+           - Calculated transmission error
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - calc_mode
+           - ``CalcMode``
+           - Mode for selecting floor or ceiling transmission estimation
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - calculated_transmission
+           - ``T_CALC``
+           - Calculated transmission (all blades)
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - calculated_transmission_3omega
+           - ``T_3OMEGA``
+           - Calculated 3omega transmission (all blades)
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - cancel_apply
+           - ``Cancel``
+           - Stop trying to apply the configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - desired_transmission
+           - ``DesiredTransmission``
+           - Desired transmission value
+           - float 
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - energy_actual
+           - ``ActualPhotonEnergy_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+                 **Startup**
+           - 
+    
+        *  - energy_custom
+           - ``CustomPhotonEnergy``
+           - 
+           - float 
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - energy_source
+           - ``EnergySource``
+           - Choose the source of photon energy
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - filter_moving
+           - ``FiltersMoving_RBV``
+           - Filter motion status as an array (1 if moving)
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - filter_moving_bitmask
+           - ``FiltersMovingBitmask_RBV``
+           - Filter motion status as an integer
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - last_energy
+           - ``LastPhotonEnergy_RBV``
+           - Energy that was used for the calculation.
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - last_mode
+           - ``LastCalcMode_RBV``
+           - Last calculation mode
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - last_transmission
+           - ``LastTransmission_RBV``
+           - Last desired transmission value
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - mirror_in
+           - ``MIRROR_IN``
+           - The inspection mirror is in
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - moving
+           - ``Moving_RBV``
+           - Moving to a new configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - run
+           - ``Run``
+           - Run calculation
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+                 **Put**
+           - 
+    
+        *  - transmission_3omega_actual
+           - ``Actual3OmegaTransmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+        *  - transmission_actual
+           - ``ActualTransmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.system.SystemGroupBase`
+           - 
+    
+    
+
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~SystemGroup.calculate_stuck_transmission
+       ~SystemGroup.calculate_transmission
+       ~SystemGroup.calculate_transmission_3omega
+       ~SystemGroup.check_materials
+       ~SystemGroup.get_filters
+       ~SystemGroup.group_read
+       ~SystemGroup.group_write
+       ~SystemGroup.motor_has_moved
+       ~SystemGroup.move_blade_step
+       ~SystemGroup.move_blades
+       ~SystemGroup.run_calculation
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~SystemGroup.active_filters
+       ~SystemGroup.all_filter_materials
+       ~SystemGroup.default_values
+       ~SystemGroup.filters
+       ~SystemGroup.first_filter
+       ~SystemGroup.material_order
+       ~SystemGroup.stuck_filters
+       ~SystemGroup.type_map
+       ~SystemGroup.type_map_read_only
+    
+
+    
+    .. rubric:: pvproperty methods
+    .. method:: active_config.startup(self, instance, async_lib)
+        
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: active_config.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 259
+        :lines: 259-283
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    
+    .. method:: apply_config.startup(self, instance, async_lib)
+        
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: apply_config.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 323
+        :lines: 323-340
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    
+    .. method:: energy_actual.startup(self, instance, async_lib)
+        
+    Update beam energy and calculated values.
+    
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: energy_actual.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 285
+        :lines: 285-311
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    

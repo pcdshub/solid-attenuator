@@ -1,0 +1,35 @@
+﻿solid\_attenuator.ioc\_lfe\_at2l0\_calc.at2l0
+=============================================
+
+.. automodule:: solid_attenuator.ioc_lfe_at2l0_calc.at2l0
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      create_ioc
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SystemGroup
+   
+   
+
+   
+   
+   
+
+
+

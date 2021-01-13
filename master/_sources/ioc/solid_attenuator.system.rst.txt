@@ -1,0 +1,29 @@
+﻿solid\_attenuator.system
+========================
+
+.. automodule:: solid_attenuator.system
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SystemGroupBase
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,132 @@
+﻿solid\_attenuator.filters.InOutFilterGroup
+==========================================
+
+
+.. currentmodule:: solid_attenuator.filters
+
+.. autoclass:: InOutFilterGroup
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+    .. list-table:: InOutFilterGroup pvproperties
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Docs
+           - Type
+           - Notes
+           - Alarm Group
+    
+        *  - active
+           - ``Active``
+           - Filter should be used in calculations
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+        *  - closest_energy
+           - ``ClosestEnergy_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+        *  - closest_index
+           - ``ClosestIndex_RBV``
+           - 
+           - int 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+        *  - is_stuck
+           - ``IsStuck``
+           - Stuck at indicated state
+           - ENUM (:class:`mbbo <caproto.server.records.MbboFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+        *  - material
+           - ``Material``
+           - Filter material
+           - STRING (:class:`stringin <caproto.server.records.StringinFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+                 **Put**
+           - 
+    
+        *  - thickness
+           - ``Thickness``
+           - Filter thickness
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+                 **Put**
+           - 
+    
+        *  - transmission
+           - ``Transmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+        *  - transmission_3omega
+           - ``Transmission3Omega_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 Inherited from :class:`~solid_attenuator.filters.FilterGroup`
+           - 
+    
+    
+
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~InOutFilterGroup.get_stuck_state
+       ~InOutFilterGroup.get_transmission
+       ~InOutFilterGroup.group_read
+       ~InOutFilterGroup.group_write
+       ~InOutFilterGroup.load_data
+       ~InOutFilterGroup.set_inserted_filter_state
+       ~InOutFilterGroup.set_photon_energy
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~InOutFilterGroup.default_values
+       ~InOutFilterGroup.type_map
+       ~InOutFilterGroup.type_map_read_only
+    
+
+    
+    .. rubric:: pvproperty methods

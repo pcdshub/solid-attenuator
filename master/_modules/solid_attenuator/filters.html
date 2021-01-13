@@ -1,0 +1,569 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>solid_attenuator.filters &mdash; solid-attenuator  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> solid-attenuator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm.html">Filter Selection Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pcdshub/solid-attenuator">Github Repository</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">solid-attenuator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>solid_attenuator.filters</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for solid_attenuator.filters</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">caproto</span> <span class="kn">import</span> <span class="n">ChannelType</span>
+<span class="kn">from</span> <span class="nn">caproto.server</span> <span class="kn">import</span> <span class="n">PVGroup</span><span class="p">,</span> <span class="n">SubGroup</span><span class="p">,</span> <span class="n">pvproperty</span>
+<span class="kn">from</span> <span class="nn">caproto.server.autosave</span> <span class="kn">import</span> <span class="n">autosaved</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">calculator</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">State</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InOutFilterGroup&#39;</span><span class="p">,</span> <span class="s1">&#39;EightFilterGroup&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">FilterGroup</span><span class="p">(</span><span class="n">PVGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PVGroup for a single filter - with a specific material and thickness.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">        PV prefix.</span>
+
+<span class="sd">    index : int</span>
+<span class="sd">        Index of the filter in the system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="c1"># Default to silicon, for now</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s1">&#39;Si&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s1">) &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">material</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> um &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;T=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;&gt;&#39;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the HDF5 dataset containing physical constants</span>
+<span class="sd">        and photon energy : atomic scattering factor table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_absorption_table</span><span class="p">(</span><span class="n">formula</span><span class="o">=</span><span class="n">formula</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Failed to load absorption table for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                               <span class="n">formula</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded absorption table for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">formula</span><span class="p">)</span>
+
+    <span class="n">material</span> <span class="o">=</span> <span class="n">autosaved</span><span class="p">(</span>
+        <span class="n">pvproperty</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Si&#39;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Material&#39;</span><span class="p">,</span>
+            <span class="n">record</span><span class="o">=</span><span class="s1">&#39;stringin&#39;</span><span class="p">,</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Filter material&#39;</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">STRING</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">thickness</span> <span class="o">=</span> <span class="n">autosaved</span><span class="p">(</span>
+        <span class="n">pvproperty</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thickness&#39;</span><span class="p">,</span>
+            <span class="n">record</span><span class="o">=</span><span class="s1">&#39;ao&#39;</span><span class="p">,</span>
+            <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">900000.0</span><span class="p">,</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Filter thickness&#39;</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;um&#39;</span><span class="p">,</span>
+            <span class="n">precision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">closest_energy</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ClosestEnergy_RBV&#39;</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">closest_index</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ClosestIndex_RBV&#39;</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">transmission</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Transmission_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">upper_ctrl_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">lower_ctrl_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">transmission_3omega</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Transmission3Omega_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">upper_alarm_limit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">lower_alarm_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># What does it mean to be inactive but stuck?</span>
+    <span class="c1"># stuck,     inactive -&gt; ignore entirely</span>
+    <span class="c1"># not stuck, inactive -&gt; ignore entirely</span>
+    <span class="c1"># stuck,       active -&gt; stuck, include in transmission</span>
+    <span class="c1"># not stuck,   active -&gt; use in calculations</span>
+    <span class="n">active</span> <span class="o">=</span> <span class="n">autosaved</span><span class="p">(</span>
+        <span class="n">pvproperty</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Active&#39;</span><span class="p">,</span>
+            <span class="n">record</span><span class="o">=</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+            <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Filter should be used in calculations&#39;</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># TODO: intention is to say it&#39;s stuck in/out/etc depending on the state</span>
+    <span class="c1"># better name would be &quot;StuckAtState&quot;</span>
+    <span class="c1"># NOTE: this is a PV API change for AT2L0, but it&#39;s not currently necessary</span>
+    <span class="c1"># as of the time of writing, fortunately.</span>
+    <span class="n">is_stuck</span> <span class="o">=</span> <span class="n">autosaved</span><span class="p">(</span>
+        <span class="n">pvproperty</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Not stuck&#39;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;IsStuck&#39;</span><span class="p">,</span>
+            <span class="n">record</span><span class="o">=</span><span class="s1">&#39;mbbo&#39;</span><span class="p">,</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Stuck at indicated state&#39;</span><span class="p">,</span>
+            <span class="n">enum_strings</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Not stuck&#39;</span><span class="p">,</span> <span class="s1">&#39;Out&#39;</span><span class="p">,</span> <span class="s1">&#39;In_01&#39;</span><span class="p">,</span> <span class="s1">&#39;In_02&#39;</span><span class="p">,</span> <span class="s1">&#39;In_03&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;In_04&#39;</span><span class="p">,</span> <span class="s1">&#39;In_05&#39;</span><span class="p">,</span> <span class="s1">&#39;In_06&#39;</span><span class="p">,</span> <span class="s1">&#39;In_07&#39;</span><span class="p">,</span> <span class="s1">&#39;In_08&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;In_09&#39;</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">ENUM</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_stuck_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;If marked as stuck, get the stuck State.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">State</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_stuck</span><span class="o">.</span><span class="n">enum_strings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_stuck</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_photon_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_ev</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the current photon energy to determine transmission.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        energy_ev : float</span>
+<span class="sd">            The photon energy [eV].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span> <span class="o">=</span> <span class="n">energy_ev</span>
+        <span class="n">closest_energy</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">find_closest_energy</span><span class="p">(</span>
+            <span class="n">energy_ev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">closest_index</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">closest_energy</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">closest_energy</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transmission</span><span class="p">(</span><span class="n">energy_ev</span><span class="p">))</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_3omega</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_transmission</span><span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="n">energy_ev</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_transmission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_energy_ev</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the transmission for the given photon energy based on the material</span>
+<span class="sd">        and thickness configured.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        energy_ev : float</span>
+<span class="sd">            The photon energy [eV].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transmission : float</span>
+<span class="sd">            Normalized transmission value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_transmission</span><span class="p">(</span>
+            <span class="n">photon_energy</span><span class="o">=</span><span class="n">photon_energy_ev</span><span class="p">,</span>
+            <span class="n">table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">,</span>
+            <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>  <span class="c1"># um -&gt; meters</span>
+        <span class="p">)</span>
+
+    <span class="nd">@material</span><span class="o">.</span><span class="n">putter</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">material</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the material - load the table and update transmission values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">formula</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_photon_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span><span class="p">)</span>
+
+    <span class="nd">@thickness</span><span class="o">.</span><span class="n">putter</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">thickness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the thickness</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transmission</span><span class="p">(</span><span class="n">energy</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="InOutFilterGroup"><a class="viewcode-back" href="../../ioc/solid_attenuator.filters.InOutFilterGroup.html#solid_attenuator.filters.InOutFilterGroup">[docs]</a><span class="k">class</span> <span class="nc">InOutFilterGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PVGroup for a single in-out filter blade.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">        PV prefix.</span>
+
+<span class="sd">    index : int</span>
+<span class="sd">        Index of the filter in the system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_inserted_filter_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
+        <span class="o">...</span></div>
+
+
+<span class="k">class</span> <span class="nc">EightFilterGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PVGroup for a single blade with 8 spots for filters.</span>
+
+<span class="sd">    This inherits and overrides methods from :class:`FilterGroup`.  If a filter</span>
+<span class="sd">    is selected, values such as transmission and material will reflect those of</span>
+<span class="sd">    the selected filter.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        As this is the standard holder for AT1K4 and similar attenuators, a</span>
+<span class="sd">        dynamic &quot;NFilterGroup&quot; is currently unnecessary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">        PV prefix.</span>
+
+<span class="sd">    index : int</span>
+<span class="sd">        Index of the blade in the system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N_FILTERS</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">idx</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;filter</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s1">02d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_FILTERS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="c1"># TODO: caproto pvproperty doesn&#39;t really work this way, sadly:</span>
+        <span class="c1"># self.material.read_only = True</span>
+        <span class="c1"># self.thickness.read_only = True</span>
+
+    <span class="n">filter01</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:01:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">filter02</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:02:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">filter03</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:03:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">filter04</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:04:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">filter05</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:05:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">filter06</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:06:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">filter07</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:07:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">filter08</span> <span class="o">=</span> <span class="n">SubGroup</span><span class="p">(</span><span class="n">FilterGroup</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;FILTER:08:&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="n">inserted_filter_index</span> <span class="o">=</span> <span class="n">pvproperty</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;InsertedFilter_RBV&#39;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">):</span>
+        <span class="c1"># Stub load_data, as `self.table` is not used here, instead relying</span>
+        <span class="c1"># on the inserted filter&#39;s information.</span>
+        <span class="o">...</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inserted_filter_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The current filter state, according to inserted_filter_index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_stuck</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;Not stuck&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stuck_state</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">State</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inserted_filter_index</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inserted_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FilterGroup</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;The currently inserted filter.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inserted_filter_state</span><span class="o">.</span><span class="n">filter_index</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_transmission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_energy_ev</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the transmission for the given photon energy based on the material</span>
+<span class="sd">        and thickness configured.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        energy_ev : float</span>
+<span class="sd">            The photon energy [eV].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transmission : float</span>
+<span class="sd">            Normalized transmission value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inserted_filter</span>
+        <span class="k">if</span> <span class="n">flt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="n">flt</span><span class="o">.</span><span class="n">get_transmission</span><span class="p">(</span><span class="n">photon_energy_ev</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_inserted_filter_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">inserted_filter_index</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proxy the inserted filter&#39;s information to transmission, etc.&quot;&quot;&quot;</span>
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inserted_filter</span>
+
+        <span class="k">if</span> <span class="n">flt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">transmission</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">transmission_3omega</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">closest_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">closest_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">thickness</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">material</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transmission</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">transmission_3omega</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">transmission_3omega</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">closest_index</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">closest_index</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">closest_energy</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">closest_energy</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">thickness</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">material</span> <span class="o">=</span> <span class="n">flt</span><span class="o">.</span><span class="n">material</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">transmission</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_3omega</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">transmission_3omega</span><span class="p">,</span>
+                                             <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">closest_index</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">closest_index</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">closest_energy</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">closest_energy</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">thickness</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">thickness</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">material</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">material</span><span class="p">,</span> <span class="n">verify_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_photon_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_ev</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the current photon energy to determine transmission.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        energy_ev : float</span>
+<span class="sd">            The photon energy [eV].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_photon_energy</span> <span class="o">=</span> <span class="n">energy_ev</span>
+        <span class="k">for</span> <span class="n">flt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">await</span> <span class="n">flt</span><span class="o">.</span><span class="n">set_photon_energy</span><span class="p">(</span><span class="n">energy_ev</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">FilterGroup</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;A dictionary of all filters that are in active, working order.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">idx</span><span class="p">:</span> <span class="n">filt</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">filt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">filt</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span>
+        <span class="p">}</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, SLAC National Accelerator Laboratory.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

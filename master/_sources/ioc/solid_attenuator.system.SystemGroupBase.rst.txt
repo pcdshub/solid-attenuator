@@ -1,0 +1,330 @@
+﻿solid\_attenuator.system.SystemGroupBase
+========================================
+
+
+.. currentmodule:: solid_attenuator.system
+
+.. autoclass:: SystemGroupBase
+
+    .. if not using autodoc, add this here: automethod:: __init__
+
+    
+
+    
+
+    
+    
+    .. list-table:: SystemGroupBase pvproperties
+        :header-rows: 1
+        :widths: auto
+
+        *  - Attribute
+           - Suffix
+           - Docs
+           - Type
+           - Notes
+           - Alarm Group
+    
+        *  - active_config
+           - ``ActiveConfiguration_RBV``
+           - Active configuration array
+           - int 
+           - 
+                 **Read-only**
+                 **Startup**
+           - 
+    
+        *  - active_config_bitmask
+           - ``ActiveConfigurationBitmask_RBV``
+           - Active configuration represented as an integer
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - apply_config
+           - ``ApplyConfiguration``
+           - Apply the calculated configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Startup**
+                 **Put**
+           - 
+    
+        *  - best_config
+           - ``BestConfiguration_RBV``
+           - Best configuration as an array (1 if inserted)
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - best_config_bitmask
+           - ``BestConfigurationBitmask_RBV``
+           - Best configuration as an integer
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - best_config_error
+           - ``BestConfigError_RBV``
+           - Calculated transmission error
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 **Read-only**
+           - 
+    
+        *  - calc_mode
+           - ``CalcMode``
+           - Mode for selecting floor or ceiling transmission estimation
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+           - 
+    
+        *  - calculated_transmission
+           - ``T_CALC``
+           - Calculated transmission (all blades)
+           - float (:class:`ao <caproto.server.records.AoFields>`)
+           - 
+                 **Read-only**
+           - 
+    
+        *  - calculated_transmission_3omega
+           - ``T_3OMEGA``
+           - Calculated 3omega transmission (all blades)
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - cancel_apply
+           - ``Cancel``
+           - Stop trying to apply the configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+           - 
+    
+        *  - desired_transmission
+           - ``DesiredTransmission``
+           - Desired transmission value
+           - float 
+           - 
+           - 
+    
+        *  - energy_actual
+           - ``ActualPhotonEnergy_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+                 **Startup**
+           - 
+    
+        *  - energy_custom
+           - ``CustomPhotonEnergy``
+           - 
+           - float 
+           - 
+           - 
+    
+        *  - energy_source
+           - ``EnergySource``
+           - Choose the source of photon energy
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+           - 
+    
+        *  - filter_moving
+           - ``FiltersMoving_RBV``
+           - Filter motion status as an array (1 if moving)
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - filter_moving_bitmask
+           - ``FiltersMovingBitmask_RBV``
+           - Filter motion status as an integer
+           - int 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - last_energy
+           - ``LastPhotonEnergy_RBV``
+           - Energy that was used for the calculation.
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - last_mode
+           - ``LastCalcMode_RBV``
+           - Last calculation mode
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+           - 
+    
+        *  - last_transmission
+           - ``LastTransmission_RBV``
+           - Last desired transmission value
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - mirror_in
+           - ``MIRROR_IN``
+           - The inspection mirror is in
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+           - 
+    
+        *  - moving
+           - ``Moving_RBV``
+           - Moving to a new configuration.
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Read-only**
+           - 
+    
+        *  - run
+           - ``Run``
+           - Run calculation
+           - ENUM (:class:`bo <caproto.server.records.BoFields>`)
+           - 
+                 **Put**
+           - 
+    
+        *  - transmission_3omega_actual
+           - ``Actual3OmegaTransmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+        *  - transmission_actual
+           - ``ActualTransmission_RBV``
+           - 
+           - float 
+           - 
+                 **Read-only**
+           - 
+    
+    
+
+    
+    
+
+    
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+       ~SystemGroupBase.calculate_stuck_transmission
+       ~SystemGroupBase.calculate_transmission
+       ~SystemGroupBase.calculate_transmission_3omega
+       ~SystemGroupBase.get_filters
+       ~SystemGroupBase.group_read
+       ~SystemGroupBase.group_write
+       ~SystemGroupBase.motor_has_moved
+       ~SystemGroupBase.move_blade_step
+       ~SystemGroupBase.move_blades
+    
+    
+
+    
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+    
+       ~SystemGroupBase.active_filters
+       ~SystemGroupBase.all_filter_materials
+       ~SystemGroupBase.default_values
+       ~SystemGroupBase.filters
+       ~SystemGroupBase.first_filter
+       ~SystemGroupBase.stuck_filters
+       ~SystemGroupBase.type_map
+       ~SystemGroupBase.type_map_read_only
+    
+
+    
+    .. rubric:: pvproperty methods
+    .. method:: active_config.startup(self, instance, async_lib)
+        
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: active_config.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 259
+        :lines: 259-283
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    
+    .. method:: apply_config.startup(self, instance, async_lib)
+        
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: apply_config.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 323
+        :lines: 323-340
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    
+    .. method:: energy_actual.startup(self, instance, async_lib)
+        
+    Update beam energy and calculated values.
+    
+
+    
+    .. raw:: html
+
+        <details>
+        <summary>Source code: energy_actual.startup</summary>
+
+    
+    .. literalinclude:: /../../solid_attenuator/system.py
+        :language: python
+        :linenos:
+        :dedent: 0
+        :lineno-start: 285
+        :lines: 285-311
+
+    .. raw:: html
+
+        </details>
+        <br/>
+
+    

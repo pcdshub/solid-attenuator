@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>solid_attenuator.filters.InOutFilterGroup &mdash; solid-attenuator  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="solid_attenuator.system" href="solid_attenuator.system.html" />
+    <link rel="prev" title="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup" href="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> solid-attenuator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../algorithm.html">Filter Selection Information</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#at2l0-ioc-api">AT2L0 IOC API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.IOCBase.html">solid_attenuator.ioc_lfe_at2l0_calc.at2l0.IOCBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solid_attenuator.system.SystemGroupBase.html">solid_attenuator.system.SystemGroupBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.html">solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">solid_attenuator.filters.InOutFilterGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#full-api">Full API</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pcdshub/solid-attenuator">Github Repository</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">solid-attenuator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">API</a> &raquo;</li>
+        
+      <li>solid_attenuator.filters.InOutFilterGroup</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/ioc/solid_attenuator.filters.InOutFilterGroup.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="solid-attenuator-filters-inoutfiltergroup">
+<h1>solid_attenuator.filters.InOutFilterGroup<a class="headerlink" href="#solid-attenuator-filters-inoutfiltergroup" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="solid_attenuator.filters.InOutFilterGroup">
+<em class="property">class </em><code class="sig-prename descclassname">solid_attenuator.filters.</code><code class="sig-name descname">InOutFilterGroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prefix</span></em>, <em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/solid_attenuator/filters.html#InOutFilterGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solid_attenuator.filters.InOutFilterGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>PVGroup for a single in-out filter blade.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>prefix</strong><span class="classifier">str</span></dt><dd><p>PV prefix.</p>
+</dd>
+<dt><strong>index</strong><span class="classifier">int</span></dt><dd><p>Index of the filter in the system.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<table class="colwidths-auto docutils align-default" id="id1">
+<caption><span class="caption-text">InOutFilterGroup pvproperties</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Suffix</p></th>
+<th class="head"><p>Docs</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+<th class="head"><p>Alarm Group</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>active</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Active</span></code></p></td>
+<td><p>Filter should be used in calculations</p></td>
+<td><p>ENUM (<a class="reference external" href="https://caproto.github.io/caproto/master/generated/caproto.server.records.BoFields.html#caproto.server.records.BoFields" title="(in caproto v0.6.0+136.g2cf72f2b)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bo</span></code></a>)</p></td>
+<td><p>Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>closest_energy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ClosestEnergy_RBV</span></code></p></td>
+<td></td>
+<td><p>float</p></td>
+<td><p><strong>Read-only</strong>
+Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>closest_index</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ClosestIndex_RBV</span></code></p></td>
+<td></td>
+<td><p>int</p></td>
+<td><p><strong>Read-only</strong>
+Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>is_stuck</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IsStuck</span></code></p></td>
+<td><p>Stuck at indicated state</p></td>
+<td><p>ENUM (<a class="reference external" href="https://caproto.github.io/caproto/master/generated/caproto.server.records.MbboFields.html#caproto.server.records.MbboFields" title="(in caproto v0.6.0+136.g2cf72f2b)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mbbo</span></code></a>)</p></td>
+<td><p>Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>material</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Material</span></code></p></td>
+<td><p>Filter material</p></td>
+<td><p>STRING (<a class="reference external" href="https://caproto.github.io/caproto/master/generated/caproto.server.records.StringinFields.html#caproto.server.records.StringinFields" title="(in caproto v0.6.0+136.g2cf72f2b)"><code class="xref py py-class docutils literal notranslate"><span class="pre">stringin</span></code></a>)</p></td>
+<td><p>Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code>
+<strong>Put</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>thickness</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Thickness</span></code></p></td>
+<td><p>Filter thickness</p></td>
+<td><p>float (<a class="reference external" href="https://caproto.github.io/caproto/master/generated/caproto.server.records.AoFields.html#caproto.server.records.AoFields" title="(in caproto v0.6.0+136.g2cf72f2b)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ao</span></code></a>)</p></td>
+<td><p>Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code>
+<strong>Put</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>transmission</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Transmission_RBV</span></code></p></td>
+<td></td>
+<td><p>float</p></td>
+<td><p><strong>Read-only</strong>
+Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>transmission_3omega</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Transmission3Omega_RBV</span></code></p></td>
+<td></td>
+<td><p>float</p></td>
+<td><p><strong>Read-only</strong>
+Inherited from <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterGroup</span></code></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_stuck_state</span></code>()</p></td>
+<td><p>If marked as stuck, get the stuck State.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_transmission</span></code>(photon_energy_ev)</p></td>
+<td><p>Get the transmission for the given photon energy based on the material and thickness configured.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_read</span></code>(instance)</p></td>
+<td><p>Generic read called for channels without <cite>get</cite> defined</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_write</span></code>(instance, value)</p></td>
+<td><p>Generic write called for channels without <cite>put</cite> defined</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code>(formula)</p></td>
+<td><p>Load the HDF5 dataset containing physical constants and photon energy : atomic scattering factor table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_inserted_filter_state</span></code>(state)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_photon_energy</span></code>(energy_ev)</p></td>
+<td><p>Set the current photon energy to determine transmission.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_values</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_map</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_map_read_only</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">pvproperty methods</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="solid_attenuator.system.html" class="btn btn-neutral float-right" title="solid_attenuator.system" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.html" class="btn btn-neutral float-left" title="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, SLAC National Accelerator Laboratory.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
