@@ -605,6 +605,9 @@ class SystemGroupBase(PVGroup):
         array_idx = blade_index - self.parent.first_filter
         state = State(int(raw_state))
 
+        flt = self.parent.filters[blade_index]
+        await flt.set_inserted_filter_state(state)
+
         new_config = list(self.active_config.value)
         new_config[array_idx] = int(state)
         if tuple(new_config) != tuple(self.active_config.value):
@@ -624,6 +627,3 @@ class SystemGroupBase(PVGroup):
             await self.filter_moving_bitmask.write(
                 util.int_array_to_bit_string(moving)
             )
-
-        flt = self.parent.filters[blade_index]
-        await flt.set_inserted_filter_state(state)
