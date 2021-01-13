@@ -34,58 +34,59 @@ class SystemGroup(SystemGroupBase):
                               ) -> calculator.Config:
         # Update all of the filters first, to determine their transmission
         # at this energy
-        for filter in self.filters.values():
-            await filter.set_photon_energy(energy)
+        stuck = self.get_filters(stuck=True, inactive=False, normal=False)
+        blades = self.get_filters(stuck=False, inactive=False, normal=True)
 
-        # TODO: handling for stuck filters? active is below...
+        for filter in stuck + blades:
+            await filter.set_photon_energy(energy)
 
         # Using the above-calculated transmissions, find the best configuration
         # Get only the *active* filter transmissions:
         blade_transmissions = [
-            [flt.transmission.value
-             for flt in blade.active_filters.values()]
-            for blade in self.filters.values()
+            [flt.transmission.value for flt in blade.active_filters.values()]
+            for blade in blades
         ]
 
         # Map per-blade array index -> filter index
         # Having removed non-active filters, these may not match 1-1 any more.
         blade_transmission_idx_to_filter_idx = [
             dict(enumerate(blade.active_filters))
-            for blade in self.filters.values()
+            for blade in blades
         ]
+
+        # Account for stuck filters when calculating desired transmission:
+        stuck_transmission = self.calculate_stuck_transmission()
+        adjusted_tdes = desired_transmission / stuck_transmission
 
         config = calculator.get_ladder_config(
             blade_transmissions=blade_transmissions,
-            t_des=desired_transmission,
+            t_des=adjusted_tdes,
             mode=calc_mode,
         )
 
-        # Use the transmission array indices to get back a State:
-        best_config = [
-            State.from_filter_index(idx_map.get(transmission_idx))
-            for transmission_idx, idx_map
-            in zip(config.filter_states, blade_transmission_idx_to_filter_idx)
+        # Map each blade to the appropriate state:
+        # 1. transmission_idx is the index chosen from blade_transmissions
+        # 2. idx_map maps from blade_transmissions -> filter index
+        # 3. State.from_filter_index() gives a State
+        blade_to_state = {
+            blade: State.from_filter_index(idx_map.get(transmission_idx))
+            for blade, transmission_idx, idx_map
+            in zip(blades, config.filter_states,
+                   blade_transmission_idx_to_filter_idx)
+        }
+        blade_to_state.update(
+            {blade: blade.get_stuck_state() for blade in stuck}
+        )
+
+        # Finally, all blades need to go in their defined order - that is given
+        # by `self.filters`:
+        config.filter_states = [
+            blade_to_state[blade]
+            for blade in self.filters.values()
         ]
 
-        await self.best_config.write(best_config)
-        await self.best_config_bitmask.write(
-            util.int_array_to_bit_string(
-                [state.is_inserted for state in best_config]
-            )
-        )
-        await self.best_config_error.write(
-            config.transmission - self.desired_transmission.value
-        )
-        self.log.info(
-            'Energy %s eV with desired transmission %.2g estimated %.2g '
-            '(delta %.3g) mode: %s configuration: %s',
-            energy,
-            desired_transmission,
-            config.transmission,
-            self.best_config_error.value,
-            calc_mode,
-            config.filter_states,
-        )
+        # Include the stuck transmission in the result:
+        config.transmission *= stuck_transmission
         return config
 
 

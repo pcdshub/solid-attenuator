@@ -59,9 +59,8 @@ class SystemGroup(SystemGroupBase):
         for filter in stuck + filters:
             await filter.set_photon_energy(energy)
 
-        stuck_transmission = self.calculate_stuck_transmission()
-
         # Account for stuck filters when calculating desired transmission:
+        stuck_transmission = self.calculate_stuck_transmission()
         adjusted_tdes = desired_transmission / stuck_transmission
 
         # Using the above-calculated transmissions, find the best configuration

@@ -324,18 +324,29 @@ def get_ladder_configs(
             transmission=config_transmission[idx],
         )
 
-    # Find the two indices of filter configuration which minimizes the
-    # differences between the desired and closest achievable transmissions.
-    idx1, idx2 = np.argsort(
-        np.abs(config_transmission - t_des)
-    )[:2]
+    # Find the indices of filter configuration which minimize the differences
+    # between the desired and closest achievable transmissions.
+    closest_indices = np.argsort(np.abs(config_transmission - t_des))
 
-    config1 = to_config(idx1)
-    config2 = to_config(idx2)
+    # Determine the closest transmissions that meet the floor/ceiling
+    # criteria.
+    closest_transmissions = config_transmission[closest_indices]
+    closest_low, = np.where(closest_transmissions <= t_des)
+    closest_high, = np.where(closest_transmissions >= t_des)
 
-    if config1.transmission < config2.transmission:
-        return [config1, config2]
-    return [config2, config1]
+    # But in some cases, there may not be a floor or ceiling configuration
+    # that fits.
+    if not len(closest_low) and len(closest_high):
+        # There's nothing lower - give back the closest
+        closest_low = closest_high
+    if not len(closest_high) and len(closest_low):
+        # There's nothing higher - give the closest
+        closest_high = closest_low
+
+    return [
+        to_config(closest_indices[closest_low[0]]),
+        to_config(closest_indices[closest_high[0]]),
+    ]
 
 
 def get_ladder_config(
