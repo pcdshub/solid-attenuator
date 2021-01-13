@@ -99,7 +99,8 @@ pvproperty_with_rbv = get_pv_pair_wrapper(setpoint_suffix='',
 
 
 class FakeTwinCATStateConfigOne(PVGroup):
-    state_name = pvproperty(dtype=str, name='NAME_RBV')
+    state_name = pvproperty(value='', dtype=str, name='NAME_RBV',
+                            max_length=40)
     setpoint = pvproperty_with_rbv(dtype=float, name='SETPOINT')
     delta = pvproperty_with_rbv(dtype=float, name='DELTA')
     velo = pvproperty_with_rbv(dtype=float, name='VELO')
@@ -111,16 +112,20 @@ class FakeTwinCATStateConfigOne(PVGroup):
 
 
 class FakeTwinCATStateConfigAll(PVGroup):
+    # Unknown / moving
     state01 = SubGroup(FakeTwinCATStateConfigOne, prefix='01:')
+    # Out
     state02 = SubGroup(FakeTwinCATStateConfigOne, prefix='02:')
+
+    # And the remainder in:
     state03 = SubGroup(FakeTwinCATStateConfigOne, prefix='03:')
     state04 = SubGroup(FakeTwinCATStateConfigOne, prefix='04:')
     state05 = SubGroup(FakeTwinCATStateConfigOne, prefix='05:')
     state06 = SubGroup(FakeTwinCATStateConfigOne, prefix='06:')
-    # state07 = SubGroup(FakeTwinCATStateConfigOne, prefix='07:')
-    # state08 = SubGroup(FakeTwinCATStateConfigOne, prefix='08:')
-    # state09 = SubGroup(FakeTwinCATStateConfigOne, prefix='09:')
-    # state10 = SubGroup(FakeTwinCATStateConfigOne, prefix='10:')
+    state07 = SubGroup(FakeTwinCATStateConfigOne, prefix='07:')
+    state08 = SubGroup(FakeTwinCATStateConfigOne, prefix='08:')
+    state09 = SubGroup(FakeTwinCATStateConfigOne, prefix='09:')
+    state10 = SubGroup(FakeTwinCATStateConfigOne, prefix='10:')
     # state11 = SubGroup(FakeTwinCATStateConfigOne, prefix='11:')
     # state12 = SubGroup(FakeTwinCATStateConfigOne, prefix='12:')
     # state13 = SubGroup(FakeTwinCATStateConfigOne, prefix='13:')

@@ -2,20 +2,20 @@
 API
 ===
 
----------
-PV Groups
----------
+-------------
+AT2L0 IOC API
+-------------
 
-
-.. currentmodule:: solid_attenuator.ioc_lfe_at2l0_calc
+.. currentmodule:: solid_attenuator
 
 
 .. autosummary::
     :toctree: ioc
 
-    satt_app.IOCBase
-    db.system.SystemGroup
-    db.filters.FilterGroup
+    ioc_lfe_at2l0_calc.at2l0.IOCBase
+    system.SystemGroupBase
+    ioc_lfe_at2l0_calc.at2l0.SystemGroup
+    filters.InOutFilterGroup
 
 
 --------
@@ -25,8 +25,8 @@ Full API
 .. autosummary::
     :toctree: ioc
 
-    satt_app
-    db
-    db.system
-    db.filters
-    db.util
+    system
+    filters
+    util
+    ioc_lfe_at2l0_calc
+    ioc_lfe_at2l0_calc.at2l0

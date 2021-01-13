@@ -3,8 +3,8 @@ import sys
 
 from caproto.server import ioc_arg_parser, run
 
-from .db import util
-from .satt_app import create_ioc
+from .. import util
+from .at2l0 import create_ioc
 
 ################################################
 FIRST_FILTER = 2
@@ -38,18 +38,21 @@ ioc_args = {
         N: f'{N:02d}'
         for N in range(FIRST_FILTER, NUM_BLADES + FIRST_FILTER)
     },
-    "eV_pv": eV_name,
-    "pmps_run_pv": pmps_run_name,
-    "pmps_tdes_pv": pmps_tdes_name,
-    "motor_prefix": motor_prefix,
-    "autosave_path": autosave_path,
 }
 
 
 def main():
     ioc_options, run_options = ioc_arg_parser(
         default_prefix=prefix,
-        desc='Solid attenuator IOC')
+        desc='Solid attenuator IOC',
+        macros={
+            'ev_pv': eV_name,
+            'pmps_run_pv': pmps_run_name,
+            'pmps_tdes_pv': pmps_tdes_name,
+            'motor_prefix': motor_prefix,
+            'autosave_path': autosave_path,
+        }
+    )
 
     ioc = create_ioc(**ioc_args, **ioc_options)
     util.config_logging(ioc.log, level=log_level)

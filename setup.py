@@ -53,15 +53,19 @@ setup(
     url='https://github.com/pcdshub/solid-attenuator',
     entry_points={
         'console_scripts': [
+            # AT2L0 and its simulator:
             'ioc-lfe-at2l0-calc=solid_attenuator.ioc_lfe_at2l0_calc.__main__:main',  # noqa
             'ioc-sim-at2l0=solid_attenuator.ioc_sim_at2l0.__main__:main',
+            # AT1K4 and sxr solid attenuators:
+            'ioc-kfe-at1k4-calc=solid_attenuator.ioc_kfe_at1k4_calc.__main__:main',  # noqa
+            'ioc-sim-sxr-satt=solid_attenuator.ioc_sim_sxr.__main__:main',
             ],
         },
     include_package_data=True,
     package_data={
         'solid_attenuator': [
             # When adding files here, remember to update MANIFEST.in as well!
-            'ioc_lfe_at2l0_calc/CXRO/*.nff'
+            'CXRO/*.nff'
             'ioc_lfe_at2l0_calc/iocBoot/*.cmd',
             'ioc_sim_at2l0/iocBoot/*.cmd',
             ]

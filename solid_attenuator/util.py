@@ -1,3 +1,4 @@
+import enum
 import functools
 import sys
 import typing
@@ -5,8 +6,74 @@ import typing
 import caproto
 import caproto._log as caproto_log
 import caproto.threading
+import numpy as np
 
 _default_thread_context = None
+
+
+class MisconfigurationError(Exception):
+    """Misconfiguration blocks the calculation from continuing."""
+    ...
+
+
+class State(enum.IntEnum):
+    """
+    State which matches that of the motion IOC.
+    """
+    # 'Moving' is also: "unknown" or "between states"
+    Moving = 0
+
+    # 'Out' is fixed at 1:
+    Out = 1
+
+    # And any "in" states follow:
+    In_01 = 2
+    In_02 = 3
+    In_03 = 4
+    In_04 = 5
+    In_05 = 6
+    In_06 = 7
+    In_07 = 8
+    In_08 = 9
+    In_09 = 10
+
+    @property
+    def filter_index(self) -> typing.Optional[int]:
+        """The one-based filter index, if inserted."""
+        if not self.is_inserted:
+            return None
+        return self.value - 1
+
+    @property
+    def is_inserted(self) -> bool:
+        """Is a filter inserted?"""
+        return self not in {State.Moving, State.Out}
+
+    @property
+    def is_moving(self) -> bool:
+        """Is the blade moving?"""
+        return self == State.Moving
+
+    @classmethod
+    def from_filter_index(self, idx: typing.Optional[int]) -> 'State':
+        """Get a State from a filter index (where filter 1 is 1)."""
+        return {
+            None: State.Out,
+            np.nan: State.Out,
+            0: State.Out,
+            1: State.In_01,
+            2: State.In_02,
+            3: State.In_03,
+            4: State.In_04,
+            5: State.In_05,
+            6: State.In_06,
+            7: State.In_07,
+            8: State.In_08,
+            9: State.In_09,
+        }[idx]
+
+    def __repr__(self):
+        return self.name
 
 
 def get_default_thread_context():
@@ -225,3 +292,59 @@ def block_on_reentry(token=None):
         return wrapped
 
     return inner
+
+
+def int_array_to_bit_string(int_array: list) -> int:
+    """
+    Integer array such as [1, 0, 0, 0] to integer (8).
+
+    Returns 0 if non-binary values found in the list.
+
+    Parameters
+    ----------
+    int_array : list of int
+        Integer array.
+
+    Returns
+    -------
+    value : int
+    """
+    try:
+        return int(''.join(str(int(c)) for c in int_array), 2)
+    except ValueError:
+        return 0
+
+
+async def alarm_if(
+        data: caproto.ChannelData,
+        condition: bool,
+        status: caproto.AlarmStatus,
+        severity: caproto.AlarmSeverity = caproto.AlarmSeverity.MAJOR_ALARM
+        ):
+    """
+    Set an alarm if the condition is met - otherwise NO_ALARM.
+
+    Parameters
+    ----------
+    data : caproto.ChannelData
+        The data instance to set the alarm.
+
+    condition : bool
+        Condition to choose alarm status and severity.
+
+    status : caproto.AlarmStatus
+        Status to set if condition is met.
+
+    severity : caproto.AlarmSeverity
+        Severity to set if condition is met.  Defaults to MAJOR_STATUS.
+    """
+    if condition:
+        # Raise the alarm - use passed-in alarm settings.
+        status = caproto.AlarmStatus(status)
+        severity = caproto.AlarmSeverity(severity)
+    else:
+        status = caproto.AlarmStatus.NO_ALARM
+        severity = caproto.AlarmSeverity.NO_ALARM
+
+    if data.alarm.status != status or data.alarm.severity != severity:
+        await data.alarm.write(status=status, severity=severity)

@@ -28,12 +28,12 @@ env:
     # CONDA_EXTRAS) but for pip
     - PIP_EXTRAS=""
 
-# jobs:
-#   allow_failures:
-#     # This makes the PIP based Python 3.6 optional for passing.
-#     # Remove this block if passing tests with PIP is mandatory for your
-#     # package
-#     - name: "Python 3.6 - PIP"
+jobs:
+  allow_failures:
+    # This makes the PIP based Python 3.6 optional for passing.  Tests use
+    # dataclasses, making 3.6 not an option.
+    - name: "Python 3.6 - PIP"
+    - name: "Python 3.6"
 
 import:
   # This import enables a set of standard python jobs including:
