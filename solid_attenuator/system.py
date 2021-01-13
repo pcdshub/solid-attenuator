@@ -366,57 +366,66 @@ class SystemGroupBase(PVGroup):
 
         await self.moving.write(0)
 
+    async def _run_calculation_outer(self):
+        """
+        Setup calculation based on current settings, call run_calculation,
+        and then update results based on that.
+
+        Any exception raised here will be caught in the 'run' put handler.
+        """
+        energy = {
+            'Actual': self.energy_actual.value,
+            'Custom': self.energy_custom.value,
+        }[self.energy_source.value]
+
+        desired_transmission = self.desired_transmission.value
+        calc_mode = self.calc_mode.value
+        config = await self.run_calculation(
+            energy,
+            desired_transmission=self.desired_transmission.value,
+            calc_mode=calc_mode,
+        )
+
+        await self.last_energy.write(energy)
+        await self.last_mode.write(calc_mode)
+        await self.last_transmission.write(desired_transmission)
+        await self.best_config.write(
+            [int(state) for state in config.filter_states]
+        )
+        await self.best_config_bitmask.write(
+            util.int_array_to_bit_string(
+                [state.is_inserted for state in config.filter_states]
+            )
+        )
+        await self.best_config_error.write(
+            config.transmission - desired_transmission
+        )
+
+        await self.calculated_transmission.write(
+            config.transmission
+        )
+        # TODO
+        # await self.calculated_transmission_3omega.write(
+        #     self.calculate_transmission_3omega()
+        # )
+
+        self.log.info(
+            'Energy %s eV with desired transmission %.2g estimated %.2g '
+            '(delta %.3g) configuration: %s',
+            energy,
+            desired_transmission,
+            config.transmission,
+            self.best_config_error.value,
+            self.best_config.value,
+        )
+
     @run.putter
     async def run(self, instance, value):
         if value == 'False':
             return
 
         try:
-            energy = {
-                'Actual': self.energy_actual.value,
-                'Custom': self.energy_custom.value,
-            }[self.energy_source.value]
-
-            desired_transmission = self.desired_transmission.value
-            calc_mode = self.calc_mode.value
-            config = await self.run_calculation(
-                energy,
-                desired_transmission=self.desired_transmission.value,
-                calc_mode=calc_mode,
-            )
-
-            await self.last_energy.write(energy)
-            await self.last_mode.write(calc_mode)
-            await self.last_transmission.write(desired_transmission)
-            await self.best_config.write(
-                [int(state) for state in config.filter_states]
-            )
-            await self.best_config_bitmask.write(
-                util.int_array_to_bit_string(
-                    [state.is_inserted for state in config.filter_states]
-                )
-            )
-            await self.best_config_error.write(
-                config.transmission - desired_transmission
-            )
-
-            await self.calculated_transmission.write(
-                config.transmission
-            )
-            # TODO
-            # await self.calculated_transmission_3omega.write(
-            #     self.calculate_transmission_3omega()
-            # )
-
-            self.log.info(
-                'Energy %s eV with desired transmission %.2g estimated %.2g '
-                '(delta %.3g) configuration: %s',
-                energy,
-                desired_transmission,
-                config.transmission,
-                self.best_config_error.value,
-                self.best_config.value,
-            )
+            await self._run_calculation_outer()
         except util.MisconfigurationError as ex:
             self.log.warning('Misconfiguration blocks calculation: %s', ex)
             await self.desired_transmission.alarm.write(
