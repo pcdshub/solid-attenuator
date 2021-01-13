@@ -36,8 +36,8 @@ class SystemGroupBase(PVGroup):
         value=0.1,
         name='T_CALC',
         record='ao',
-        upper_alarm_limit=1.0,
-        lower_alarm_limit=0.0,
+        lower_ctrl_limit=0.0,
+        upper_ctrl_limit=1.0,
         read_only=True,
         doc='Calculated transmission (all blades)',
         precision=3,
@@ -46,8 +46,8 @@ class SystemGroupBase(PVGroup):
     calculated_transmission_3omega = pvproperty(
         name='T_3OMEGA',
         value=0.5,
-        upper_alarm_limit=1.0,
-        lower_alarm_limit=0.0,
+        lower_ctrl_limit=0.0,
+        upper_ctrl_limit=1.0,
         read_only=True,
         doc='Calculated 3omega transmission (all blades)',
         precision=3,
@@ -57,8 +57,8 @@ class SystemGroupBase(PVGroup):
         value=0.1,
         name='BestConfigError_RBV',
         record='ao',
-        upper_alarm_limit=1.0,
-        lower_alarm_limit=-1.0,
+        lower_ctrl_limit=-1.0,
+        upper_ctrl_limit=1.0,
         read_only=True,
         doc='Calculated transmission error',
         precision=3,
@@ -379,10 +379,43 @@ class SystemGroupBase(PVGroup):
 
             desired_transmission = self.desired_transmission.value
             calc_mode = self.calc_mode.value
-            await self.run_calculation(
+            config = await self.run_calculation(
                 energy,
                 desired_transmission=self.desired_transmission.value,
                 calc_mode=calc_mode,
+            )
+
+            await self.last_energy.write(energy)
+            await self.last_mode.write(calc_mode)
+            await self.last_transmission.write(desired_transmission)
+            await self.best_config.write(
+                [int(state) for state in config.filter_states]
+            )
+            await self.best_config_bitmask.write(
+                util.int_array_to_bit_string(
+                    [state.is_inserted for state in config.filter_states]
+                )
+            )
+            await self.best_config_error.write(
+                config.transmission - desired_transmission
+            )
+
+            await self.calculated_transmission.write(
+                config.transmission
+            )
+            # TODO
+            # await self.calculated_transmission_3omega.write(
+            #     self.calculate_transmission_3omega()
+            # )
+
+            self.log.info(
+                'Energy %s eV with desired transmission %.2g estimated %.2g '
+                '(delta %.3g) configuration: %s',
+                energy,
+                desired_transmission,
+                config.transmission,
+                self.best_config_error.value,
+                self.best_config.value,
             )
         except util.MisconfigurationError as ex:
             self.log.warning('Misconfiguration blocks calculation: %s', ex)
@@ -394,10 +427,6 @@ class SystemGroupBase(PVGroup):
             await self.desired_transmission.alarm.write(
                 status=AlarmStatus.CALC, severity=AlarmSeverity.MAJOR_ALARM,
             )
-        else:
-            await self.last_energy.write(energy)
-            await self.last_mode.write(calc_mode)
-            await self.last_transmission.write(desired_transmission)
 
     # RUN.PROC -> run = 1
     util.process_writes_value(run, value=1)
@@ -409,7 +438,7 @@ class SystemGroupBase(PVGroup):
 
         transm = np.zeros_like(config) * np.nan
         transm3 = np.zeros_like(config) * np.nan
-        for idx, filt in self.working_filters.items():
+        for idx, filt in self.active_filters.items():
             zero_index = idx - offset
             if State(config[zero_index]).is_inserted:
                 transm[zero_index] = filt.transmission.value
@@ -519,22 +548,32 @@ class SystemGroupBase(PVGroup):
         return self.parent.filters
 
     @property
-    def working_filters(self):
-        """
-        A dictionary of all filters that are in working order.
+    def stuck_filters(self) -> Dict[int, PVGroup]:
+        """A dictionary of all filters that are stuck in a particular state."""
+        return {
+            idx: filt for idx, filt in self.active_filters.items()
+            if filt.is_stuck.value != 'Not stuck'
+        }
 
-        That is to say, filters that are marked as active and not stuck.
-        """
+    @property
+    def active_filters(self) -> Dict[int, PVGroup]:
+        """A dictionary of all filters that are marked as inactive."""
         return {
             idx: filt for idx, filt in self.filters.items()
-            if filt.is_stuck.value == 'Not stuck' and
-            filt.active.value == "True"
+            if filt.active.value == "True"
         }
+
+    def calculate_stuck_transmission(self) -> float:
+        """The effective normalized transmission of all stuck filters."""
+        transmission = 1.0
+        for filt in self.get_filters(stuck=True, inactive=False, normal=False):
+            transmission *= filt.transmission.value
+        return transmission
 
     @property
     def all_filter_materials(self) -> List[str]:
         """All filter materials in a list."""
-        return [flt.material.value for flt in self.filters.values()]
+        return [flt.material.value for flt in self.active_filters.values()]
 
     async def motor_has_moved(self, blade_index, raw_state):
         """

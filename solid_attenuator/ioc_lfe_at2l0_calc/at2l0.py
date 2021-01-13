@@ -51,41 +51,44 @@ class SystemGroup(SystemGroupBase):
 
         # Update all of the filters first, to determine their transmission
         # at this energy
-        for filter in self.filters.values():
+        stuck = self.get_filters(stuck=True, inactive=False, normal=False)
+        filters = self.get_filters(stuck=False, inactive=False, normal=True)
+
+        materials = list(flt.material.value for flt in filters)
+        transmissions = list(flt.transmission.value for flt in filters)
+        for filter in stuck + filters:
             await filter.set_photon_energy(energy)
 
-        await self.calculated_transmission.write(
-            self.calculate_transmission()
-        )
-        await self.calculated_transmission_3omega.write(
-            self.calculate_transmission_3omega()
-        )
+        stuck_transmission = self.calculate_stuck_transmission()
+
+        # Account for stuck filters when calculating desired transmission:
+        adjusted_tdes = desired_transmission / stuck_transmission
 
         # Using the above-calculated transmissions, find the best configuration
         config = calculator.get_best_config_with_material_priority(
-            materials=self.all_filter_materials,
-            transmissions=list(self.all_transmissions),
+            materials=materials,
+            transmissions=transmissions,
             material_order=self.material_order,
-            t_des=desired_transmission,
+            t_des=adjusted_tdes,
             mode=calc_mode,
         )
-        await self.best_config.write(
-            [State.from_filter_index(idx) for idx in config.filter_states]
+
+        filter_to_state = {
+            flt: State.from_filter_index(idx)
+            for flt, idx in zip(filters, config.filter_states)
+        }
+        filter_to_state.update(
+            {flt: flt.get_stuck_state() for flt in stuck}
         )
-        await self.best_config_bitmask.write(
-            util.int_array_to_bit_string(config.filter_states))
-        await self.best_config_error.write(
-            config.transmission - self.desired_transmission.value
-        )
-        self.log.info(
-            'Energy %s eV with desired transmission %.2g estimated %.2g '
-            '(delta %.3g) configuration: %s',
-            energy,
-            desired_transmission,
-            config.transmission,
-            self.best_config_error.value,
-            config.filter_states,
-        )
+
+        # Reassemble filter states in order:
+        config.filter_states = [
+            # Inactive filters will be implicitly marked as "Out" here.
+            filter_to_state.get(flt, State.Out)
+            for flt in self.filters.values()
+        ]
+        # Include the stuck transmission in the result:
+        config.transmission *= stuck_transmission
         return config
 
 

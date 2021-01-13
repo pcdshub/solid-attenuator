@@ -107,6 +107,11 @@ class FilterGroup(PVGroup):
         precision=3,
     )
 
+    # What does it mean to be inactive but stuck?
+    # stuck,     inactive -> ignore entirely
+    # not stuck, inactive -> ignore entirely
+    # stuck,       active -> stuck, include in transmission
+    # not stuck,   active -> use in calculations
     active = autosaved(
         pvproperty(
             value='True',
@@ -134,6 +139,10 @@ class FilterGroup(PVGroup):
             dtype=ChannelType.ENUM,
         )
     )
+
+    def get_stuck_state(self) -> State:
+        """If marked as stuck, get the stuck State."""
+        return State(self.is_stuck.enum_strings.index(self.is_stuck.value))
 
     async def set_photon_energy(self, energy_ev):
         """
@@ -273,10 +282,9 @@ class EightFilterGroup(FilterGroup):
     def inserted_filter_state(self) -> State:
         """The current filter state, according to inserted_filter_index."""
         if self.is_stuck.value != 'Not stuck':
-            state_value = self.is_stuck.enum_strings.index(self.is_stuck.value)
-        else:
-            state_value = self.inserted_filter_index.value
-        return State(state_value)
+            return self.get_stuck_state()
+
+        return State(self.inserted_filter_index.value)
 
     @property
     def inserted_filter(self) -> Optional[FilterGroup]:
