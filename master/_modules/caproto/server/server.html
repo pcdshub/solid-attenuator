@@ -1514,7 +1514,7 @@
 
 <span class="k">def</span> <span class="nf">channeldata_from_pvspec</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">pvspec</span><span class="p">):</span>
     <span class="s1">&#39;Create a ChannelData instance based on a PVSpec&#39;</span>
-    <span class="n">full_pvname</span> <span class="o">=</span> <span class="n">expand_macros</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">pvspec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">macros</span><span class="p">)</span>
+    <span class="n">full_pvname</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">expand_macros</span><span class="p">(</span><span class="n">pvspec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">macros</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">pvspec</span><span class="o">.</span><span class="n">value</span>
              <span class="k">if</span> <span class="n">pvspec</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
              <span class="k">else</span> <span class="n">group</span><span class="o">.</span><span class="n">default_values</span><span class="p">[</span><span class="n">pvspec</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
@@ -1777,8 +1777,10 @@
             <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Macro substitution required by this IOC&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default_value</span><span class="p">,</span>
-                                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Macro substitution, optional&quot;</span><span class="p">)</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;--</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default_value</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Optional macro substitution, default: </span><span class="si">{</span><span class="n">default_value</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">split_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
