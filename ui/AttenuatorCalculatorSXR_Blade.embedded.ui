@@ -96,30 +96,30 @@
     </widget>
    </item>
    <item>
-    <widget class="PyDMLabel" name="Active">
-     <property name="font">
-      <font>
-       <weight>50</weight>
-       <bold>false</bold>
-      </font>
+    <widget class="PyDMByteIndicator" name="Inserted">
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>50</height>
+      </size>
      </property>
      <property name="toolTip">
-      <string>Active: should it be included in calculations?</string>
-     </property>
-     <property name="text">
-      <string>(active)</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="showUnits" stdset="0">
-      <bool>false</bool>
+      <string/>
      </property>
      <property name="channel" stdset="0">
       <string>ca://${prefix}:AXIS:${FILTER}:Active</string>
      </property>
-     <property name="displayFormat" stdset="0">
-      <enum>PyDMLabel::String</enum>
+     <property name="orientation" stdset="0">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="showLabels" stdset="0">
+      <bool>false</bool>
+     </property>
+     <property name="circles" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="shift" stdset="0">
+      <number>0</number>
      </property>
     </widget>
    </item>
@@ -214,6 +214,11 @@
    <class>PyDMLabel</class>
    <extends>QLabel</extends>
    <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
   </customwidget>
  </customwidgets>
  <resources/>

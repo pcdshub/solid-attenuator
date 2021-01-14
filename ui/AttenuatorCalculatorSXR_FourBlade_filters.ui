@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>656</width>
-    <height>286</height>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -133,18 +133,66 @@
     </layout>
    </item>
    <item>
-    <widget class="PyDMTemplateRepeater" name="PyDMTemplateRepeater">
+    <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay">
      <property name="toolTip">
       <string/>
      </property>
-     <property name="layoutSpacing" stdset="0">
+     <property name="lineWidth">
       <number>0</number>
      </property>
-     <property name="templateFilename" stdset="0">
+     <property name="macros" stdset="0">
+      <string>{&quot;FILTER&quot;:&quot;01&quot;}</string>
+     </property>
+     <property name="filename" stdset="0">
       <string>AttenuatorCalculatorSXR_Blade.embedded.ui</string>
      </property>
-     <property name="dataSource" stdset="0">
-      <string>AttenuatorCalculatorSXR_FourBlade.filters.json</string>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_2">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="macros" stdset="0">
+      <string>{&quot;FILTER&quot;:&quot;02&quot;}</string>
+     </property>
+     <property name="filename" stdset="0">
+      <string>AttenuatorCalculatorSXR_Blade.embedded.ui</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_3">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="macros" stdset="0">
+      <string>{&quot;FILTER&quot;:&quot;03&quot;}</string>
+     </property>
+     <property name="filename" stdset="0">
+      <string>AttenuatorCalculatorSXR_Blade.embedded.ui</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_4">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="macros" stdset="0">
+      <string>{&quot;FILTER&quot;:&quot;04&quot;}</string>
+     </property>
+     <property name="filename" stdset="0">
+      <string>AttenuatorCalculatorSXR_Blade.embedded.ui</string>
      </property>
     </widget>
    </item>
@@ -152,9 +200,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMTemplateRepeater</class>
+   <class>PyDMEmbeddedDisplay</class>
    <extends>QFrame</extends>
-   <header>pydm.widgets.template_repeater</header>
+   <header>pydm.widgets.embedded_display</header>
   </customwidget>
  </customwidgets>
  <resources/>
