@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>526</width>
-    <height>81</height>
+    <width>816</width>
+    <height>113</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,34 +40,6 @@
     </widget>
    </item>
    <item>
-    <widget class="PyDMByteIndicator" name="Inserted">
-     <property name="maximumSize">
-      <size>
-       <width>100</width>
-       <height>50</height>
-      </size>
-     </property>
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="channel" stdset="0">
-      <string>ca://AT2L0:XTES:MMS:${FILTER}:STATE:GET_RBV</string>
-     </property>
-     <property name="orientation" stdset="0">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="showLabels" stdset="0">
-      <bool>false</bool>
-     </property>
-     <property name="circles" stdset="0">
-      <bool>true</bool>
-     </property>
-     <property name="shift" stdset="0">
-      <number>1</number>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="PyDMLabel" name="Material">
      <property name="font">
       <font>
@@ -88,7 +60,7 @@
       <bool>false</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${prefix}:FILTER:${FILTER}:Material</string>
+      <string>ca://${prefix}:AXIS:${FILTER}:Material</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::String</enum>
@@ -116,10 +88,38 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${prefix}:FILTER:${FILTER}:Thickness</string>
+      <string>ca://${prefix}:AXIS:${FILTER}:Thickness</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Decimal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMByteIndicator" name="Inserted">
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>50</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="channel" stdset="0">
+      <string>ca://${prefix}:AXIS:${FILTER}:Active</string>
+     </property>
+     <property name="orientation" stdset="0">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="showLabels" stdset="0">
+      <bool>false</bool>
+     </property>
+     <property name="circles" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="shift" stdset="0">
+      <number>0</number>
      </property>
     </widget>
    </item>
@@ -144,7 +144,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${prefix}:FILTER:${FILTER}:IsStuck</string>
+      <string>ca://${prefix}:AXIS:${FILTER}:IsStuck</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::String</enum>
@@ -172,7 +172,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${prefix}:FILTER:${FILTER}:Transmission_RBV</string>
+      <string>ca://${prefix}:AXIS:${FILTER}:Transmission_RBV</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Exponential</enum>
@@ -200,7 +200,7 @@
       <bool>true</bool>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${prefix}:FILTER:${FILTER}:Transmission3Omega_RBV</string>
+      <string>ca://${prefix}:AXIS:${FILTER}:Transmission3Omega_RBV</string>
      </property>
      <property name="displayFormat" stdset="0">
       <enum>PyDMLabel::Exponential</enum>
