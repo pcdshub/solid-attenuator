@@ -27,6 +27,9 @@ test:
     imports:
       - solid_attenuator
       - solid_attenuator.ioc_lfe_at2l0_calc
+      - solid_attenuator.ioc_kfe_at1k4_calc
+      - solid_attenuator.ioc_sim_at2l0
+      - solid_attenuator.ioc_sim_sxr
     requires:
       - pytest
 

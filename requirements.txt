@@ -1,4 +1,4 @@
-caproto[standard]>=0.7.0
+caproto[standard]>=0.7.1
 scipy
 periodictable
 psutil
