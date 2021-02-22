@@ -1,4 +1,3 @@
-master/_modules/caproto/server/server.html
 master/_modules/index.html
 master/_modules/solid_attenuator/filters.html
 master/_modules/solid_attenuator/ioc.html
@@ -51,7 +50,7 @@ master/_static/plus.png
 master/_static/pygments.css
 master/_static/searchtools.js
 master/_static/theme_overrides.css
-master/_static/underscore-1.3.1.js
+master/_static/underscore-1.12.0.js
 master/_static/underscore.js
 master/algorithm.html
 master/api.html

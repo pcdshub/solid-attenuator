@@ -175,7 +175,7 @@
 <h1>solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup<a class="headerlink" href="#solid-attenuator-ioc-lfe-at2l0-calc-at2l0-systemgroup" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup">
-<em class="property">class </em><code class="sig-prename descclassname">solid_attenuator.ioc_lfe_at2l0_calc.at2l0.</code><code class="sig-name descname">SystemGroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/solid_attenuator/ioc_lfe_at2l0_calc/at2l0.html#SystemGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">solid_attenuator.ioc_lfe_at2l0_calc.at2l0.</span></code><code class="sig-name descname"><span class="pre">SystemGroup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/solid_attenuator/ioc_lfe_at2l0_calc/at2l0.html#SystemGroup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>PV group for attenuator system-spanning information.</p>
 <p>This system group implementation is specific to AT2L0.</p>
 <table class="colwidths-auto docutils align-default" id="id1">
@@ -463,166 +463,166 @@ Inherited from <a class="reference internal" href="solid_attenuator.system.Syste
 <p class="rubric">pvproperty methods</p>
 <dl class="py method">
 <dt id="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.active_config.startup">
-<code class="sig-prename descclassname">active_config.</code><code class="sig-name descname">startup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">instance</span></em>, <em class="sig-param"><span class="n">async_lib</span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.active_config.startup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">active_config.</span></code><code class="sig-name descname"><span class="pre">startup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_lib</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.active_config.startup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <details>
-<summary>Source code: active_config.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>259
-260
-261
-262
-263
-264
-265
-266
-267
-268
-269
-270
-271
-272
-273
-274
-275
-276
-277
-278
-279
-280
-281
-282
-283</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="nd">@active_config</span><span class="o">.</span><span class="n">startup</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">active_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
-        <span class="n">motor_pvnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">]</span>
-        <span class="n">monitor_list</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">pvlist</span> <span class="k">for</span> <span class="n">pvlist</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
-                           <span class="p">[])</span>
-        <span class="n">all_status</span> <span class="o">=</span> <span class="p">{</span><span class="n">pv</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">pv</span> <span class="ow">in</span> <span class="n">monitor_list</span><span class="p">}</span>
+<summary>Source code: active_config.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nd">@active_config</span><span class="o">.</span><span class="n">startup</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">active_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+    <span class="n">motor_pvnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">]</span>
+    <span class="n">monitor_list</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">pvlist</span> <span class="k">for</span> <span class="n">pvlist</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                       <span class="p">[])</span>
+    <span class="n">all_status</span> <span class="o">=</span> <span class="p">{</span><span class="n">pv</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">pv</span> <span class="ow">in</span> <span class="n">monitor_list</span><span class="p">}</span>
 
-        <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
-            <span class="n">all_status</span><span class="p">[</span><span class="n">pv</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;connected&#39;</span><span class="p">)</span>
-            <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">all_status</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
-                                <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+        <span class="n">all_status</span><span class="p">[</span><span class="n">pv</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;connected&#39;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">all_status</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                            <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span><span class="p">)</span>
 
-        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="o">*</span><span class="n">monitor_list</span><span class="p">,</span>
-                                                      <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
-                <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-                <span class="k">continue</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="o">*</span><span class="n">monitor_list</span><span class="p">,</span>
+                                                  <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">continue</span>
 
-            <span class="n">pvname</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">name</span>
-            <span class="k">if</span> <span class="n">pvname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]:</span>
-                <span class="k">continue</span>
+        <span class="n">pvname</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">pvname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">motor_pvnames</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]:</span>
+            <span class="k">continue</span>
 
-            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;get&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pvname</span><span class="p">)</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">motor_has_moved</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span> <span class="o">+</span> <span class="n">idx</span><span class="p">,</span>
-                                       <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;get&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pvname</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">motor_has_moved</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">first_filter</span> <span class="o">+</span> <span class="n">idx</span><span class="p">,</span>
+                                   <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </td></tr></table></div>
 </details>
 <br/><dl class="py method">
 <dt id="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.apply_config.startup">
-<code class="sig-prename descclassname">apply_config.</code><code class="sig-name descname">startup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">instance</span></em>, <em class="sig-param"><span class="n">async_lib</span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.apply_config.startup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">apply_config.</span></code><code class="sig-name descname"><span class="pre">startup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_lib</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.apply_config.startup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <details>
-<summary>Source code: apply_config.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>323
-324
-325
-326
-327
-328
-329
-330
-331
-332
-333
-334
-335
-336
-337
-338
-339
-340</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="nd">@apply_config</span><span class="o">.</span><span class="n">startup</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">apply_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">put_thread</span><span class="p">():</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">pv</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">pv</span><span class="o">.</span><span class="n">write</span><span class="p">([</span><span class="n">value</span><span class="p">],</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Failed to put value: </span><span class="si">%s</span><span class="s1">=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">pv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<summary>Source code: apply_config.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nd">@apply_config</span><span class="o">.</span><span class="n">startup</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">apply_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">put_thread</span><span class="p">():</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">pv</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pv</span><span class="o">.</span><span class="n">write</span><span class="p">([</span><span class="n">value</span><span class="p">],</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Failed to put value: </span><span class="si">%s</span><span class="s1">=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">pv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
-        <span class="n">ctx</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_default_thread_context</span><span class="p">()</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_default_thread_context</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_pvs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get_pvs</span><span class="p">(</span>
-            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;set&#39;</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_set_pvs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get_pvs</span><span class="p">(</span>
+        <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;motors&#39;</span><span class="p">][</span><span class="s1">&#39;set&#39;</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_lib</span><span class="o">.</span><span class="n">ThreadsafeQueue</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">put_thread</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_pv_put_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_lib</span><span class="o">.</span><span class="n">ThreadsafeQueue</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">put_thread</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_put_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </pre></div>
 </td></tr></table></div>
 </details>
 <br/><dl class="py method">
 <dt id="solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.energy_actual.startup">
-<code class="sig-prename descclassname">energy_actual.</code><code class="sig-name descname">startup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">instance</span></em>, <em class="sig-param"><span class="n">async_lib</span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.energy_actual.startup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">energy_actual.</span></code><code class="sig-name descname"><span class="pre">startup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_lib</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#solid_attenuator.ioc_lfe_at2l0_calc.at2l0.SystemGroup.energy_actual.startup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p>Update beam energy and calculated values.</p>
 <details>
-<summary>Source code: energy_actual.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>285
-286
-287
-288
-289
-290
-291
-292
-293
-294
-295
-296
-297
-298
-299
-300
-301
-302
-303
-304
-305
-306
-307
-308
-309
-310
-311</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="nd">@energy_actual</span><span class="o">.</span><span class="n">startup</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">energy_actual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Update beam energy and calculated values.&quot;&quot;&quot;</span>
-        <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">status</span><span class="p">):</span>
-            <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span>
-                <span class="n">instance</span><span class="p">,</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;connected&#39;</span><span class="p">,</span> <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span>
-            <span class="p">)</span>
+<summary>Source code: energy_actual.startup</summary><div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nd">@energy_actual</span><span class="o">.</span><span class="n">startup</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">energy_actual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">async_lib</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update beam energy and calculated values.&quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">update_connection_status</span><span class="p">(</span><span class="n">status</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">util</span><span class="o">.</span><span class="n">alarm_if</span><span class="p">(</span>
+            <span class="n">instance</span><span class="p">,</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;connected&#39;</span><span class="p">,</span> <span class="n">AlarmStatus</span><span class="o">.</span><span class="n">LINK</span>
+        <span class="p">)</span>
 
-        <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="s1">&#39;disconnected&#39;</span><span class="p">)</span>
-        <span class="n">pvname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;ev&#39;</span><span class="p">]</span>
-        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="n">pvname</span><span class="p">,</span>
-                                                      <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-                <span class="k">continue</span>
+    <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="s1">&#39;disconnected&#39;</span><span class="p">)</span>
+    <span class="n">pvname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">monitor_pvnames</span><span class="p">[</span><span class="s1">&#39;ev&#39;</span><span class="p">]</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">monitor_pvs</span><span class="p">(</span><span class="n">pvname</span><span class="p">,</span>
+                                                  <span class="n">async_lib</span><span class="o">=</span><span class="n">async_lib</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;connection&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">update_connection_status</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">continue</span>
 
-            <span class="n">eV</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Photon energy changed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
+        <span class="n">eV</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Photon energy changed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">eV</span><span class="p">:</span>
-                <span class="n">delta</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">eV</span>
-                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Photon energy changed to </span><span class="si">%s</span><span class="s2"> eV.&quot;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">instance</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">eV</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">eV</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">eV</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Photon energy changed to </span><span class="si">%s</span><span class="s2"> eV.&quot;</span><span class="p">,</span> <span class="n">eV</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">instance</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">eV</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">eV</span>
+    <span class="k">return</span> <span class="n">eV</span>
 </pre></div>
 </td></tr></table></div>
 </details>
