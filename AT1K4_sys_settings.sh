@@ -8,7 +8,7 @@ echo "Prefix set to: $PREFIX"
 
 set -e
 
-# Corresponds to MMS:01 -> most upstream axis
+# Corresponds to MMS:01 -> most downstream axis
 # AT1K4 	SN-11345 	1072
 caput ${PREFIX}:AXIS:01:IsStuck 0
 
@@ -39,7 +39,7 @@ caput ${PREFIX}:AXIS:01:FILTER:06:Active "True"
 caput ${PREFIX}:AXIS:01:FILTER:07:Active "True"
 caput ${PREFIX}:AXIS:01:FILTER:08:Active "True"
 
-# MMS:02 -> 2nd-most upstream axis
+# MMS:02 -> 2nd-most downstream axis
 # AT1K4 	SN-11345 	1084
 caput ${PREFIX}:AXIS:02:IsStuck 0
 
@@ -70,7 +70,7 @@ caput ${PREFIX}:AXIS:02:FILTER:06:Active "True"
 caput ${PREFIX}:AXIS:02:FILTER:07:Active "True"
 caput ${PREFIX}:AXIS:02:FILTER:08:Active "True"
 
-# MMS:03 -> 2nd to downstream axis
+# MMS:03 -> 2nd to upstream axis
 # AT1K4 	SN-11345 	1070
 caput ${PREFIX}:AXIS:03:IsStuck 0
 
@@ -101,7 +101,7 @@ caput ${PREFIX}:AXIS:03:FILTER:06:Active "True"
 caput ${PREFIX}:AXIS:03:FILTER:07:Active "True"
 caput ${PREFIX}:AXIS:03:FILTER:08:Active "True"
 
-# MMS:04 -> downstream-most axis
+# MMS:04 -> upstream-most axis
 # AT1K4 	SN-11345 	1085
 caput ${PREFIX}:AXIS:04:IsStuck 0
 
