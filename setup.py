@@ -56,7 +56,9 @@ setup(
             # AT2L0 and its simulator:
             'ioc-lfe-at2l0-calc=solid_attenuator.ioc_lfe_at2l0_calc.__main__:main',  # noqa
             'ioc-sim-at2l0=solid_attenuator.ioc_sim_at2l0.__main__:main',
-            # AT1K4 and sxr solid attenuators:
+            # SXR solid attenuator entrypoint, including AT2K2:
+            'ioc-satt-ladder-calc=solid_attenuator.ioc_kfe_at1k4_calc.__main__:main',  # noqa
+            # Back-compat for the ioc-kfe-at1k4 entrypoint:
             'ioc-kfe-at1k4-calc=solid_attenuator.ioc_kfe_at1k4_calc.__main__:main',  # noqa
             'ioc-sim-sxr-satt=solid_attenuator.ioc_sim_sxr.__main__:main',
             ],
