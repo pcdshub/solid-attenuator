@@ -1,4 +1,19 @@
-import os
+#!/usr/bin/env python3
+"""
+IOC entrypoint for AT1K4.
+
+Also works for:
+
+* AT2K2 (RIX, ioc-rix-at2k2-calc)
+
+Ensure that:
+
+* ``--autosave_path`` and other macros are appropriately customized to
+  avoid shadowing PVs from other IOCs.
+* For production IOCs, the ``--production`` flag is used such that the proper
+  MPS PVs will be chosen, and logging debug flags will be set.
+"""
+
 import sys
 
 from caproto.server import ioc_arg_parser, run
@@ -19,9 +34,9 @@ if '--production' in sys.argv:
     log_level = 'INFO'
     # autosave_path = '/reg/d/iocData/ioc-lfe-at1k4-calc/iocInfo/autosave.json'
     # TODO: wrong env var here; this method is not great:
-    ioc_data = os.environ.get('IOC_DATA_{system}', '/reg/d/iocData/ioc-lfe-at1k4-calc/')  # noqa
+    # ioc_data = os.environ.get('IOC_DATA_SATT', '/reg/d/iocData/ioc-lfe-at1k4-calc/')  # noqa
     # autosave_path = os.path.join(ioc_data, 'autosave.json')
-    autosave_path = 'autosave_development.json'
+    autosave_path = "autosave_development.json"
     sys.argv.remove('--production')
 else:
     subsystem = 'SIM'
