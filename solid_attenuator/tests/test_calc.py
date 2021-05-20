@@ -25,7 +25,7 @@ class Blade:
     filters: List[Filter]
 
 
-@pytest.fixture(params=range(2_000, 3_0000, 2_000))
+@pytest.fixture(params=[2000, 3000, 5000, 8000, 12_000, 20_000, 25_000])
 def photon_energy(request) -> float:
     return float(request.param)
 
@@ -140,12 +140,13 @@ def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
     try:
         subplot = _subplots[param_id]
     except KeyError:
-        fig = plt.figure(figsize=(10, 6), dpi=120)
+        fig = plt.figure(figsize=(12, 6), dpi=200)
         _subplots[param_id] = subplot = fig.subplots(1, 2)
 
-        subplot[0].set_title(f'{param_id} - Transmission Actual vs Desired')
+        # fig.suptitle(param_id)
+        subplot[0].set_title('Transmission Actual vs Desired')
         subplot[1].set_title('Error vs Desired')
-        fig.tight_layout()
+        # fig.tight_layout()
 
     line, = subplot[0].plot(t_des_checks, actual,
                             alpha=0.5,
@@ -169,7 +170,13 @@ def test_material_prioritization(request, diamond_thicknesses, si_thicknesses,
                     np.asarray(actual) - np.asarray(t_des_checks),
                     label=f'{photon_energy} eV',
                     alpha=0.5, lw=1, color=line.get_color())
+    subplot[0].set_xlabel("Desired transmission")
+    subplot[0].set_ylabel("Actual transmission")
+    subplot[1].set_xlabel("Desired transmission")
+    subplot[1].set_ylabel("(Actual - desired) transmission")
     subplot[0].figure.savefig(f'{param_id}.pdf')
+    subplot[0].figure.savefig(f'{param_id}.png', transparent=True,
+                              bbox_inches='tight', pad_inches=0.2)
 
 
 @pytest.mark.parametrize(
@@ -252,12 +259,13 @@ def test_ladder(request, blades, mode, soft_photon_energy):
     try:
         subplot = _subplots[param_id]
     except KeyError:
-        fig = plt.figure(figsize=(10, 6), dpi=120)
+        fig = plt.figure(figsize=(12, 6), dpi=200)
         _subplots[param_id] = subplot = fig.subplots(1, 2)
 
-        subplot[0].set_title(f'{param_id} - Transmission Actual vs Desired')
+        # fig.suptitle(param_id)
+        subplot[0].set_title('Transmission Actual vs Desired')
         subplot[1].set_title('Error vs Desired')
-        fig.tight_layout()
+        # fig.tight_layout()
 
     line, = subplot[0].plot(t_des_checks, actual,
                             alpha=0.5,
@@ -269,4 +277,10 @@ def test_ladder(request, blades, mode, soft_photon_energy):
                     np.asarray(actual) - np.asarray(t_des_checks),
                     label=f'{photon_energy} eV',
                     alpha=0.5, lw=1, color=line.get_color())
+    subplot[0].set_xlabel("Desired transmission")
+    subplot[0].set_ylabel("Actual transmission")
+    subplot[1].set_xlabel("Desired transmission")
+    subplot[1].set_ylabel("(Actual - desired) transmission")
     subplot[0].figure.savefig(f'{param_id}.pdf')
+    subplot[0].figure.savefig(f'{param_id}.png', transparent=True,
+                              bbox_inches='tight', pad_inches=0.2)
