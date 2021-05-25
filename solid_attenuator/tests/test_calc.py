@@ -35,7 +35,9 @@ def soft_photon_energy(request) -> float:
     return float(request.param)
 
 
-@pytest.fixture(params=[calculator.ConfigMode.Floor, calculator.ConfigMode.Ceiling])
+@pytest.fixture(
+    params=[calculator.ConfigMode.Floor, calculator.ConfigMode.Ceiling]
+)
 def mode(request) -> calculator.ConfigMode:
     return request.param
 
@@ -82,7 +84,9 @@ def test_transmission_values():
                 lw=1,
             )
             try:
-                about_half_energy = photon_energy[np.where(c_transm >= 0.5)[0][0]]
+                about_half_energy = photon_energy[
+                    np.where(c_transm >= 0.5)[0][0]
+                ]
             except IndexError:
                 ...
             else:
@@ -135,7 +139,9 @@ def test_material_prioritization(
         for thickness in diamond_thicknesses
     ]
     silicon_filters = [
-        Filter("Si", thickness, get_transmission("Si", thickness, photon_energy))
+        Filter(
+            "Si", thickness, get_transmission("Si", thickness, photon_energy)
+        )
         for thickness in si_thicknesses
     ]
     filters = diamond_filters + silicon_filters
@@ -161,7 +167,9 @@ def test_material_prioritization(
         )
 
         inserted_materials = [
-            flt.material for state, flt in zip(conf.filter_states, filters) if state
+            flt.material
+            for state, flt in zip(conf.filter_states, filters)
+            if state
         ]
         if "Si" in inserted_materials:
             assert inserted_materials.count("C") == len(diamond_filters)
