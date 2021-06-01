@@ -1,0 +1,17 @@
+[tool.black]
+line-length = 80
+target-version = ['py37']
+include = '\.pyi?$'
+exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/(
+  (
+    | \.git          # root of the project
+    | build
+    | dist
+  )/
+  | _version.py
+  | versioneer.py
+)
+'''
