@@ -25,10 +25,10 @@ caput ${PREFIX}:AXIS:01:FILTER:01:Thickness "0"  # Not active
 caput ${PREFIX}:AXIS:01:FILTER:02:Thickness "0"  # Not active
 caput ${PREFIX}:AXIS:01:FILTER:03:Thickness "0"  # Not active
 caput ${PREFIX}:AXIS:01:FILTER:04:Thickness "0"  # Not active
-caput ${PREFIX}:AXIS:01:FILTER:05:Thickness "1.52"
-caput ${PREFIX}:AXIS:01:FILTER:06:Thickness "2.85"
-caput ${PREFIX}:AXIS:01:FILTER:07:Thickness "6.18"
-caput ${PREFIX}:AXIS:01:FILTER:08:Thickness "11.5"
+caput ${PREFIX}:AXIS:01:FILTER:05:Thickness "11.5"
+caput ${PREFIX}:AXIS:01:FILTER:06:Thickness "6.18"
+caput ${PREFIX}:AXIS:01:FILTER:07:Thickness "2.85"
+caput ${PREFIX}:AXIS:01:FILTER:08:Thickness "1.52"
 
 caput ${PREFIX}:AXIS:01:FILTER:01:Active "False" # Not active
 caput ${PREFIX}:AXIS:01:FILTER:02:Active "False" # Not active
@@ -56,10 +56,10 @@ caput ${PREFIX}:AXIS:02:FILTER:01:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:02:FILTER:02:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:02:FILTER:03:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:02:FILTER:04:Thickness "0"  # not active
-caput ${PREFIX}:AXIS:02:FILTER:05:Thickness "0.78"
-caput ${PREFIX}:AXIS:02:FILTER:06:Thickness "1.52"
-caput ${PREFIX}:AXIS:02:FILTER:07:Thickness "2.85"
-caput ${PREFIX}:AXIS:02:FILTER:08:Thickness "6.18"
+caput ${PREFIX}:AXIS:02:FILTER:05:Thickness "6.18"
+caput ${PREFIX}:AXIS:02:FILTER:06:Thickness "2.85"
+caput ${PREFIX}:AXIS:02:FILTER:07:Thickness "1.52"
+caput ${PREFIX}:AXIS:02:FILTER:08:Thickness "0.78"
 
 caput ${PREFIX}:AXIS:02:FILTER:01:Active "False"  # not active
 caput ${PREFIX}:AXIS:02:FILTER:02:Active "False"  # not active
@@ -87,10 +87,10 @@ caput ${PREFIX}:AXIS:03:FILTER:01:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:03:FILTER:02:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:03:FILTER:03:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:03:FILTER:04:Thickness "0"  # not active
-caput ${PREFIX}:AXIS:03:FILTER:05:Thickness "0.39"
-caput ${PREFIX}:AXIS:03:FILTER:06:Thickness "0.78"
-caput ${PREFIX}:AXIS:03:FILTER:07:Thickness "1.52"
-caput ${PREFIX}:AXIS:03:FILTER:08:Thickness "2.85"
+caput ${PREFIX}:AXIS:03:FILTER:05:Thickness "2.85"
+caput ${PREFIX}:AXIS:03:FILTER:06:Thickness "1.52"
+caput ${PREFIX}:AXIS:03:FILTER:07:Thickness "0.78"
+caput ${PREFIX}:AXIS:03:FILTER:08:Thickness "0.39"
 
 caput ${PREFIX}:AXIS:03:FILTER:01:Active "False"  # not active
 caput ${PREFIX}:AXIS:03:FILTER:02:Active "False"  # not active
@@ -118,10 +118,10 @@ caput ${PREFIX}:AXIS:04:FILTER:01:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:04:FILTER:02:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:04:FILTER:03:Thickness "0"  # not active
 caput ${PREFIX}:AXIS:04:FILTER:04:Thickness "0"  # not active
-caput ${PREFIX}:AXIS:04:FILTER:05:Thickness "0.20"
-caput ${PREFIX}:AXIS:04:FILTER:06:Thickness "0.39"
-caput ${PREFIX}:AXIS:04:FILTER:07:Thickness "0.78"
-caput ${PREFIX}:AXIS:04:FILTER:08:Thickness "1.52"
+caput ${PREFIX}:AXIS:04:FILTER:05:Thickness "1.52"
+caput ${PREFIX}:AXIS:04:FILTER:06:Thickness "0.78"
+caput ${PREFIX}:AXIS:04:FILTER:07:Thickness "0.39"
+caput ${PREFIX}:AXIS:04:FILTER:08:Thickness "0.20"
 
 caput ${PREFIX}:AXIS:04:FILTER:01:Active "False"  # not active
 caput ${PREFIX}:AXIS:04:FILTER:02:Active "False"  # not active
