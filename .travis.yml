@@ -28,13 +28,6 @@ env:
     # CONDA_EXTRAS) but for pip
     - PIP_EXTRAS=""
 
-jobs:
-  allow_failures:
-    # This makes the PIP based Python 3.6 optional for passing.  Tests use
-    # dataclasses, making 3.6 not an option.
-    - name: "Python 3.6 - PIP"
-    - name: "Python 3.6"
-
 import:
   # This import enables a set of standard python jobs including:
   # - Build
@@ -48,4 +41,4 @@ import:
   #   - Documentation using doctr
   #   - Conda Package - uploaded to pcds-dev and pcds-tag
   #   - PyPI
-  - pcdshub/pcds-ci-helpers:travis/shared_configs/standard-python-conda.yml
+  - pcdshub/pcds-ci-helpers:travis/shared_configs/standard-python-conda-latest.yml
