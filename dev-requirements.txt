@@ -4,7 +4,6 @@ coverage
 flake8
 pytest
 matplotlib
-
 # sphinx-related dependencies:
 numpydoc
 sphinx-copybutton
