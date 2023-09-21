@@ -60,7 +60,8 @@ class FilterGroup(PVGroup):
             name='Material',
             record='stringin',
             doc='Filter material',
-            dtype=ChannelType.STRING
+            dtype=ChannelType.STRING,
+            alarm_group="material",
         )
     )
 
@@ -74,6 +75,7 @@ class FilterGroup(PVGroup):
             doc='Filter thickness',
             units='um',
             precision=1,
+            alarm_group="material",
         )
     )
 
@@ -82,11 +84,13 @@ class FilterGroup(PVGroup):
         name='ClosestEnergy_RBV',
         read_only=True,
         precision=1,
+        alarm_group="material",
     )
 
     closest_index = pvproperty(
         name='ClosestIndex_RBV',
         read_only=True,
+        alarm_group="energy_based",
     )
 
     transmission = pvproperty(
@@ -96,6 +100,7 @@ class FilterGroup(PVGroup):
         lower_ctrl_limit=0.0,
         read_only=True,
         precision=3,
+        alarm_group="energy_based",
     )
 
     transmission_3omega = pvproperty(
@@ -105,6 +110,7 @@ class FilterGroup(PVGroup):
         lower_alarm_limit=0.0,
         read_only=True,
         precision=3,
+        alarm_group="energy_based",
     )
 
     # What does it mean to be inactive but stuck?
@@ -120,6 +126,7 @@ class FilterGroup(PVGroup):
             enum_strings=['False', 'True'],
             doc='Filter should be used in calculations',
             dtype=ChannelType.ENUM,
+            alarm_group="material",
         )
     )
 
@@ -137,6 +144,7 @@ class FilterGroup(PVGroup):
                           'In_04', 'In_05', 'In_06', 'In_07', 'In_08',
                           'In_09'],
             dtype=ChannelType.ENUM,
+            alarm_group="stuck",
         )
     )
 
